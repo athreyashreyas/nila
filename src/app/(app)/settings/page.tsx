@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import { useEncryption } from '@/lib/encryption/context';
 import { derivePasswordKey, wrapMasterKey, generateSalt } from '@/lib/encryption/core';
 import { useCycles } from '@/hooks/useCycles';
 import { useDailyLog } from '@/hooks/useDailyLog';
+import { registerPushSubscription, unregisterPushSubscription, isPushSupported } from '@/lib/push/register';
 
 function supabase() {
   return createBrowserClient(
@@ -21,12 +22,49 @@ export default function SettingsPage() {
   const { cycles } = useCycles();
   const { logs } = useDailyLog();
 
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [pwLoading, setPwLoading] = useState(false);
   const [pwError, setPwError] = useState('');
   const [pwSuccess, setPwSuccess] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then((reg) =>
+        reg.pushManager.getSubscription().then((sub) => setPushEnabled(!!sub))
+      );
+    }
+  }, []);
+
+  async function handlePushToggle() {
+    setPushLoading(true);
+    try {
+      const db = supabase();
+      const { data: { user } } = await db.auth.getUser();
+      if (!user) return;
+
+      if (pushEnabled) {
+        await unregisterPushSubscription();
+        await db.from('push_subscriptions').delete().eq('user_id', user.id);
+        setPushEnabled(false);
+      } else {
+        const sub = await registerPushSubscription();
+        if (sub) {
+          await db.from('push_subscriptions').upsert({
+            user_id: user.id,
+            subscription: sub.toJSON(),
+            device_name: navigator.userAgent.includes('iPhone') ? 'iPhone' : 'Device',
+          });
+          setPushEnabled(true);
+        }
+      }
+    } finally {
+      setPushLoading(false);
+    }
+  }
 
   async function handleSignOut() {
     clearKey();
@@ -130,6 +168,34 @@ export default function SettingsPage() {
             <Row label="Export data" sub={`${cycles.length} cycles, ${logs.length} journal entries`} onClick={handleExport} />
           </div>
         </div>
+
+        {isPushSupported() && (
+          <div>
+            <p className="text-[11px] font-semibold tracking-widest uppercase mb-2 px-1 mt-2" style={{ color: 'var(--color-foreground-muted)' }}>Notifications</p>
+            <button
+              onClick={handlePushToggle}
+              disabled={pushLoading}
+              className="flex items-center justify-between w-full px-4 py-3.5 rounded-[var(--radius)] transition-all"
+              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+            >
+              <div className="text-left">
+                <div className="text-sm font-medium">Period reminders</div>
+                <div className="text-xs mt-0.5 opacity-50">
+                  {pushEnabled ? 'On — tap to disable' : 'Off — tap to enable (requires home screen)'}
+                </div>
+              </div>
+              <div
+                className="w-11 h-6 rounded-full relative transition-colors flex-shrink-0"
+                style={{ background: pushEnabled ? 'var(--color-accent)' : 'var(--color-border)' }}
+              >
+                <div
+                  className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all"
+                  style={{ left: pushEnabled ? '22px' : '2px' }}
+                />
+              </div>
+            </button>
+          </div>
+        )}
 
         <div>
           <p className="text-[11px] font-semibold tracking-widest uppercase mb-2 px-1 mt-2" style={{ color: 'var(--color-foreground-muted)' }}>Privacy</p>
