@@ -1,90 +1,91 @@
 @import "tailwindcss";
 
-/* ─── Lune Design Tokens ──────────────────────────────────────
-   Colors will be refined via HTML mockup sessions.
-   These are the baseline palette — deep purple dark mode first.
+/* ─── Nila Design Tokens ──────────────────────────────────────
+   Light = Soft Sage · Dark = Deep Indigo
+   Radius: 20px · Weight: 500 · Surface: 30% opacity
    ─────────────────────────────────────────────────────────── */
 
 :root {
-  /* Light mode (will be updated via design session) */
-  --background: #faf8ff;
-  --surface: #f0ebff;
-  --foreground: #1a0f2e;
-  --foreground-muted: #6b5b95;
-  --border: #ddd6fe;
-  --accent: #8b5cf6;
-  --accent-soft: #ede9fe;
+  /* Light mode — Soft Sage */
+  --background:        #f0f7f3;
+  --surface:           rgba(218, 238, 227, 0.30);
+  --surface-solid:     #daeee3;
+  --foreground:        #0a2814;
+  --foreground-muted:  rgba(10, 40, 20, 0.50);
+  --border:            rgba(22, 163, 74, 0.15);
+  --accent:            #16a34a;
+  --accent-soft:       rgba(22, 163, 74, 0.12);
 
   /* Phase colors */
-  --phase-period: #c084fc;
-  --phase-follicular: #86efac;
-  --phase-ovulation: #fde68a;
-  --phase-luteal: #93c5fd;
+  --phase-period:      #e879f9;
+  --phase-follicular:  #4ade80;
+  --phase-ovulation:   #fbbf24;
+  --phase-luteal:      #60a5fa;
 
-  /* Safe area insets for iOS notch / Dynamic Island */
-  --safe-area-top: env(safe-area-inset-top);
-  --safe-area-bottom: env(safe-area-inset-bottom);
-  --safe-area-left: env(safe-area-inset-left);
-  --safe-area-right: env(safe-area-inset-right);
+  /* Layout tokens */
+  --radius:            20px;
+  --radius-sm:         12px;
+
+  /* Safe area insets (iOS notch / Dynamic Island) */
+  --safe-top:    env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+  --safe-left:   env(safe-area-inset-left);
+  --safe-right:  env(safe-area-inset-right);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #1a0f2e;
-    --surface: #261847;
-    --foreground: #f5f0ff;
-    --foreground-muted: #a78bfa;
-    --border: #3d2b6b;
-    --accent: #a78bfa;
-    --accent-soft: #3d2b6b;
+    /* Dark mode — Deep Indigo */
+    --background:       #0d0f1f;
+    --surface:          rgba(26, 31, 74, 0.80);
+    --surface-solid:    #1a1f4a;
+    --foreground:       #e8eaff;
+    --foreground-muted: rgba(232, 234, 255, 0.50);
+    --border:           rgba(129, 140, 248, 0.18);
+    --accent:           #818cf8;
+    --accent-soft:      rgba(129, 140, 248, 0.15);
   }
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-surface: var(--surface);
-  --color-foreground: var(--foreground);
+  --color-background:       var(--background);
+  --color-surface:          var(--surface);
+  --color-surface-solid:    var(--surface-solid);
+  --color-foreground:       var(--foreground);
   --color-foreground-muted: var(--foreground-muted);
-  --color-border: var(--border);
-  --color-accent: var(--accent);
-  --color-accent-soft: var(--accent-soft);
-  --font-sans: var(--font-geist-sans);
+  --color-border:           var(--border);
+  --color-accent:           var(--accent);
+  --color-accent-soft:      var(--accent-soft);
+  --color-phase-period:     var(--phase-period);
+  --color-phase-follicular: var(--phase-follicular);
+  --color-phase-ovulation:  var(--phase-ovulation);
+  --color-phase-luteal:     var(--phase-luteal);
+  --font-sans:              var(--font-geist-sans);
 }
 
-/* ─── Base Styles ─────────────────────────────────────────── */
+/* ─── Base ────────────────────────────────────────────────── */
 
 html {
-  /* Prevent elastic bounce in standalone PWA mode */
   overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  font-weight: 500;
   -webkit-font-smoothing: antialiased;
-  /* Respect Dynamic Island / notch */
-  padding-top: var(--safe-area-top);
-  padding-bottom: var(--safe-area-bottom);
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
 }
 
-/* ─── iOS PWA Utilities ───────────────────────────────────── */
-
-.safe-bottom {
-  padding-bottom: max(1rem, var(--safe-area-bottom));
-}
-
-.safe-top {
-  padding-top: max(1rem, var(--safe-area-top));
-}
-
-/* Smooth tap highlight removal for iOS */
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Prevent text size adjustment on orientation change */
-html {
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-}
+/* ─── iOS PWA safe-area helpers ───────────────────────────── */
+
+.safe-bottom { padding-bottom: max(1rem, var(--safe-bottom)); }
+.safe-top    { padding-top:    max(1rem, var(--safe-top)); }

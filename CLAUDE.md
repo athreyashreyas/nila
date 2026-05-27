@@ -1,6 +1,6 @@
 @AGENTS.md
 
-# Lune
+# Nila
 
 Period tracking PWA. Next.js 16 App Router + TypeScript + Tailwind CSS v4 + Supabase + client-side E2EE.
 Target: iPhone + iPad PWA (iOS 16.4+). ~2 users. Deployed on Vercel.

@@ -63,7 +63,7 @@ export default function SignupPage() {
       <div className="w-full max-w-sm">
         <h1 className="text-xl font-medium mb-1">Your recovery phrase</h1>
         <p className="text-sm opacity-60 mb-6">
-          Write these 12 words down and keep them somewhere safe. They&apos;re the only way to recover your data if you forget your password. Lune cannot recover them for you.
+          Write these 12 words down and keep them somewhere safe. They&apos;re the only way to recover your data if you forget your password. Nila cannot recover them for you.
         </p>
 
         <div className="grid grid-cols-3 gap-2 mb-6 p-4 rounded-2xl bg-[--color-surface] border border-[--color-border]">
@@ -90,7 +90,7 @@ export default function SignupPage() {
           disabled={!confirmed}
           className="w-full py-3 rounded-xl bg-[--color-accent] text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          Continue to Lune
+          Continue to Nila
         </button>
       </div>
     );

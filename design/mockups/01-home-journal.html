@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lune — Design Mockup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0f0f13;
+    color: #fff;
+    display: flex;
+    gap: 0;
+    min-height: 100vh;
+  }
+
+  /* ── Controls panel ── */
+  #controls {
+    width: 300px;
+    min-width: 280px;
+    background: #1a1a22;
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+    border-right: 1px solid rgba(255,255,255,0.08);
+  }
+
+  #controls h2 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; opacity: .4; margin-bottom: 4px; }
+
+  .palette-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .palette-btn {
+    padding: 10px 8px;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+    transition: all .15s;
+  }
+
+  .palette-btn.active { border-color: rgba(255,255,255,0.6); }
+
+  .control-row { display: flex; flex-direction: column; gap: 6px; }
+  .control-row label { font-size: 12px; opacity: .5; display: flex; justify-content: space-between; }
+  .control-row label span { opacity: 1; font-weight: 600; }
+  input[type=range] { width: 100%; accent-color: #a78bfa; cursor: pointer; }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+  }
+
+  .toggle {
+    width: 44px; height: 26px;
+    background: rgba(255,255,255,.15);
+    border-radius: 13px;
+    position: relative;
+    cursor: pointer;
+    transition: background .2s;
+  }
+  .toggle.on { background: #a78bfa; }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    top: 3px; left: 3px;
+    transition: left .2s;
+  }
+  .toggle.on::after { left: 21px; }
+
+  .phase-preview-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .phase-swatch {
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .1s;
+    border: 2px solid transparent;
+  }
+  .phase-swatch.active-phase { border-color: rgba(255,255,255,.7); transform: scale(1.05); }
+
+  /* ── Phone frame ── */
+  #preview-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+
+  .phone {
+    width: 393px;
+    height: 852px;
+    border-radius: 52px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 40px 100px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.1);
+    flex-shrink: 0;
+  }
+
+  .phone-inner {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* Status bar */
+  .status-bar {
+    height: 54px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 0 28px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  /* Scrollable content */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  /* Header */
+  .app-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0 8px;
+  }
+
+  .app-header h1 { font-size: 28px; font-weight: 700; letter-spacing: -.5px; }
+  .app-header .date { font-size: 13px; opacity: .5; }
+
+  /* Phase ring card */
+  .phase-card {
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .ring-wrap { position: relative; flex-shrink: 0; }
+
+  .ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ring-day { font-size: 22px; font-weight: 700; }
+  .ring-label { font-size: 9px; letter-spacing: .06em; text-transform: uppercase; opacity: .5; }
+
+  .phase-info { flex: 1; }
+  .phase-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .phase-sub { font-size: 12px; opacity: .55; line-height: 1.4; }
+  .phase-day-of { font-size: 12px; opacity: .4; margin-top: 6px; }
+
+  /* Prediction pill */
+  .prediction-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    font-size: 13px;
+  }
+
+  .prediction-pill .icon { font-size: 18px; }
+  .prediction-pill .label { opacity: .6; }
+  .prediction-pill .value { font-weight: 600; margin-left: auto; }
+
+  /* Today's check-in */
+  .section-title {
+    font-size: 11px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    opacity: .35;
+    margin-bottom: 2px;
+  }
+
+  .mood-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .mood-btn {
+    flex: 1;
+    aspect-ratio: 1;
+    border-radius: calc(var(--radius) - 8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    font-size: 22px;
+    border: 2px solid transparent;
+    transition: all .15s;
+  }
+
+  .mood-btn .mood-label { font-size: 9px; font-weight: 500; opacity: .5; }
+  .mood-btn.selected { border-color: var(--accent); }
+
+  /* Flow row */
+  .flow-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  .flow-chip {
+    flex: 1;
+    padding: 8px 4px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all .15s;
+    opacity: .6;
+  }
+  .flow-chip.selected { opacity: 1; border-color: var(--accent); }
+
+  /* Symptom chips */
+  .chips-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all .15s;
+    opacity: .55;
+  }
+  .chip.selected { opacity: 1; border-color: var(--accent); }
+
+  /* Notes area */
+  .notes-area {
+    border-radius: calc(var(--radius) - 4px);
+    padding: 12px 14px;
+    font-size: 13px;
+    resize: none;
+    width: 100%;
+    border: 1.5px solid;
+    font-family: inherit;
+    outline: none;
+    min-height: 72px;
+  }
+
+  /* Bottom nav */
+  .bottom-nav {
+    height: 83px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-around;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,.06);
+    flex-shrink: 0;
+  }
+
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    opacity: .4;
+    cursor: pointer;
+    padding: 4px 16px;
+    border-radius: 12px;
+    transition: opacity .15s;
+  }
+
+  .nav-item.active { opacity: 1; }
+  .nav-icon { font-size: 22px; }
+
+  /* Scrollbar hide */
+  .content::-webkit-scrollbar { display: none; }
+</style>
+</head>
+<body>
+
+<!-- Controls -->
+<div id="controls">
+  <div>
+    <h2>Palette</h2>
+    <div class="palette-grid" style="margin-top:10px">
+      <div class="palette-btn active" data-palette="nila" style="background:linear-gradient(135deg,#0d0f1f 50%,#f0f7f3 50%);color:#818cf8;border-color:#818cf8">🌙 Nila</div>
+      <div class="palette-btn" data-palette="mauve" style="background:#3d1f5e;color:#e2c9ff">🌸 Mauve</div>
+      <div class="palette-btn" data-palette="indigo" style="background:#1a1f5e;color:#c9d4ff">🌌 Indigo</div>
+      <div class="palette-btn" data-palette="sage" style="background:#1a3028;color:#b8e0c8">🌿 Sage</div>
+    </div>
+  </div>
+
+  <div>
+    <h2>Light / Dark</h2>
+    <div class="toggle-row" style="margin-top:10px">
+      <span>Dark mode</span>
+      <div class="toggle on" id="dark-toggle"></div>
+    </div>
+  </div>
+
+  <div>
+    <h2>Phase preview</h2>
+    <div class="phase-preview-row" style="margin-top:10px">
+      <div class="phase-swatch active-phase" data-phase="period">🔴 Period</div>
+      <div class="phase-swatch" data-phase="follicular">🌱 Follicular</div>
+      <div class="phase-swatch" data-phase="ovulation">✨ Ovulation</div>
+      <div class="phase-swatch" data-phase="luteal">🌙 Luteal</div>
+    </div>
+  </div>
+
+  <div>
+    <h2>Corner radius</h2>
+    <div class="control-row" style="margin-top:10px">
+      <label>Radius <span id="radius-val">24px</span></label>
+      <input type="range" id="radius" min="8" max="36" value="24">
+    </div>
+  </div>
+
+  <div>
+    <h2>Typography weight</h2>
+    <div class="control-row" style="margin-top:10px">
+      <label>Body weight <span id="weight-val">400</span></label>
+      <input type="range" id="weight" min="300" max="500" step="100" value="400">
+    </div>
+  </div>
+
+  <div>
+    <h2>Surface opacity</h2>
+    <div class="control-row" style="margin-top:10px">
+      <label>Card opacity <span id="surface-val">12%</span></label>
+      <input type="range" id="surface-opacity" min="5" max="30" value="12">
+    </div>
+  </div>
+
+  <div>
+    <h2>Ring style</h2>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="palette-btn active" data-ring="arc" style="flex:1;padding:8px;font-size:12px">Arc</button>
+      <button class="palette-btn" data-ring="full" style="flex:1;padding:8px;font-size:12px">Full ring</button>
+      <button class="palette-btn" data-ring="dot" style="flex:1;padding:8px;font-size:12px">Dot pulse</button>
+    </div>
+  </div>
+</div>
+
+<!-- Phone preview -->
+<div id="preview-wrap">
+  <div class="phone" id="phone">
+    <div class="phone-inner" id="app">
+
+      <div class="status-bar" id="status-bar">
+        <span>9:41</span>
+        <span>●●●</span>
+      </div>
+
+      <div class="content" id="content">
+
+        <!-- Header -->
+        <div class="app-header">
+          <div>
+            <h1 id="app-title">Lune</h1>
+            <div class="date" id="app-date">Monday, 27 May</div>
+          </div>
+          <div id="avatar-icon" style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px">🌙</div>
+        </div>
+
+        <!-- Phase ring card -->
+        <div class="phase-card" id="phase-card">
+          <div class="ring-wrap">
+            <svg id="phase-ring" width="100" height="100" viewBox="0 0 100 100">
+              <circle id="ring-track" cx="50" cy="50" r="42" fill="none" stroke-width="7" stroke="rgba(255,255,255,0.08)" />
+              <circle id="ring-progress" cx="50" cy="50" r="42" fill="none" stroke-width="7"
+                stroke-linecap="round"
+                stroke-dasharray="263.9"
+                stroke-dashoffset="190"
+                transform="rotate(-90 50 50)" />
+              <circle id="ring-dot" cx="50" cy="8" r="5" />
+            </svg>
+            <div class="ring-center">
+              <div class="ring-day" id="ring-day">3</div>
+              <div class="ring-label">day</div>
+            </div>
+          </div>
+          <div class="phase-info">
+            <div class="phase-name" id="phase-name">Period</div>
+            <div class="phase-sub" id="phase-sub">Rest and be gentle with yourself.</div>
+            <div class="phase-day-of" id="phase-day-of">Day 3 of 5 · next in 25 days</div>
+          </div>
+        </div>
+
+        <!-- Period prediction pill -->
+        <div class="prediction-pill" id="pred-pill">
+          <div class="icon">🗓</div>
+          <div>
+            <div class="label">Next period</div>
+            <div style="font-size:12px;opacity:.4;margin-top:1px">±2 days</div>
+          </div>
+          <div class="value">Jun 21</div>
+        </div>
+
+        <!-- Today's mood -->
+        <div>
+          <div class="section-title">How are you feeling?</div>
+          <div class="mood-row" style="margin-top:8px">
+            <div class="mood-btn selected" data-mood="great">😊<div class="mood-label">Great</div></div>
+            <div class="mood-btn" data-mood="good">🙂<div class="mood-label">Good</div></div>
+            <div class="mood-btn" data-mood="okay">😐<div class="mood-label">Okay</div></div>
+            <div class="mood-btn" data-mood="low">😔<div class="mood-label">Low</div></div>
+            <div class="mood-btn" data-mood="tired">😴<div class="mood-label">Tired</div></div>
+          </div>
+        </div>
+
+        <!-- Flow -->
+        <div>
+          <div class="section-title">Flow</div>
+          <div class="flow-row" style="margin-top:8px">
+            <div class="flow-chip" data-flow="none">None</div>
+            <div class="flow-chip" data-flow="spot">Spotting</div>
+            <div class="flow-chip selected" data-flow="light">Light</div>
+            <div class="flow-chip" data-flow="medium">Medium</div>
+            <div class="flow-chip" data-flow="heavy">Heavy</div>
+          </div>
+        </div>
+
+        <!-- Symptoms -->
+        <div>
+          <div class="section-title">Symptoms</div>
+          <div class="chips-wrap" style="margin-top:8px">
+            <div class="chip selected">cramps</div>
+            <div class="chip">bloating</div>
+            <div class="chip selected">fatigue</div>
+            <div class="chip">headache</div>
+            <div class="chip">backache</div>
+            <div class="chip">mood swings</div>
+            <div class="chip">acne</div>
+            <div class="chip">nausea</div>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div>
+          <div class="section-title">Notes</div>
+          <textarea class="notes-area" id="notes-area" placeholder="How's your day going…" style="margin-top:8px"></textarea>
+        </div>
+
+        <div style="height:8px"></div>
+      </div>
+
+      <!-- Bottom nav -->
+      <div class="bottom-nav" id="bottom-nav">
+        <div class="nav-item active"><div class="nav-icon">🏠</div><div>Today</div></div>
+        <div class="nav-item"><div class="nav-icon">📅</div><div>Calendar</div></div>
+        <div class="nav-item"><div class="nav-icon">📊</div><div>Insights</div></div>
+        <div class="nav-item"><div class="nav-icon">⚙️</div><div>Settings</div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Palette definitions ──────────────────────────────────────────────────────
+const PALETTES = {
+  nila: {
+    name: 'Nila',
+    // Dark = Deep Indigo, Light = Soft Sage
+    dark:  { bg: '#0d0f1f', surface: '#1a1f4a', fg: '#e8eaff', accent: '#818cf8', border: 'rgba(129,140,248,0.18)', muted: 'rgba(232,234,255,0.45)' },
+    light: { bg: '#f0f7f3', surface: '#daeee3', fg: '#0a2814', accent: '#16a34a', border: 'rgba(22,163,74,0.15)', muted: 'rgba(10,40,20,0.45)' },
+  },
+  mauve: {
+    name: 'Warm Mauve',
+    dark:  { bg: '#130a1f', surface: '#2a1245', fg: '#f0e6ff', accent: '#c084fc', border: 'rgba(192,132,252,0.15)', muted: 'rgba(240,230,255,0.45)' },
+    light: { bg: '#f5f0ff', surface: '#ede0ff', fg: '#2a1040', accent: '#9333ea', border: 'rgba(147,51,234,0.15)', muted: 'rgba(42,16,64,0.45)' },
+  },
+  indigo: {
+    name: 'Deep Indigo',
+    dark:  { bg: '#0d0f1f', surface: '#1a1f4a', fg: '#e8eaff', accent: '#818cf8', border: 'rgba(129,140,248,0.15)', muted: 'rgba(232,234,255,0.45)' },
+    light: { bg: '#f0f1ff', surface: '#e0e3ff', fg: '#0d0f40', accent: '#4f46e5', border: 'rgba(79,70,229,0.15)', muted: 'rgba(13,15,64,0.45)' },
+  },
+  sage: {
+    name: 'Soft Sage',
+    dark:  { bg: '#162419', surface: '#223d28', fg: '#e4f2ea', accent: '#4ade80', border: 'rgba(74,222,128,0.18)', muted: 'rgba(228,242,234,0.45)' },
+    light: { bg: '#f0f7f3', surface: '#daeee3', fg: '#0a2814', accent: '#16a34a', border: 'rgba(22,163,74,0.15)', muted: 'rgba(10,40,20,0.45)' },
+  },
+};
+
+const PHASE_DATA = {
+  period:     { emoji: '🔴', name: 'Period',     sub: 'Rest and be gentle with yourself.',       color: '#e879f9', day: 3, of: 5,  next: 25 },
+  follicular: { emoji: '🌱', name: 'Follicular', sub: 'Energy returning. Great time for new starts.', color: '#4ade80', day: 6, of: 12, next: 18 },
+  ovulation:  { emoji: '✨', name: 'Ovulation',  sub: 'Peak energy. You may feel confident.',   color: '#fbbf24', day: 2, of: 5,  next: 9 },
+  luteal:     { emoji: '🌙', name: 'Luteal',     sub: 'Winding down. Honour the need for rest.',color: '#60a5fa', day: 8, of: 14, next: 6 },
+};
+
+// ── State ────────────────────────────────────────────────────────────────────
+let state = {
+  palette: 'nila',
+  dark: true,
+  phase: 'period',
+  radius: 24,
+  weight: 400,
+  surfaceOpacity: 12,
+  ringStyle: 'arc',
+};
+
+// ── Apply theme ──────────────────────────────────────────────────────────────
+function apply() {
+  const pal = PALETTES[state.palette][state.dark ? 'dark' : 'light'];
+  const ph = PHASE_DATA[state.phase];
+  const app = document.getElementById('app');
+  const r = state.radius + 'px';
+
+  // CSS vars on the phone
+  app.style.cssText = `
+    background: ${pal.bg};
+    color: ${pal.fg};
+    --accent: ${pal.accent};
+    --surface: ${pal.surface};
+    --border: ${pal.border};
+    --muted: ${pal.muted};
+    --radius: ${r};
+    font-weight: ${state.weight};
+  `;
+
+  // App title
+  document.getElementById('app-title').textContent = 'Nila';
+
+  // Avatar icon — accent bg so it's visible in both light and dark
+  const avatar = document.getElementById('avatar-icon');
+  avatar.style.background = pal.accent + '28';
+  avatar.style.color = pal.accent;
+
+  // Status bar
+  const sb = document.getElementById('status-bar');
+  sb.style.background = pal.bg;
+  sb.style.color = pal.fg;
+
+  // Phase card
+  const card = document.getElementById('phase-card');
+  card.style.background = pal.surface;
+
+  // Phase ring
+  applyRing(ph, pal);
+
+  // Phase info
+  document.getElementById('phase-name').textContent = ph.name;
+  document.getElementById('phase-name').style.color = ph.color;
+  document.getElementById('phase-sub').textContent = ph.sub;
+  document.getElementById('phase-day-of').textContent = `Day ${ph.day} of ${ph.of} · next in ${ph.next} days`;
+
+  // Prediction pill
+  const pill = document.getElementById('pred-pill');
+  pill.style.background = pal.surface;
+
+  // Notes
+  const notes = document.getElementById('notes-area');
+  notes.style.background = pal.surface;
+  notes.style.color = pal.fg;
+  notes.style.borderColor = pal.border;
+  notes.style.borderRadius = 'calc(' + r + ' - 4px)';
+
+  // Bottom nav
+  document.getElementById('bottom-nav').style.background = pal.bg;
+
+  // Mood buttons
+  document.querySelectorAll('.mood-btn').forEach(b => {
+    b.style.background = pal.surface;
+    b.style.color = pal.fg;
+  });
+
+  // Flow chips
+  document.querySelectorAll('.flow-chip').forEach(b => {
+    b.style.background = pal.surface;
+    b.style.color = pal.fg;
+  });
+
+  // Symptom chips
+  document.querySelectorAll('.chip').forEach(b => {
+    b.style.background = pal.surface;
+    b.style.color = pal.fg;
+  });
+
+  // Phase swatches in control panel
+  document.querySelectorAll('.phase-swatch').forEach(s => {
+    const p = PHASE_DATA[s.dataset.phase];
+    s.style.background = p.color + '33';
+    s.style.color = p.color;
+  });
+}
+
+function applyRing(ph, pal) {
+  const style = state.ringStyle;
+  const svg = document.getElementById('phase-ring');
+  const progress = document.getElementById('ring-progress');
+  const track = document.getElementById('ring-track');
+  const dot = document.getElementById('ring-dot');
+  const dayEl = document.getElementById('ring-day');
+
+  dayEl.textContent = ph.day;
+
+  const pct = ph.day / (state.phase === 'period' ? 28 : 28); // progress through cycle
+  const circumference = 2 * Math.PI * 42;
+
+  if (style === 'arc') {
+    track.style.display = '';
+    progress.style.display = '';
+    dot.style.display = '';
+    progress.setAttribute('stroke', ph.color);
+    progress.setAttribute('stroke-dasharray', circumference);
+    progress.setAttribute('stroke-dashoffset', circumference * (1 - pct));
+    dot.setAttribute('fill', ph.color);
+    // Position dot at end of arc
+    const angle = (pct * 360 - 90) * Math.PI / 180;
+    const x = 50 + 42 * Math.cos(angle);
+    const y = 50 + 42 * Math.sin(angle);
+    dot.setAttribute('cx', x);
+    dot.setAttribute('cy', y);
+    dot.setAttribute('r', 5);
+  } else if (style === 'full') {
+    track.style.display = '';
+    progress.style.display = '';
+    dot.style.display = 'none';
+    progress.setAttribute('stroke', ph.color);
+    progress.setAttribute('stroke-dasharray', circumference);
+    progress.setAttribute('stroke-dashoffset', circumference * (1 - pct));
+    progress.setAttribute('stroke-linecap', 'butt');
+  } else if (style === 'dot') {
+    track.style.display = 'none';
+    progress.style.display = 'none';
+    dot.style.display = '';
+    dot.setAttribute('cx', 50); dot.setAttribute('cy', 50);
+    dot.setAttribute('r', 28);
+    dot.setAttribute('fill', ph.color + '33');
+    dot.setAttribute('stroke', ph.color);
+    dot.setAttribute('stroke-width', '2');
+  }
+}
+
+// ── Event listeners ──────────────────────────────────────────────────────────
+document.querySelectorAll('[data-palette]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.dataset.ring) {
+      // Ring style buttons
+      state.ringStyle = btn.dataset.ring;
+      document.querySelectorAll('[data-ring]').forEach(b => b.classList.remove('active'));
+    } else {
+      state.palette = btn.dataset.palette;
+      document.querySelectorAll('[data-palette]').forEach(b => b.classList.remove('active'));
+    }
+    btn.classList.add('active');
+    apply();
+  });
+});
+
+document.querySelectorAll('[data-ring]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    state.ringStyle = btn.dataset.ring;
+    document.querySelectorAll('[data-ring]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    apply();
+  });
+});
+
+document.getElementById('dark-toggle').addEventListener('click', function() {
+  state.dark = !state.dark;
+  this.classList.toggle('on', state.dark);
+  apply();
+});
+
+document.querySelectorAll('[data-phase]').forEach(s => {
+  s.addEventListener('click', () => {
+    state.phase = s.dataset.phase;
+    document.querySelectorAll('[data-phase]').forEach(x => x.classList.remove('active-phase'));
+    s.classList.add('active-phase');
+    apply();
+  });
+});
+
+document.getElementById('radius').addEventListener('input', function() {
+  state.radius = +this.value;
+  document.getElementById('radius-val').textContent = this.value + 'px';
+  apply();
+});
+
+document.getElementById('weight').addEventListener('input', function() {
+  state.weight = +this.value;
+  document.getElementById('weight-val').textContent = this.value;
+  apply();
+});
+
+document.getElementById('surface-opacity').addEventListener('input', function() {
+  state.surfaceOpacity = +this.value;
+  document.getElementById('surface-val').textContent = this.value + '%';
+  apply();
+});
+
+document.querySelectorAll('.mood-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.mood-btn').forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected');
+  });
+});
+
+document.querySelectorAll('.flow-chip').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.flow-chip').forEach(x => x.classList.remove('selected'));
+    b.classList.add('selected');
+  });
+});
+
+document.querySelectorAll('.chip').forEach(b => {
+  b.addEventListener('click', () => b.classList.toggle('selected'));
+});
+
+// Initial render
+apply();
+</script>
+</body>
+</html>

@@ -10,12 +10,12 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: 'Lune',
+  title: 'Nila',
   description: 'Your private cycle companion',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
-    title: 'Lune',
+    title: 'Nila',
     statusBarStyle: 'black-translucent',
   },
   formatDetection: {
@@ -37,8 +37,8 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#1a0f2e' },
-    { media: '(prefers-color-scheme: light)', color: '#f5f0ff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0d0f1f' },
+    { media: '(prefers-color-scheme: light)', color: '#f0f7f3' },
   ],
 };
 
