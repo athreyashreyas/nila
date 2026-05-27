@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist } from 'next/font/google';
 import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration';
+import { EncryptionProvider } from '@/lib/encryption/context';
 import './globals.css';
 
 const geist = Geist({
@@ -89,7 +90,9 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col antialiased bg-[--color-background] text-[--color-foreground]">
         <ServiceWorkerRegistration />
-        {children}
+        <EncryptionProvider>
+          {children}
+        </EncryptionProvider>
       </body>
     </html>
   );

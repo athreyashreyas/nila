@@ -10,10 +10,15 @@ function toBase64url(buf: ArrayBuffer | Uint8Array): string {
     .replace(/=/g, '');
 }
 
-function fromBase64url(str: string): Uint8Array {
+function fromBase64url(str: string): Uint8Array<ArrayBuffer> {
   const pad = '='.repeat((4 - (str.length % 4)) % 4);
   const base64 = (str + pad).replace(/-/g, '+').replace(/_/g, '/');
-  return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  const binary = atob(base64);
+  const output = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    output[i] = binary.charCodeAt(i);
+  }
+  return output;
 }
 
 // ─── Salt ─────────────────────────────────────────────────────────────────────
@@ -50,9 +55,11 @@ export async function derivePasswordKey(
 export async function deriveRecoveryKey(phrase: string): Promise<CryptoKey> {
   const { mnemonicToSeed } = await import('@scure/bip39');
   const seed = await mnemonicToSeed(phrase);
+  const keyBytes = new Uint8Array(32);
+  keyBytes.set(seed.subarray(0, 32));
   return crypto.subtle.importKey(
     'raw',
-    seed.slice(0, 32),
+    keyBytes,
     { name: 'AES-KW' },
     false,
     ['wrapKey', 'unwrapKey']
