@@ -51,14 +51,14 @@ function LoginForm() {
       mountKey(masterKey);
       router.push('/home');
     } catch (err) {
-      if (err instanceof Error && err.message.includes('Invalid login')) {
-        setError('Incorrect email or password.');
+      const msg = err instanceof Error
+        ? err.message
+        : (err as { message?: string })?.message ?? '';
+      if (msg.toLowerCase().includes('invalid login') || msg.toLowerCase().includes('invalid credentials')) {
+        setError('no-account');
       } else if (err instanceof DOMException) {
         setError('Incorrect password — could not decrypt your account.');
       } else {
-        const msg = err instanceof Error
-          ? err.message
-          : (err as { message?: string })?.message ?? JSON.stringify(err);
         setError(msg || 'Something went wrong.');
       }
     } finally {
@@ -107,7 +107,14 @@ function LoginForm() {
             style={inputStyle} />
         </div>
 
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error === 'no-account' ? (
+          <p className="text-sm text-red-400">
+            No account found for that email.{' '}
+            <Link href="/signup" className="underline underline-offset-2 text-red-300">Create one instead?</Link>
+          </p>
+        ) : error ? (
+          <p className="text-sm text-red-400">{error}</p>
+        ) : null}
 
         <motion.button type="submit" whileTap={{ scale: 0.97 }} transition={{ duration: 0.1 }}
           disabled={loading}

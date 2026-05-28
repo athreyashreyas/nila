@@ -32,6 +32,7 @@ export default function CalendarPage() {
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
+  const [tappedDate, setTappedDate] = useState<string | null>(null);
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
@@ -93,13 +94,19 @@ export default function CalendarPage() {
           return (
             <button
               key={day}
+              onPointerDown={() => setTappedDate(iso)}
+              onPointerUp={() => setTappedDate(null)}
+              onPointerLeave={() => setTappedDate(null)}
+              onPointerCancel={() => setTappedDate(null)}
               onClick={() => router.push(`/journal/${iso}`)}
-              className="relative flex flex-col items-center justify-center aspect-square rounded-xl text-sm font-medium transition-all"
+              className="relative flex flex-col items-center justify-center aspect-square rounded-xl text-sm font-medium"
               style={{
                 background: phaseMeta ? `${phaseMeta.color}28` : 'var(--color-surface)',
                 color: isToday ? 'var(--color-accent)' : 'var(--color-foreground)',
                 fontWeight: isToday ? 700 : 500,
                 border: isToday ? '1.5px solid var(--color-accent)' : '1px solid var(--color-border)',
+                transform: tappedDate === iso ? 'scale(0.88)' : 'scale(1)',
+                transition: 'transform 0.08s ease',
               }}
             >
               {day}

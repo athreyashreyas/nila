@@ -29,8 +29,9 @@ const DISPLAY_SYMPTOMS = SYMPTOMS.slice(0, 8);
 
 export default function HomePage() {
   const { theme, setTheme } = useTheme();
-  const { logs, prediction, upsertLog } = useAppData();
+  const { cycles, logs, prediction, upsertLog, addCycle, updateCycle } = useAppData();
 
+  const openCycle = cycles.find(c => !c.payload.periodEnd) ?? null;
   const todayLog = logs.find((l) => l.payload.date === TODAY);
   const [mood, setMood] = useState<MoodLevel | null>(todayLog?.payload.mood ?? null);
   const [flow, setFlow] = useState<FlowIntensity>(todayLog?.payload.flow ?? 'none');
@@ -51,6 +52,16 @@ export default function HomePage() {
     );
   }
 
+  async function startPeriod() {
+    setSaving(true);
+    try {
+      await addCycle({ periodStart: TODAY, periodEnd: null, flowIntensity: 'medium', notes: '' });
+      setFlow('medium');
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function save() {
     if (!mood) return;
     setSaving(true);
@@ -60,13 +71,31 @@ export default function HomePage() {
         mood,
         energy: null,
         symptoms,
-        flow,
+        flow: openCycle ? flow : 'none',
         notes: todayLog?.payload.notes ?? '',
       });
+
+      // Auto-close: flow='none' + open cycle started ≥ 2 days ago
+      if (openCycle && flow === 'none') {
+        const daysDiff = Math.round(
+          (new Date().getTime() - new Date(openCycle.payload.periodStart).getTime()) / 86400000
+        );
+        if (daysDiff >= 2) {
+          const lastFlowLog = [...logs]
+            .filter(l => l.payload.date !== TODAY && l.payload.flow && l.payload.flow !== 'none')
+            .sort((a, b) => b.payload.date.localeCompare(a.payload.date))[0];
+          const periodEnd = lastFlowLog?.payload.date ?? openCycle.payload.periodStart;
+          await updateCycle(openCycle.id, { ...openCycle.payload, periodEnd });
+        }
+      }
     } finally {
       setSaving(false);
     }
   }
+
+  const periodDayCount = openCycle
+    ? Math.round((new Date().getTime() - new Date(openCycle.payload.periodStart).getTime()) / 86400000) + 1
+    : 0;
 
   const meta = PHASE_META[prediction.currentPhase];
   const today = new Date();
@@ -152,30 +181,51 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Flow */}
-      <div>
-        <p className="text-[11px] font-semibold tracking-widest uppercase mb-3"
-          style={{ color: 'var(--color-foreground-muted)' }}>
-          Flow
-        </p>
-        <div className="flex gap-1.5">
-          {FLOWS.map(({ value, label }) => (
-            <button
-              key={value}
-              onClick={() => setFlow(value)}
-              className="flex-1 py-2 rounded-[var(--radius-sm)] text-xs font-medium transition-all"
-              style={{
-                background: 'var(--color-surface)',
-                border: `1.5px solid ${flow === value ? 'var(--color-accent)' : 'transparent'}`,
-                opacity: flow !== value ? 0.55 : 1,
-                color: flow === value ? 'var(--color-accent)' : undefined,
-              }}
-            >
-              {label}
-            </button>
-          ))}
+      {/* Period / Flow */}
+      {openCycle ? (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[11px] font-semibold tracking-widest uppercase"
+              style={{ color: 'var(--color-foreground-muted)' }}>
+              Flow today
+            </p>
+            <span className="text-xs font-medium" style={{ color: PHASE_META.period.color }}>
+              Period day {periodDayCount}
+            </span>
+          </div>
+          <div className="flex gap-1.5">
+            {FLOWS.map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => setFlow(value)}
+                className="flex-1 py-2 rounded-[var(--radius-sm)] text-xs font-medium transition-all"
+                style={{
+                  background: 'var(--color-surface)',
+                  border: `1.5px solid ${flow === value ? 'var(--color-accent)' : 'transparent'}`,
+                  opacity: flow !== value ? 0.55 : 1,
+                  color: flow === value ? 'var(--color-accent)' : undefined,
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {flow === 'none' && periodDayCount >= 2 && (
+            <p className="text-xs mt-2" style={{ color: 'var(--color-foreground-muted)' }}>
+              Saving &apos;None&apos; will mark your period as ended.
+            </p>
+          )}
         </div>
-      </div>
+      ) : (
+        <button
+          onClick={startPeriod}
+          disabled={saving}
+          className="w-full py-3.5 rounded-[var(--radius)] text-sm font-semibold transition-opacity disabled:opacity-60 flex items-center justify-center gap-2"
+          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+        >
+          <span>🩸</span> My period started today
+        </button>
+      )}
 
       {/* Symptoms */}
       <div>
