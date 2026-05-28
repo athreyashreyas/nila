@@ -1,12 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
-import { useEncryption } from '@/lib/encryption/context';
 import { useTheme } from '@/lib/theme/context';
-import { useCycles } from '@/hooks/useCycles';
-import { useDailyLog } from '@/hooks/useDailyLog';
-import { usePrediction } from '@/hooks/usePrediction';
+import { useAppData } from '@/lib/data/context';
 import { PhaseRing } from '@/components/ui/PhaseRing';
 import { PHASE_META, SYMPTOMS } from '@/types/app';
 import type { MoodLevel, FlowIntensity } from '@/types/app';
@@ -29,28 +25,17 @@ const FLOWS: { value: FlowIntensity; label: string }[] = [
 ];
 
 const TODAY = toISODate(new Date());
-
 const DISPLAY_SYMPTOMS = SYMPTOMS.slice(0, 8);
 
 export default function HomePage() {
-  const { isUnlocked } = useEncryption();
   const { theme, setTheme } = useTheme();
-  const { cycles, fetchAll: fetchCycles } = useCycles();
-  const { logs, fetchAll: fetchLogs, upsertLog } = useDailyLog();
-  const prediction = usePrediction(cycles);
+  const { logs, prediction, upsertLog } = useAppData();
 
   const todayLog = logs.find((l) => l.payload.date === TODAY);
   const [mood, setMood] = useState<MoodLevel | null>(todayLog?.payload.mood ?? null);
   const [flow, setFlow] = useState<FlowIntensity>(todayLog?.payload.flow ?? 'none');
   const [symptoms, setSymptoms] = useState<string[]>(todayLog?.payload.symptoms ?? []);
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (isUnlocked) {
-      fetchCycles();
-      fetchLogs();
-    }
-  }, [isUnlocked, fetchCycles, fetchLogs]);
 
   useEffect(() => {
     if (todayLog) {

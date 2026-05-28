@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { createBrowserClient } from '@supabase/ssr';
 import { setupEncryption } from '@/lib/encryption/setup';
@@ -26,6 +27,7 @@ const inputStyle = {
 const btnStyle = { background: 'var(--color-accent)' };
 
 export default function SignupPage() {
+  const router = useRouter();
   const { mountKey } = useEncryption();
   const [step, setStep] = useState<Step>('form');
   const [email, setEmail] = useState('');
@@ -119,7 +121,7 @@ export default function SignupPage() {
         </label>
 
         <motion.button whileTap={{ scale: 0.97 }} transition={{ duration: 0.1 }}
-          onClick={() => setStep('email-check')} disabled={!confirmed}
+          onClick={() => router.replace('/onboarding')} disabled={!confirmed}
           className="w-full py-3 rounded-xl text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
           style={btnStyle}>
           Continue

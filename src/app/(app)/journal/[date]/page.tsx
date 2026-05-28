@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useEncryption } from '@/lib/encryption/context';
-import { useDailyLog } from '@/hooks/useDailyLog';
+import { useAppData } from '@/lib/data/context';
 import { SYMPTOMS } from '@/types/app';
 import type { MoodLevel, FlowIntensity } from '@/types/app';
 
@@ -26,8 +25,7 @@ const FLOWS: { value: FlowIntensity; label: string }[] = [
 export default function JournalDatePage() {
   const { date } = useParams<{ date: string }>();
   const router = useRouter();
-  const { isUnlocked } = useEncryption();
-  const { logs, fetchAll, upsertLog, deleteLog } = useDailyLog();
+  const { logs, upsertLog, deleteLog } = useAppData();
 
   const existing = logs.find((l) => l.payload.date === date);
 
@@ -37,10 +35,6 @@ export default function JournalDatePage() {
   const [notes, setNotes] = useState(existing?.payload.notes ?? '');
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-
-  useEffect(() => {
-    if (isUnlocked) fetchAll();
-  }, [isUnlocked, fetchAll]);
 
   useEffect(() => {
     if (existing) {
@@ -83,7 +77,6 @@ export default function JournalDatePage() {
 
   return (
     <div className="px-5 pt-4 pb-28 flex flex-col gap-5">
-      {/* Header */}
       <div className="flex items-center gap-3 pt-2">
         <button onClick={() => router.back()} className="text-xl" style={{ color: 'var(--color-accent)' }}>‹</button>
         <div>
@@ -97,7 +90,6 @@ export default function JournalDatePage() {
         )}
       </div>
 
-      {/* Mood */}
       <div>
         <p className="text-[11px] font-semibold tracking-widest uppercase mb-3" style={{ color: 'var(--color-foreground-muted)' }}>Mood</p>
         <div className="flex gap-2">
@@ -116,7 +108,6 @@ export default function JournalDatePage() {
         </div>
       </div>
 
-      {/* Flow */}
       <div>
         <p className="text-[11px] font-semibold tracking-widest uppercase mb-3" style={{ color: 'var(--color-foreground-muted)' }}>Flow</p>
         <div className="flex gap-1.5">
@@ -135,7 +126,6 @@ export default function JournalDatePage() {
         </div>
       </div>
 
-      {/* Symptoms */}
       <div>
         <p className="text-[11px] font-semibold tracking-widest uppercase mb-3" style={{ color: 'var(--color-foreground-muted)' }}>Symptoms</p>
         <div className="flex flex-wrap gap-2">
@@ -154,7 +144,6 @@ export default function JournalDatePage() {
         </div>
       </div>
 
-      {/* Notes */}
       <div>
         <p className="text-[11px] font-semibold tracking-widest uppercase mb-3" style={{ color: 'var(--color-foreground-muted)' }}>Notes</p>
         <textarea
@@ -171,7 +160,6 @@ export default function JournalDatePage() {
         />
       </div>
 
-      {/* Save */}
       <button onClick={handleSave} disabled={!mood || saving}
         className="w-full py-3.5 rounded-[var(--radius)] text-sm font-semibold disabled:opacity-40"
         style={{ background: 'var(--color-accent)', color: '#fff' }}>

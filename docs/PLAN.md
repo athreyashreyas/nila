@@ -1,7 +1,7 @@
-# Lune — Period Tracking PWA: Master Plan
+# Nila — Period Tracking PWA: Master Plan
 
 ## Context
-Lune is a privacy-first menstrual cycle tracking PWA for iPhone and iPad. ~1-2 users. Goals: accurate 4-phase prediction, true zero-knowledge E2EE (server sees NO health data including dates), empathetic journal-first UI, fast iteration, zero-cost MVP. Built with Next.js 14 + Supabase. Plan committed to repo so it survives branch wipes or full rebuilds.
+Nila is a privacy-first menstrual cycle tracking PWA for iPhone and iPad. ~1-2 users. Goals: accurate 4-phase prediction, true zero-knowledge E2EE (server sees NO health data including dates), empathetic journal-first UI, fast iteration, zero-cost MVP. Built with Next.js 14 + Supabase. Plan committed to repo so it survives branch wipes or full rebuilds.
 
 ---
 
@@ -167,7 +167,7 @@ During the build session, any visual design decision gets an **interactive HTML 
 
 **First mockup (home/journal screen):** Phase indicator ring, today's check-in, mood/symptom quick-log, color palette variants (warm mauve, deep indigo, soft sage, earthy terracotta), light + dark mode. This anchors all subsequent color/type decisions.
 
-**App aesthetic:** Lune (French for moon). Warm, tactile, non-clinical. French-inspired minimalism. Subtly lunar — no aggressive red or stark medical feel.
+**App aesthetic:** Nila (Tamil for moon). Warm, tactile, non-clinical. Tamil-inspired minimalism. Subtly lunar — no aggressive red or stark medical feel.
 
 ---
 
@@ -419,7 +419,7 @@ If the MVP branch is scrapped, these files in git history give you the full cont
 ## CLAUDE.md (Created in Step 1, Never Overridden)
 
 ```markdown
-# Lune
+# Nila
 
 Period tracking PWA. Next.js 14 App Router + TypeScript + Tailwind CSS + Supabase + client-side E2EE.
 Target: iPhone + iPad PWA (iOS 16.4+). ~2 users. Deployed on Vercel.

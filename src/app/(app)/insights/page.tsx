@@ -1,9 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useEncryption } from '@/lib/encryption/context';
-import { useCycles } from '@/hooks/useCycles';
-import { usePrediction } from '@/hooks/usePrediction';
+import { useAppData } from '@/lib/data/context';
 import { PHASE_META } from '@/types/app';
 import { daysBetween, fromISODate } from '@/lib/utils/dates';
 
@@ -11,15 +8,8 @@ const CHART_H = 120;
 const CHART_W = 300;
 
 export default function InsightsPage() {
-  const { isUnlocked } = useEncryption();
-  const { cycles, fetchAll } = useCycles();
-  const prediction = usePrediction(cycles);
+  const { cycles, prediction } = useAppData();
 
-  useEffect(() => {
-    if (isUnlocked) fetchAll();
-  }, [isUnlocked, fetchAll]);
-
-  // Compute cycle lengths from consecutive periodStarts
   const sorted = [...cycles].sort((a, b) => a.payload.periodStart.localeCompare(b.payload.periodStart));
   const lengths: number[] = [];
   for (let i = 1; i < sorted.length; i++) {
@@ -31,7 +21,6 @@ export default function InsightsPage() {
   const maxLen = lengths.length > 0 ? Math.max(...lengths) : 32;
   const range = Math.max(maxLen - minLen, 4);
 
-  // SVG path
   let path = '';
   let area = '';
   if (lengths.length >= 2) {
@@ -50,7 +39,6 @@ export default function InsightsPage() {
     <div className="px-5 pt-4 pb-28">
       <h1 className="text-2xl font-bold pt-2 mb-5">Insights</h1>
 
-      {/* Stats row */}
       <div className="grid grid-cols-3 gap-3 mb-5">
         {[
           { label: 'Avg cycle', value: `${avg}d`, sub: prediction.confidence + ' confidence' },
@@ -66,7 +54,6 @@ export default function InsightsPage() {
         ))}
       </div>
 
-      {/* Cycle length chart */}
       <div className="rounded-[var(--radius)] p-4 mb-5"
         style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
         <h2 className="text-xs font-semibold mb-3 tracking-widest uppercase" style={{ color: 'var(--color-foreground-muted)' }}>
@@ -76,11 +63,8 @@ export default function InsightsPage() {
           <div className="text-sm opacity-40 text-center py-8">Log 2+ cycles to see your chart.</div>
         ) : (
           <svg viewBox={`0 0 ${CHART_W} ${CHART_H}`} className="w-full" style={{ height: CHART_H }}>
-            {/* Area fill */}
             <path d={area} fill="var(--color-accent)" fillOpacity={0.1} />
-            {/* Line */}
             <path d={path} fill="none" stroke="var(--color-accent)" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-            {/* Dots */}
             {lengths.map((l, i) => {
               const x = (i / (lengths.length - 1)) * CHART_W;
               const y = CHART_H - ((l - minLen) / range) * CHART_H;
@@ -96,7 +80,6 @@ export default function InsightsPage() {
         )}
       </div>
 
-      {/* Phase breakdown */}
       <div className="rounded-[var(--radius)] p-4"
         style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
         <h2 className="text-xs font-semibold mb-3 tracking-widest uppercase" style={{ color: 'var(--color-foreground-muted)' }}>

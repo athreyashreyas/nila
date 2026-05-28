@@ -1,11 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useEncryption } from '@/lib/encryption/context';
-import { useCycles } from '@/hooks/useCycles';
-import { useDailyLog } from '@/hooks/useDailyLog';
-import { usePrediction } from '@/hooks/usePrediction';
+import { useAppData } from '@/lib/data/context';
 import { PHASE_META } from '@/types/app';
 import { getDaysInMonth, getFirstDayOfMonth, toISODate, addDays } from '@/lib/utils/dates';
 import type { CyclePhase, PredictionResult } from '@/types/app';
@@ -13,13 +10,9 @@ import type { CyclePhase, PredictionResult } from '@/types/app';
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 function getPhaseForDate(date: Date, prediction: PredictionResult): CyclePhase | null {
-  // Rough phase coloring: use the prediction anchored from last period
-  // We derive phase per-day by comparing to prediction boundaries
   const today = new Date();
   const diff = Math.round((date.getTime() - today.getTime()) / 86400000);
   const futureDays = prediction.daysUntilNextPeriod;
-
-  // Past: estimate phase backwards from today's phase
   const dayInCycle = ((prediction.estimatedCycleLength - futureDays) + diff) % prediction.estimatedCycleLength;
   if (dayInCycle < 0) return null;
 
@@ -34,37 +27,27 @@ function getPhaseForDate(date: Date, prediction: PredictionResult): CyclePhase |
 
 export default function CalendarPage() {
   const router = useRouter();
-  const { isUnlocked } = useEncryption();
-  const { cycles, fetchAll: fetchCycles } = useCycles();
-  const { logs, fetchAll: fetchLogs } = useDailyLog();
-  const prediction = usePrediction(cycles);
+  const { cycles, logs, prediction } = useAppData();
 
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
 
-  useEffect(() => {
-    if (isUnlocked) { fetchCycles(); fetchLogs(); }
-  }, [isUnlocked, fetchCycles, fetchLogs]);
-
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
   const todayISO = toISODate(now);
 
-  // Build set of dates with period logs
   const periodDates = new Set(
-    cycles
-      .flatMap((c) => {
-        const start = new Date(c.payload.periodStart);
-        const end = c.payload.periodEnd ? new Date(c.payload.periodEnd) : start;
-        const days: string[] = [];
-        let d = start;
-        while (d <= end) { days.push(toISODate(d)); d = addDays(d, 1); }
-        return days;
-      })
+    cycles.flatMap((c) => {
+      const start = new Date(c.payload.periodStart);
+      const end = c.payload.periodEnd ? new Date(c.payload.periodEnd) : start;
+      const days: string[] = [];
+      let d = start;
+      while (d <= end) { days.push(toISODate(d)); d = addDays(d, 1); }
+      return days;
+    })
   );
 
-  // Dates with daily log entries
   const logDates = new Set(logs.map((l) => l.payload.date));
 
   function prevMonth() {
@@ -80,7 +63,6 @@ export default function CalendarPage() {
 
   return (
     <div className="px-5 pt-4 pb-28">
-      {/* Header */}
       <div className="flex items-center justify-between mb-5 pt-2">
         <h1 className="text-2xl font-bold">Calendar</h1>
         <div className="flex items-center gap-3">
@@ -90,18 +72,14 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      {/* Weekday headers */}
       <div className="grid grid-cols-7 mb-1">
         {WEEKDAYS.map(d => (
           <div key={d} className="text-center text-[10px] font-semibold py-1" style={{ color: 'var(--color-foreground-muted)' }}>{d}</div>
         ))}
       </div>
 
-      {/* Days grid */}
       <div className="grid grid-cols-7 gap-1">
-        {/* Leading empty cells */}
         {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
-
         {Array.from({ length: daysInMonth }).map((_, i) => {
           const day = i + 1;
           const date = new Date(year, month, day);
@@ -125,7 +103,6 @@ export default function CalendarPage() {
               }}
             >
               {day}
-              {/* Dots */}
               <div className="flex gap-0.5 mt-0.5 h-1.5">
                 {hasPeriod && <div className="w-1 h-1 rounded-full" style={{ background: PHASE_META.period.color }} />}
                 {hasLog && !hasPeriod && <div className="w-1 h-1 rounded-full" style={{ background: 'var(--color-accent)' }} />}
@@ -135,7 +112,6 @@ export default function CalendarPage() {
         })}
       </div>
 
-      {/* Legend */}
       <div className="flex flex-wrap gap-3 mt-6 px-1">
         {(['period', 'follicular', 'ovulation', 'luteal'] as CyclePhase[]).map(p => (
           <div key={p} className="flex items-center gap-1.5">

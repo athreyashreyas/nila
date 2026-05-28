@@ -1,4 +1,4 @@
-# Lune — E2EE Architecture Reference
+# Nila — E2EE Architecture Reference
 
 ## Key Hierarchy
 

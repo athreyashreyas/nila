@@ -35,7 +35,12 @@ function confidenceLevel(cycleCount: number): ConfidenceLevel {
   return 'low';
 }
 
-export function predictCycle(records: CycleRecord[], today: Date = new Date()): PredictionResult {
+export function predictCycle(
+  records: CycleRecord[],
+  today: Date = new Date(),
+  defaultCycleLen = DEFAULT_CYCLE_LENGTH,
+  defaultPeriodLen = DEFAULT_PERIOD_LENGTH,
+): PredictionResult {
   const todayNorm = startOfDay(today);
 
   // Sort chronologically (oldest first, so weighted mean favours recent)
@@ -62,11 +67,11 @@ export function predictCycle(records: CycleRecord[], today: Date = new Date()): 
 
   const avgCycleLength = cycleLengths.length > 0
     ? Math.round(weightedMean(cycleLengths))
-    : DEFAULT_CYCLE_LENGTH;
+    : defaultCycleLen;
 
   const avgPeriodLength = periodLengths.length > 0
     ? Math.round(weightedMean(periodLengths))
-    : DEFAULT_PERIOD_LENGTH;
+    : defaultPeriodLen;
 
   const cycleStdDev = cycleLengths.length >= 2
     ? stdDev(cycleLengths, weightedMean(cycleLengths))

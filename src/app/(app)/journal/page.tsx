@@ -1,9 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useEncryption } from '@/lib/encryption/context';
-import { useDailyLog } from '@/hooks/useDailyLog';
+import { useAppData } from '@/lib/data/context';
 import { toISODate } from '@/lib/utils/dates';
 
 const MOOD_EMOJI: Record<string, string> = {
@@ -12,13 +10,7 @@ const MOOD_EMOJI: Record<string, string> = {
 
 export default function JournalPage() {
   const router = useRouter();
-  const { isUnlocked } = useEncryption();
-  const { logs, fetchAll } = useDailyLog();
-
-  useEffect(() => {
-    if (isUnlocked) fetchAll();
-  }, [isUnlocked, fetchAll]);
-
+  const { logs } = useAppData();
   const todayISO = toISODate(new Date());
 
   return (
