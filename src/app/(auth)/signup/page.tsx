@@ -1,15 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
 import { setupEncryption } from '@/lib/encryption/setup';
+import { useEncryption } from '@/lib/encryption/context';
+import { createProfile } from '@/app/actions/createProfile';
 
-type Step = 'form' | 'phrase';
+type Step = 'form' | 'phrase' | 'email-check';
 
 export default function SignupPage() {
-  const router = useRouter();
+  const { mountKey } = useEncryption();
   const [step, setStep] = useState<Step>('form');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,21 +34,20 @@ export default function SignupPage() {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       );
 
-      const { profileKeyData, recoveryPhrase: phrase } = await setupEncryption(password);
+      const { profileKeyData, recoveryPhrase: phrase, masterKey } = await setupEncryption(password);
 
       const { data, error: authError } = await supabase.auth.signUp({ email, password });
       if (authError) throw authError;
       if (!data.user) throw new Error('No user returned from sign up.');
 
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: data.user.id,
+      await createProfile(data.user.id, {
         key_salt: profileKeyData.key_salt,
         wrapped_key: profileKeyData.wrapped_key,
         recovery_wrapped_key: profileKeyData.recovery_wrapped_key ?? null,
         pbkdf2_iterations: profileKeyData.pbkdf2_iterations,
       });
-      if (profileError) throw profileError;
 
+      mountKey(masterKey);
       setRecoveryPhrase(phrase);
       setStep('phrase');
     } catch (err) {
@@ -55,6 +55,22 @@ export default function SignupPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (step === 'email-check') {
+    return (
+      <div className="w-full max-w-sm text-center">
+        <div className="text-4xl mb-4">✉️</div>
+        <h1 className="text-xl font-medium mb-2">Check your inbox</h1>
+        <p className="text-sm opacity-60 mb-6 leading-relaxed">
+          We sent a confirmation link to <span className="font-medium opacity-100">{email}</span>.
+          Click it to verify your account, then sign in.
+        </p>
+        <p className="text-xs opacity-40">
+          After confirming, you&apos;ll be taken to the sign-in page. Your data is ready whenever you are.
+        </p>
+      </div>
+    );
   }
 
   if (step === 'phrase') {
@@ -86,11 +102,11 @@ export default function SignupPage() {
         </label>
 
         <button
-          onClick={() => router.push('/home')}
+          onClick={() => setStep('email-check')}
           disabled={!confirmed}
           className="w-full py-3 rounded-xl bg-[--color-accent] text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          Continue to Nila
+          Continue
         </button>
       </div>
     );

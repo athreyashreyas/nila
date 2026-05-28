@@ -1,14 +1,17 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createBrowserClient } from '@supabase/ssr';
 import { derivePasswordKey, unwrapMasterKey } from '@/lib/encryption/core';
 import { useEncryption } from '@/lib/encryption/context';
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const confirmed = searchParams.get('confirmed') === '1';
+  const confirmError = searchParams.get('error') === 'confirmation-failed';
   const { mountKey } = useEncryption();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -55,6 +58,18 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-sm">
+      {confirmed && (
+        <div className="mb-6 px-4 py-3 rounded-xl text-sm text-center"
+          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-accent)', color: 'var(--color-accent)' }}>
+          Email confirmed — sign in to access your data.
+        </div>
+      )}
+      {confirmError && (
+        <div className="mb-6 px-4 py-3 rounded-xl text-sm text-center text-red-400"
+          style={{ background: 'var(--color-surface)', border: '1px solid #f87171' }}>
+          Confirmation link expired or invalid. Try signing up again.
+        </div>
+      )}
       <h1 className="text-xl font-medium mb-1">Welcome back</h1>
       <p className="text-sm opacity-60 mb-8">Sign in to access your encrypted data.</p>
 
@@ -104,5 +119,13 @@ export default function LoginPage() {
         <Link href="/signup" className="opacity-100 underline underline-offset-2">Create one</Link>
       </p>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginForm />
+    </Suspense>
   );
 }
