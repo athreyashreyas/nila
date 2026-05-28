@@ -101,12 +101,23 @@ export default function HomePage() {
   const today = new Date();
   const dateStr = today.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
+  const userName = (() => {
+    try {
+      const prefs = JSON.parse(localStorage.getItem('nila-prefs') ?? '{}');
+      return prefs.name as string | null ?? null;
+    } catch { return null; }
+  })();
+
+  const hour = today.getHours();
+  const timeGreeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+  const greeting = userName ? `${timeGreeting}, ${userName}` : 'Nila';
+
   return (
     <div className="px-5 pt-4 pb-28 flex flex-col gap-5">
       {/* Header */}
       <div className="flex items-center justify-between pt-2">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Nila</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{greeting}</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--color-foreground-muted)' }}>{dateStr}</p>
         </div>
         <button

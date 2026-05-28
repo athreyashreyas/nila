@@ -30,6 +30,7 @@ const fade = {
 export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
+  const [name, setName] = useState('');
   const [cycleLength, setCycleLength] = useState<number | null>(null);
   const [periodLength, setPeriodLength] = useState<number | null>(null);
   const [lastPeriodDate, setLastPeriodDate] = useState('');
@@ -43,6 +44,7 @@ export default function OnboardingPage() {
   function finish(dateVal: string | null) {
     try {
       localStorage.setItem('nila-prefs', JSON.stringify({
+        name: name.trim() || null,
         cycleLength: cycleLength ?? 28,
         periodLength: periodLength ?? 5,
         lastPeriodDate: dateVal || null,
@@ -53,6 +55,7 @@ export default function OnboardingPage() {
   }
 
   const today = new Date().toISOString().slice(0, 10);
+  const TOTAL_STEPS = 4;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6"
@@ -66,13 +69,13 @@ export default function OnboardingPage() {
             Welcome to Nila
           </h1>
           <p className="text-sm mt-1.5" style={{ color: 'var(--color-foreground-muted)' }}>
-            Three quick questions to personalise your experience.
+            {step === 1 ? 'Let\'s get to know you.' : 'A few quick questions to personalise your experience.'}
           </p>
         </div>
 
         {/* Progress */}
         <div className="flex gap-1.5 mb-10 justify-center">
-          {[1, 2, 3].map((s) => (
+          {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map((s) => (
             <div key={s} className="h-1 rounded-full transition-all duration-300"
               style={{
                 width: s === step ? '28px' : '8px',
@@ -83,7 +86,48 @@ export default function OnboardingPage() {
 
         <AnimatePresence mode="wait">
           {step === 1 && (
-            <motion.div key="step1" {...fade}>
+            <motion.div key="step1" {...fade} className="flex flex-col gap-5">
+              <div>
+                <h2 className="text-lg font-semibold mb-1.5" style={{ color: 'var(--color-foreground)' }}>
+                  What should we call you?
+                </h2>
+                <p className="text-sm" style={{ color: 'var(--color-foreground-muted)' }}>
+                  We&apos;ll use this to personalise your daily greeting.
+                </p>
+              </div>
+              <input
+                type="text"
+                autoFocus
+                autoComplete="given-name"
+                placeholder="Your first name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && name.trim()) setStep(2); }}
+                className="w-full px-4 py-3 rounded-2xl text-sm outline-none"
+                style={{
+                  background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)',
+                  color: 'var(--color-foreground)',
+                }}
+              />
+              <button
+                onClick={() => setStep(2)}
+                disabled={!name.trim()}
+                className="w-full py-3.5 rounded-2xl text-sm font-semibold transition-all active:scale-95 disabled:opacity-40"
+                style={{ background: 'var(--color-accent)', color: '#fff' }}
+              >
+                Continue
+              </button>
+              <button onClick={() => setStep(2)}
+                className="text-sm text-center py-1"
+                style={{ color: 'var(--color-foreground-muted)', opacity: 0.5 }}>
+                Skip
+              </button>
+            </motion.div>
+          )}
+
+          {step === 2 && (
+            <motion.div key="step2" {...fade}>
               <h2 className="text-lg font-semibold mb-1.5" style={{ color: 'var(--color-foreground)' }}>
                 How long is your cycle?
               </h2>
@@ -93,7 +137,7 @@ export default function OnboardingPage() {
               <div className="grid grid-cols-2 gap-2 mb-4">
                 {CYCLE_OPTIONS.map((opt) => (
                   <button key={opt.label}
-                    onClick={() => { setCycleLength(opt.value); setStep(2); }}
+                    onClick={() => { setCycleLength(opt.value); setStep(3); }}
                     className="py-3.5 rounded-2xl text-sm font-medium transition-all active:scale-95"
                     style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-foreground)' }}
                   >
@@ -101,7 +145,7 @@ export default function OnboardingPage() {
                   </button>
                 ))}
               </div>
-              <button onClick={() => { setCycleLength(28); setStep(2); }}
+              <button onClick={() => { setCycleLength(28); setStep(3); }}
                 className="w-full py-3 text-sm transition-all"
                 style={{ color: 'var(--color-foreground-muted)' }}>
                 I don't know — use default
@@ -109,8 +153,8 @@ export default function OnboardingPage() {
             </motion.div>
           )}
 
-          {step === 2 && (
-            <motion.div key="step2" {...fade}>
+          {step === 3 && (
+            <motion.div key="step3" {...fade}>
               <h2 className="text-lg font-semibold mb-1.5" style={{ color: 'var(--color-foreground)' }}>
                 How long does your period last?
               </h2>
@@ -120,7 +164,7 @@ export default function OnboardingPage() {
               <div className="grid grid-cols-2 gap-2 mb-4">
                 {PERIOD_OPTIONS.map((opt) => (
                   <button key={opt.label}
-                    onClick={() => { setPeriodLength(opt.value); setStep(3); }}
+                    onClick={() => { setPeriodLength(opt.value); setStep(4); }}
                     className="py-3.5 rounded-2xl text-sm font-medium transition-all active:scale-95"
                     style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-foreground)' }}
                   >
@@ -128,7 +172,7 @@ export default function OnboardingPage() {
                   </button>
                 ))}
               </div>
-              <button onClick={() => { setPeriodLength(5); setStep(3); }}
+              <button onClick={() => { setPeriodLength(5); setStep(4); }}
                 className="w-full py-3 text-sm transition-all"
                 style={{ color: 'var(--color-foreground-muted)' }}>
                 I don't know — use default
@@ -136,8 +180,8 @@ export default function OnboardingPage() {
             </motion.div>
           )}
 
-          {step === 3 && (
-            <motion.div key="step3" {...fade} className="flex flex-col gap-5">
+          {step === 4 && (
+            <motion.div key="step4" {...fade} className="flex flex-col gap-5">
               <div>
                 <h2 className="text-lg font-semibold mb-1.5" style={{ color: 'var(--color-foreground)' }}>
                   When did your last period start?
