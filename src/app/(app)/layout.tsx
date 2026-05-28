@@ -21,17 +21,13 @@ const QUOTES = [
   'Good things take just a moment.',
 ];
 
-function DataGate({ children }: { children: React.ReactNode }) {
-  const { isReady } = useAppData();
+function LoadingScreen() {
   const [quoteIdx, setQuoteIdx] = useState(() => Math.floor(Math.random() * QUOTES.length));
 
   useEffect(() => {
-    if (isReady) return;
     const id = setInterval(() => setQuoteIdx(i => (i + 1) % QUOTES.length), 2800);
     return () => clearInterval(id);
-  }, [isReady]);
-
-  if (isReady) return <>{children}</>;
+  }, []);
 
   return (
     <div
@@ -65,6 +61,12 @@ function DataGate({ children }: { children: React.ReactNode }) {
   );
 }
 
+function DataGate({ children }: { children: React.ReactNode }) {
+  const { isReady } = useAppData();
+  if (isReady) return <>{children}</>;
+  return <LoadingScreen />;
+}
+
 const TAB_ROUTES = ['/home', '/calendar', '/insights', '/settings', '/journal'];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -80,27 +82,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       const key = await loadKey();
       if (key) {
         mountKey(key);
-        // Check onboarding flag — redirect if this user hasn't gone through it yet
         try {
           if (!localStorage.getItem('nila-onboarded')) {
             router.replace('/onboarding');
-            return; // keep checking=true — blank screen while navigating
+            return;
           }
         } catch {}
       }
-    } catch {
-      // IndexedDB unavailable — fall through to password form
-    }
+    } catch {}
     setChecking(false);
   }, [mountKey, router]);
 
   useEffect(() => { tryRestoreKey(); }, [tryRestoreKey]);
 
-  // Prefetch all tabs once unlocked so first switch is instant
   useEffect(() => {
-    if (isUnlocked) {
-      TAB_ROUTES.forEach((route) => router.prefetch(route));
-    }
+    if (isUnlocked) TAB_ROUTES.forEach(route => router.prefetch(route));
   }, [isUnlocked, router]);
 
   async function handleUnlock(e: React.FormEvent) {
@@ -127,7 +123,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       await saveKey(masterKey);
       mountKey(masterKey);
 
-      // Check onboarding after manual unlock too
       try {
         if (!localStorage.getItem('nila-onboarded')) {
           router.replace('/onboarding');
@@ -145,9 +140,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }
 
-  if (checking) {
-    return <div className="min-h-screen" style={{ background: 'var(--color-background)' }} />;
-  }
+  // Show loading screen immediately — no blank flash during IDB key check
+  if (checking) return <LoadingScreen />;
 
   if (!isUnlocked) {
     return (
@@ -172,12 +166,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-foreground)' }}
             />
             {error && <p className="text-sm text-red-400">{error}</p>}
-            <button
-              type="submit"
-              disabled={loading || !password}
+            <button type="submit" disabled={loading || !password}
               className="w-full py-3 rounded-xl text-white text-sm font-medium disabled:opacity-60"
-              style={{ background: 'var(--color-accent)' }}
-            >
+              style={{ background: 'var(--color-accent)' }}>
               {loading ? 'Unlocking…' : 'Unlock'}
             </button>
           </form>
