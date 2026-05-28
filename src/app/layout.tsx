@@ -54,14 +54,13 @@ export default function RootLayout({
         {/* Anti-FOUC: apply stored theme before React hydrates */}
         <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('nila-theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');else if(t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}` }} />
         {/* Favicon — SVG, swapped by ThemeProvider when theme changes */}
-        <link rel="icon" href="/icons/icon-dark.svg" data-theme-icon="true" />
-        {/* Apple touch icons — default dark; ThemeProvider updates href to match current theme
-            so whatever is cached at "Add to Home Screen" time matches the user's theme.
-            Note: iOS cannot dynamically update an already-added icon. */}
-        <link rel="apple-touch-icon" href="/icons/icon-dark.svg" data-theme-icon="true" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-dark.svg" data-theme-icon="true" />
-        <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-dark.svg" data-theme-icon="true" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-dark.svg" data-theme-icon="true" />
+        <link rel="icon" href="/icons/icon-dark.svg" data-theme-icon="svg" />
+        {/* Apple touch icons — PNG, ThemeProvider swaps to match current theme.
+            iOS caches at "Add to Home Screen" time so theme at that moment is used. */}
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon-dark.png" data-theme-icon="png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-touch-icon-dark.png" data-theme-icon="png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/icons/apple-touch-icon-dark.png" data-theme-icon="png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-dark.png" data-theme-icon="png" />
         {/* iOS splash screens — portrait */}
         <link
           rel="apple-touch-startup-image"

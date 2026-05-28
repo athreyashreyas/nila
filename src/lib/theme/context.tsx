@@ -11,6 +11,15 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue>({ theme: 'system', setTheme: () => {} });
 
+function applyIcons(resolved: 'light' | 'dark') {
+  document.querySelectorAll<HTMLLinkElement>('link[data-theme-icon="svg"]').forEach(el => {
+    el.href = resolved === 'dark' ? '/icons/icon-dark.svg' : '/icons/icon-light.svg';
+  });
+  document.querySelectorAll<HTMLLinkElement>('link[data-theme-icon="png"]').forEach(el => {
+    el.href = resolved === 'dark' ? '/icons/apple-touch-icon-dark.png' : '/icons/apple-touch-icon-light.png';
+  });
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>('system');
 
@@ -19,14 +28,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       const stored = (localStorage.getItem('nila-theme') ?? 'system') as ThemeMode;
       const valid = stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
       setThemeState(valid);
-      // Sync favicon to stored preference on first load
+      // Sync icons to stored preference on first load
       const resolved = valid === 'system'
         ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
         : valid;
-      const iconHref = resolved === 'dark' ? '/icons/icon-dark.svg' : '/icons/icon-light.svg';
-      document.querySelectorAll<HTMLLinkElement>('link[data-theme-icon]').forEach(el => {
-        el.href = iconHref;
-      });
+      applyIcons(resolved);
     } catch {}
   }, []);
 
@@ -39,15 +45,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     else if (t === 'light') html.setAttribute('data-theme', 'light');
     else                    html.removeAttribute('data-theme');
 
-    // Update favicon + apple-touch-icon so the correct icon is cached
-    // if the user adds to home screen after changing theme
+    // Update icons so correct version is cached if user adds to home screen after changing theme
     const resolved = t === 'system'
       ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
       : t;
-    const iconHref = resolved === 'dark' ? '/icons/icon-dark.svg' : '/icons/icon-light.svg';
-    document.querySelectorAll<HTMLLinkElement>('link[data-theme-icon]').forEach(el => {
-      el.href = iconHref;
-    });
+    applyIcons(resolved);
   }
 
   return (
