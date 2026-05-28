@@ -50,9 +50,9 @@ export default function SignupPage() {
       if (authError) throw authError;
 
       if (!data.user) {
-        // Supabase silently returns null when email is already registered
-        setStep('email-check');
-        return;
+        // Supabase silently returns null when email is already registered.
+        // Show a clear message rather than the email-check screen (which implies success).
+        throw new Error('This email is already registered. Check your inbox for a confirmation link, or sign in if already confirmed.');
       }
 
       await createProfile(data.user.id, {

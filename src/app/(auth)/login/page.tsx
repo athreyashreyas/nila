@@ -54,7 +54,10 @@ function LoginForm() {
       } else if (err instanceof DOMException) {
         setError('Incorrect password — could not decrypt your account.');
       } else {
-        setError(err instanceof Error ? err.message : 'Something went wrong.');
+        const msg = err instanceof Error
+          ? err.message
+          : (err as { message?: string })?.message ?? JSON.stringify(err);
+        setError(msg || 'Something went wrong.');
       }
     } finally {
       setLoading(false);
