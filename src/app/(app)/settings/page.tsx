@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import { useEncryption } from '@/lib/encryption/context';
+import { useTheme, type ThemeMode } from '@/lib/theme/context';
 import { derivePasswordKey, wrapMasterKey, generateSalt } from '@/lib/encryption/core';
 import { clearKey as clearStoredKey } from '@/lib/encryption/keyStore';
 import { useCycles } from '@/hooks/useCycles';
@@ -20,6 +21,7 @@ function supabase() {
 export default function SettingsPage() {
   const router = useRouter();
   const { getMasterKey, clearKey } = useEncryption();
+  const { theme, setTheme } = useTheme();
   const { cycles } = useCycles();
   const { logs } = useDailyLog();
 
@@ -140,6 +142,26 @@ export default function SettingsPage() {
       <h1 className="text-2xl font-bold pt-2 mb-5">Settings</h1>
 
       <div className="flex flex-col gap-3">
+        <div>
+          <p className="text-[11px] font-semibold tracking-widest uppercase mb-2 px-1" style={{ color: 'var(--color-foreground-muted)' }}>Appearance</p>
+          <div className="flex gap-2">
+            {(['light', 'dark', 'system'] as ThemeMode[]).map((t) => (
+              <button
+                key={t}
+                onClick={() => setTheme(t)}
+                className="flex-1 py-3 rounded-[var(--radius-sm)] text-sm font-medium capitalize transition-all"
+                style={{
+                  background: theme === t ? 'var(--color-accent-soft)' : 'var(--color-surface)',
+                  border: `1.5px solid ${theme === t ? 'var(--color-accent)' : 'transparent'}`,
+                  color: theme === t ? 'var(--color-accent)' : 'var(--color-foreground)',
+                }}
+              >
+                {t === 'system' ? 'Auto' : t === 'light' ? '☀️ Light' : '🌙 Dark'}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <div>
           <p className="text-[11px] font-semibold tracking-widest uppercase mb-2 px-1" style={{ color: 'var(--color-foreground-muted)' }}>Account</p>
           <div className="flex flex-col gap-2">

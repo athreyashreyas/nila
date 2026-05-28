@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Nila — Logo Options</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, sans-serif; background: #0e0e12; color: #e8eaff; padding: 36px 28px 60px; }
+  h1  { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  p   { font-size: 13px; color: #4b5563; margin-bottom: 36px; }
+
+  .section { margin-bottom: 48px; }
+  .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #374151; margin-bottom: 20px; }
+
+  .row { display: flex; gap: 24px; flex-wrap: wrap; }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 10px; cursor: pointer; }
+  .col:hover .icon { outline-color: #828ef2; }
+
+  .icon { border-radius: 22%; overflow: hidden; box-shadow: 0 6px 24px rgba(0,0,0,0.5); outline: 2px solid transparent; outline-offset: 3px; transition: outline-color 0.15s; }
+
+  .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #4b5563; text-align: center; max-width: 100px; }
+  .sub   { font-size: 11px; color: #374151; text-align: center; max-width: 100px; line-height: 1.5; }
+
+  .pair { display: flex; gap: 8px; align-items: center; }
+  .pair-label { font-size: 10px; color: #374151; writing-mode: vertical-rl; transform: rotate(180deg); }
+</style>
+</head>
+<body>
+
+<h1>Nila — Logo Options</h1>
+<p>Lotus (fixed) · Moon concepts · light + dark · click to inspect</p>
+
+<!-- ── LOTUS FIXED ───────────────────────────────────────────── -->
+<div class="section">
+  <div class="section-title">Lotus — solid petals, bg stroke separator (no opacity artifacts)</div>
+  <div class="row">
+
+    <!-- Light -->
+    <div class="col">
+      <div class="label">Light</div>
+      <div class="pair">
+        <div class="icon" style="width:100px;height:100px;">
+          <svg viewBox="0 0 100 100" width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#f0f7f3"/>
+            <!-- Outer petals first (behind) — solid accent, bg stroke separates them -->
+            <ellipse cx="50" cy="38" rx="10" ry="18" fill="#16a34a" stroke="#f0f7f3" stroke-width="0.8" transform="rotate(-80 50 50)"/>
+            <ellipse cx="50" cy="38" rx="10" ry="18" fill="#16a34a" stroke="#f0f7f3" stroke-width="0.8" transform="rotate(80 50 50)"/>
+            <ellipse cx="50" cy="38" rx="10" ry="18" fill="#16a34a" stroke="#f0f7f3" stroke-width="0.8" transform="rotate(-40 50 50)"/>
+            <ellipse cx="50" cy="38" rx="10" ry="18" fill="#16a34a" stroke="#f0f7f3" stroke-width="0.8" transform="rotate(40 50 50)"/>
+            <!-- Inner petals -->
+            <ellipse cx="50" cy="36" rx="8" ry="16" fill="#16a34a" stroke="#f0f7f3" stroke-width="0.8" transform="rotate(-20 50 50)"/>
+            <ellipse cx="50" cy="36" rx="8" ry="16" fill="#16a34a" stroke="#f0f7f3" stroke-width="0.8" transform="rotate(20 50 50)"/>
+            <!-- Center petal on top -->
+            <ellipse cx="50" cy="36" rx="8" ry="16" fill="#16a34a" stroke="#f0f7f3" stroke-width="0.8"/>
+            <!-- Stem -->
+            <line x1="50" y1="58" x2="50" y2="70" stroke="#16a34a" stroke-width="2" stroke-linecap="round" opacity="0.45"/>
+            <path d="M38 69 Q50 65 62 69" stroke="#16a34a" stroke-width="1.5" fill="none" opacity="0.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="icon" style="width:52px;height:52px;">
+          <svg viewBox="0 0 100 100" width="52" height="52" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#f0f7f3"/>
+            <ellipse cx="50" cy="38" rx="10" ry="18" fill="#16a34a" stroke="#f0f7f3" stroke-width="0.8" transform="rotate(-80 50 50)"/>
+            <ellipse cx="50" cy="38" rx="10" ry="18" fill="#16a34a" stroke="#f0f7f3" stroke-width="0.8" transform="rotate(80 50 50)"/>
+            <ellipse cx="50" cy="38" rx="10" ry="18" fill="#16a34a" stroke="#f0f7f3" stroke-width="0.8" transform="rotate(-40 50 50)"/>
+            <ellipse cx="50" cy="38" rx="10" ry="18" fill="#16a34a" stroke="#f0f7f3" stroke-width="0.8" transform="rotate(40 50 50)"/>
+            <ellipse cx="50" cy="36" rx="8" ry="16" fill="#16a34a" stroke="#f0f7f3" stroke-width="0.8" transform="rotate(-20 50 50)"/>
+            <ellipse cx="50" cy="36" rx="8" ry="16" fill="#16a34a" stroke="#f0f7f3" stroke-width="0.8" transform="rotate(20 50 50)"/>
+            <ellipse cx="50" cy="36" rx="8" ry="16" fill="#16a34a" stroke="#f0f7f3" stroke-width="0.8"/>
+            <line x1="50" y1="58" x2="50" y2="70" stroke="#16a34a" stroke-width="2" stroke-linecap="round" opacity="0.45"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dark -->
+    <div class="col">
+      <div class="label">Dark</div>
+      <div class="pair">
+        <div class="icon" style="width:100px;height:100px;">
+          <svg viewBox="0 0 100 100" width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#111427"/>
+            <ellipse cx="50" cy="38" rx="10" ry="18" fill="#828ef2" stroke="#111427" stroke-width="0.8" transform="rotate(-80 50 50)"/>
+            <ellipse cx="50" cy="38" rx="10" ry="18" fill="#828ef2" stroke="#111427" stroke-width="0.8" transform="rotate(80 50 50)"/>
+            <ellipse cx="50" cy="38" rx="10" ry="18" fill="#828ef2" stroke="#111427" stroke-width="0.8" transform="rotate(-40 50 50)"/>
+            <ellipse cx="50" cy="38" rx="10" ry="18" fill="#828ef2" stroke="#111427" stroke-width="0.8" transform="rotate(40 50 50)"/>
+            <ellipse cx="50" cy="36" rx="8" ry="16" fill="#828ef2" stroke="#111427" stroke-width="0.8" transform="rotate(-20 50 50)"/>
+            <ellipse cx="50" cy="36" rx="8" ry="16" fill="#828ef2" stroke="#111427" stroke-width="0.8" transform="rotate(20 50 50)"/>
+            <ellipse cx="50" cy="36" rx="8" ry="16" fill="#828ef2" stroke="#111427" stroke-width="0.8"/>
+            <line x1="50" y1="58" x2="50" y2="70" stroke="#828ef2" stroke-width="2" stroke-linecap="round" opacity="0.45"/>
+            <path d="M38 69 Q50 65 62 69" stroke="#828ef2" stroke-width="1.5" fill="none" opacity="0.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="icon" style="width:52px;height:52px;">
+          <svg viewBox="0 0 100 100" width="52" height="52" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#111427"/>
+            <ellipse cx="50" cy="38" rx="10" ry="18" fill="#828ef2" stroke="#111427" stroke-width="0.8" transform="rotate(-80 50 50)"/>
+            <ellipse cx="50" cy="38" rx="10" ry="18" fill="#828ef2" stroke="#111427" stroke-width="0.8" transform="rotate(80 50 50)"/>
+            <ellipse cx="50" cy="38" rx="10" ry="18" fill="#828ef2" stroke="#111427" stroke-width="0.8" transform="rotate(-40 50 50)"/>
+            <ellipse cx="50" cy="38" rx="10" ry="18" fill="#828ef2" stroke="#111427" stroke-width="0.8" transform="rotate(40 50 50)"/>
+            <ellipse cx="50" cy="36" rx="8" ry="16" fill="#828ef2" stroke="#111427" stroke-width="0.8" transform="rotate(-20 50 50)"/>
+            <ellipse cx="50" cy="36" rx="8" ry="16" fill="#828ef2" stroke="#111427" stroke-width="0.8" transform="rotate(20 50 50)"/>
+            <ellipse cx="50" cy="36" rx="8" ry="16" fill="#828ef2" stroke="#111427" stroke-width="0.8"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── MOON CONCEPTS ─────────────────────────────────────────── -->
+<div class="section">
+  <div class="section-title">Moon concepts — light + dark</div>
+  <div class="row">
+
+    <!-- 1. Classic crescent -->
+    <div class="col">
+      <div class="label">Crescent</div>
+      <div class="pair">
+        <div class="icon" style="width:80px;height:80px;">
+          <svg viewBox="0 0 100 100" width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#f0f7f3"/>
+            <circle cx="50" cy="50" r="26" fill="#16a34a"/>
+            <circle cx="61" cy="46" r="21" fill="#f0f7f3"/>
+            <!-- small star dot -->
+            <circle cx="40" cy="36" r="2.5" fill="#16a34a" opacity="0.35"/>
+            <circle cx="33" cy="52" r="1.5" fill="#16a34a" opacity="0.25"/>
+          </svg>
+        </div>
+        <div class="icon" style="width:80px;height:80px;">
+          <svg viewBox="0 0 100 100" width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#111427"/>
+            <circle cx="50" cy="50" r="26" fill="#828ef2"/>
+            <circle cx="61" cy="46" r="21" fill="#111427"/>
+            <circle cx="40" cy="36" r="2.5" fill="#828ef2" opacity="0.35"/>
+            <circle cx="33" cy="52" r="1.5" fill="#828ef2" opacity="0.25"/>
+          </svg>
+        </div>
+      </div>
+      <div class="sub">Classic crescent with two faint star dots</div>
+    </div>
+
+    <!-- 2. Crescent + lotus -->
+    <div class="col">
+      <div class="label">Moon Lotus</div>
+      <div class="pair">
+        <div class="icon" style="width:80px;height:80px;">
+          <svg viewBox="0 0 100 100" width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#f0f7f3"/>
+            <!-- crescent -->
+            <circle cx="50" cy="50" r="26" fill="#16a34a"/>
+            <circle cx="61" cy="44" r="21" fill="#f0f7f3"/>
+            <!-- tiny lotus inside crescent -->
+            <ellipse cx="38" cy="54" rx="5" ry="9"  fill="#f0f7f3" stroke="#16a34a" stroke-width="0" transform="rotate(-35 38 60)"/>
+            <ellipse cx="38" cy="54" rx="5" ry="9"  fill="#f0f7f3" stroke="#16a34a" stroke-width="0" transform="rotate(-15 38 60)"/>
+            <ellipse cx="38" cy="53" rx="4.5" ry="9" fill="#f0f7f3" transform="rotate(5 38 60)"/>
+            <line x1="38" y1="62" x2="38" y2="69" stroke="#f0f7f3" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="icon" style="width:80px;height:80px;">
+          <svg viewBox="0 0 100 100" width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#111427"/>
+            <circle cx="50" cy="50" r="26" fill="#828ef2"/>
+            <circle cx="61" cy="44" r="21" fill="#111427"/>
+            <ellipse cx="38" cy="54" rx="5" ry="9"  fill="#111427" transform="rotate(-35 38 60)"/>
+            <ellipse cx="38" cy="54" rx="5" ry="9"  fill="#111427" transform="rotate(-15 38 60)"/>
+            <ellipse cx="38" cy="53" rx="4.5" ry="9" fill="#111427" transform="rotate(5 38 60)"/>
+            <line x1="38" y1="62" x2="38" y2="69" stroke="#111427" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="sub">Crescent with lotus silhouette inside</div>
+    </div>
+
+    <!-- 3. Full moon glow -->
+    <div class="col">
+      <div class="label">Full Moon</div>
+      <div class="pair">
+        <div class="icon" style="width:80px;height:80px;">
+          <svg viewBox="0 0 100 100" width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#f0f7f3"/>
+            <!-- glow ring -->
+            <circle cx="50" cy="50" r="30" fill="rgba(22,163,74,0.10)"/>
+            <circle cx="50" cy="50" r="24" fill="rgba(22,163,74,0.18)"/>
+            <!-- moon face -->
+            <circle cx="50" cy="50" r="18" fill="#16a34a"/>
+            <!-- subtle crater marks -->
+            <circle cx="44" cy="46" r="3" fill="#f0f7f3" opacity="0.12"/>
+            <circle cx="56" cy="54" r="2" fill="#f0f7f3" opacity="0.10"/>
+            <circle cx="50" cy="40" r="1.5" fill="#f0f7f3" opacity="0.08"/>
+          </svg>
+        </div>
+        <div class="icon" style="width:80px;height:80px;">
+          <svg viewBox="0 0 100 100" width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#111427"/>
+            <circle cx="50" cy="50" r="30" fill="rgba(130,142,242,0.08)"/>
+            <circle cx="50" cy="50" r="24" fill="rgba(130,142,242,0.15)"/>
+            <circle cx="50" cy="50" r="18" fill="#828ef2"/>
+            <circle cx="44" cy="46" r="3" fill="#111427" opacity="0.15"/>
+            <circle cx="56" cy="54" r="2" fill="#111427" opacity="0.12"/>
+            <circle cx="50" cy="40" r="1.5" fill="#111427" opacity="0.10"/>
+          </svg>
+        </div>
+      </div>
+      <div class="sub">Full moon with soft glow rings</div>
+    </div>
+
+    <!-- 4. Phase arc -->
+    <div class="col">
+      <div class="label">Phase Arc</div>
+      <div class="pair">
+        <div class="icon" style="width:80px;height:80px;">
+          <svg viewBox="0 0 100 100" width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#f0f7f3"/>
+            <!-- 4 phase dots in arc -->
+            <circle cx="30" cy="58" r="5" fill="#16a34a" opacity="0.20"/>
+            <circle cx="40" cy="43" r="7" fill="#16a34a" opacity="0.45"/>
+            <circle cx="55" cy="36" r="10" fill="#16a34a" opacity="0.75"/>
+            <circle cx="70" cy="46" r="6.5" fill="#16a34a" opacity="0.40"/>
+            <!-- connecting arc -->
+            <path d="M30 58 Q38 30 55 36 Q68 40 70 46" stroke="#16a34a" stroke-width="1" fill="none" opacity="0.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="icon" style="width:80px;height:80px;">
+          <svg viewBox="0 0 100 100" width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#111427"/>
+            <circle cx="30" cy="58" r="5" fill="#828ef2" opacity="0.20"/>
+            <circle cx="40" cy="43" r="7" fill="#828ef2" opacity="0.45"/>
+            <circle cx="55" cy="36" r="10" fill="#828ef2" opacity="0.75"/>
+            <circle cx="70" cy="46" r="6.5" fill="#828ef2" opacity="0.40"/>
+            <path d="M30 58 Q38 30 55 36 Q68 40 70 46" stroke="#828ef2" stroke-width="1" fill="none" opacity="0.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+      <div class="sub">Moon phases as an ascending arc</div>
+    </div>
+
+    <!-- 5. Crescent ring (thin) -->
+    <div class="col">
+      <div class="label">Ring Moon</div>
+      <div class="pair">
+        <div class="icon" style="width:80px;height:80px;">
+          <svg viewBox="0 0 100 100" width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#f0f7f3"/>
+            <!-- Thin crescent ring -->
+            <circle cx="50" cy="50" r="24" fill="none" stroke="#16a34a" stroke-width="6"/>
+            <!-- Mask right side -->
+            <circle cx="56" cy="48" r="22" fill="#f0f7f3"/>
+            <!-- Inner dot -->
+            <circle cx="38" cy="54" r="5" fill="#16a34a"/>
+          </svg>
+        </div>
+        <div class="icon" style="width:80px;height:80px;">
+          <svg viewBox="0 0 100 100" width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#111427"/>
+            <circle cx="50" cy="50" r="24" fill="none" stroke="#828ef2" stroke-width="6"/>
+            <circle cx="56" cy="48" r="22" fill="#111427"/>
+            <circle cx="38" cy="54" r="5" fill="#828ef2"/>
+          </svg>
+        </div>
+      </div>
+      <div class="sub">Thin ring crescent + solid dot</div>
+    </div>
+
+    <!-- 6. Crescent + N initial -->
+    <div class="col">
+      <div class="label">N Moon</div>
+      <div class="pair">
+        <div class="icon" style="width:80px;height:80px;">
+          <svg viewBox="0 0 100 100" width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#f0f7f3"/>
+            <!-- crescent -->
+            <circle cx="50" cy="50" r="26" fill="#16a34a"/>
+            <circle cx="62" cy="45" r="21" fill="#f0f7f3"/>
+            <!-- N letterform in crescent space -->
+            <path d="M28 64 L28 38 L42 60 L42 38" stroke="#f0f7f3" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="icon" style="width:80px;height:80px;">
+          <svg viewBox="0 0 100 100" width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" fill="#111427"/>
+            <circle cx="50" cy="50" r="26" fill="#828ef2"/>
+            <circle cx="62" cy="45" r="21" fill="#111427"/>
+            <path d="M28 64 L28 38 L42 60 L42 38" stroke="#111427" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+      </div>
+      <div class="sub">Crescent with N initial carved inside</div>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

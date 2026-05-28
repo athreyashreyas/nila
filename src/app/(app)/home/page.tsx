@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { useEncryption } from '@/lib/encryption/context';
+import { useTheme } from '@/lib/theme/context';
 import { useCycles } from '@/hooks/useCycles';
 import { useDailyLog } from '@/hooks/useDailyLog';
 import { usePrediction } from '@/hooks/usePrediction';
@@ -33,6 +34,7 @@ const DISPLAY_SYMPTOMS = SYMPTOMS.slice(0, 8);
 
 export default function HomePage() {
   const { isUnlocked } = useEncryption();
+  const { theme, setTheme } = useTheme();
   const { cycles, fetchAll: fetchCycles } = useCycles();
   const { logs, fetchAll: fetchLogs, upsertLog } = useDailyLog();
   const prediction = usePrediction(cycles);
@@ -93,12 +95,14 @@ export default function HomePage() {
           <h1 className="text-3xl font-bold tracking-tight">Nila</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--color-foreground-muted)' }}>{dateStr}</p>
         </div>
-        <div
+        <button
+          onClick={() => setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light')}
           className="w-10 h-10 rounded-full flex items-center justify-center text-lg"
           style={{ background: 'var(--color-accent-soft)', color: 'var(--color-accent)' }}
+          title={`Theme: ${theme} — tap to cycle`}
         >
-          🌙
-        </div>
+          {theme === 'dark' ? '🌙' : theme === 'light' ? '☀️' : '◐'}
+        </button>
       </div>
 
       {/* Phase card */}

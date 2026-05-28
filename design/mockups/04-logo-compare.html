@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Nila — Logo Comparison</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, sans-serif; background: #0e0e12; color: #e8eaff; padding: 40px 32px 60px; }
+  h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  p  { font-size: 13px; color: #4b5563; margin-bottom: 40px; }
+
+  .row { display: flex; gap: 40px; flex-wrap: wrap; margin-bottom: 48px; }
+  .col { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #4b5563; }
+  .sub   { font-size: 12px; color: #374151; max-width: 140px; text-align: center; line-height: 1.5; }
+
+  .icon { border-radius: 22%; overflow: hidden; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+  .icon svg { display: block; }
+
+  .section-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #374151; margin: 0 0 20px; }
+</style>
+</head>
+<body>
+
+<h1>Nila — Logo Comparison</h1>
+<p>Original SVG draft (left) · Lotus emoji on themed backgrounds (right)</p>
+
+<div class="section-title">Light — Sage (#f0f7f3)</div>
+<div class="row">
+
+  <!-- Original SVG draft - light -->
+  <div class="col">
+    <div class="label">Original draft</div>
+    <div class="icon" style="width:120px;height:120px;">
+      <svg viewBox="0 0 100 100" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" fill="#f0f7f3"/>
+        <ellipse cx="50" cy="38" rx="10" ry="18" fill="rgba(22,163,74,0.18)" transform="rotate(-40 50 50)"/>
+        <ellipse cx="50" cy="38" rx="10" ry="18" fill="rgba(22,163,74,0.18)" transform="rotate(40 50 50)"/>
+        <ellipse cx="50" cy="38" rx="10" ry="18" fill="rgba(22,163,74,0.18)" transform="rotate(-80 50 50)"/>
+        <ellipse cx="50" cy="38" rx="10" ry="18" fill="rgba(22,163,74,0.18)" transform="rotate(80 50 50)"/>
+        <ellipse cx="50" cy="36" rx="8" ry="16" fill="rgba(22,163,74,0.10)" transform="rotate(-20 50 50)"/>
+        <ellipse cx="50" cy="36" rx="8" ry="16" fill="rgba(22,163,74,0.10)" transform="rotate(20 50 50)"/>
+        <ellipse cx="50" cy="36" rx="8" ry="16" fill="#16a34a" opacity="0.9"/>
+        <line x1="50" y1="58" x2="50" y2="72" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+        <path d="M36 70 Q50 65 64 70" stroke="#16a34a" stroke-width="1.5" fill="none" opacity="0.3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="sub">Original — dark center petal</div>
+  </div>
+
+  <!-- Fixed SVG - light -->
+  <div class="col">
+    <div class="label" style="color:#16a34a;">Fixed ✓</div>
+    <div class="icon" style="width:120px;height:120px;outline:2px solid #16a34a;outline-offset:3px;">
+      <svg viewBox="0 0 100 100" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" fill="#f0f7f3"/>
+        <ellipse cx="50" cy="38" rx="10" ry="18" fill="rgba(22,163,74,0.18)" transform="rotate(-40 50 50)"/>
+        <ellipse cx="50" cy="38" rx="10" ry="18" fill="rgba(22,163,74,0.18)" transform="rotate(40 50 50)"/>
+        <ellipse cx="50" cy="38" rx="10" ry="18" fill="rgba(22,163,74,0.18)" transform="rotate(-80 50 50)"/>
+        <ellipse cx="50" cy="38" rx="10" ry="18" fill="rgba(22,163,74,0.18)" transform="rotate(80 50 50)"/>
+        <ellipse cx="50" cy="36" rx="8" ry="16" fill="rgba(22,163,74,0.18)" transform="rotate(-20 50 50)"/>
+        <ellipse cx="50" cy="36" rx="8" ry="16" fill="rgba(22,163,74,0.18)" transform="rotate(20 50 50)"/>
+        <ellipse cx="50" cy="36" rx="8" ry="16" fill="rgba(22,163,74,0.18)"/>
+        <line x1="50" y1="58" x2="50" y2="72" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+        <path d="M36 70 Q50 65 64 70" stroke="#16a34a" stroke-width="1.5" fill="none" opacity="0.3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="sub">Fixed — all petals same opacity (0.18), depth from overlap</div>
+  </div>
+
+  <!-- Emoji - light -->
+  <div class="col">
+    <div class="label">Emoji 🪷</div>
+    <div class="icon" style="width:120px;height:120px;">
+      <canvas id="lightLg" width="120" height="120"></canvas>
+    </div>
+    <div class="sub">Lotus emoji on sage background</div>
+  </div>
+
+  <!-- Emoji - light small -->
+  <div class="col">
+    <div class="label">Home screen size</div>
+    <div class="icon" style="width:60px;height:60px;">
+      <canvas id="lightSm" width="60" height="60"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="section-title">Dark — Indigo (#111427)</div>
+<div class="row">
+
+  <!-- Original SVG draft - dark -->
+  <div class="col">
+    <div class="label">Original draft</div>
+    <div class="icon" style="width:120px;height:120px;">
+      <svg viewBox="0 0 100 100" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" fill="#111427"/>
+        <ellipse cx="50" cy="38" rx="10" ry="18" fill="rgba(130,142,242,0.18)" transform="rotate(-40 50 50)"/>
+        <ellipse cx="50" cy="38" rx="10" ry="18" fill="rgba(130,142,242,0.18)" transform="rotate(40 50 50)"/>
+        <ellipse cx="50" cy="38" rx="10" ry="18" fill="rgba(130,142,242,0.18)" transform="rotate(-80 50 50)"/>
+        <ellipse cx="50" cy="38" rx="10" ry="18" fill="rgba(130,142,242,0.18)" transform="rotate(80 50 50)"/>
+        <ellipse cx="50" cy="36" rx="8" ry="16" fill="rgba(130,142,242,0.10)" transform="rotate(-20 50 50)"/>
+        <ellipse cx="50" cy="36" rx="8" ry="16" fill="rgba(130,142,242,0.10)" transform="rotate(20 50 50)"/>
+        <ellipse cx="50" cy="36" rx="8" ry="16" fill="#828ef2" opacity="0.9"/>
+        <line x1="50" y1="58" x2="50" y2="72" stroke="#828ef2" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+        <path d="M36 70 Q50 65 64 70" stroke="#828ef2" stroke-width="1.5" fill="none" opacity="0.3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="sub">Original — dark center petal</div>
+  </div>
+
+  <!-- Fixed SVG - dark -->
+  <div class="col">
+    <div class="label" style="color:#828ef2;">Fixed ✓</div>
+    <div class="icon" style="width:120px;height:120px;outline:2px solid #828ef2;outline-offset:3px;">
+      <svg viewBox="0 0 100 100" width="120" height="120" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" fill="#111427"/>
+        <ellipse cx="50" cy="38" rx="10" ry="18" fill="rgba(130,142,242,0.18)" transform="rotate(-40 50 50)"/>
+        <ellipse cx="50" cy="38" rx="10" ry="18" fill="rgba(130,142,242,0.18)" transform="rotate(40 50 50)"/>
+        <ellipse cx="50" cy="38" rx="10" ry="18" fill="rgba(130,142,242,0.18)" transform="rotate(-80 50 50)"/>
+        <ellipse cx="50" cy="38" rx="10" ry="18" fill="rgba(130,142,242,0.18)" transform="rotate(80 50 50)"/>
+        <ellipse cx="50" cy="36" rx="8" ry="16" fill="rgba(130,142,242,0.18)" transform="rotate(-20 50 50)"/>
+        <ellipse cx="50" cy="36" rx="8" ry="16" fill="rgba(130,142,242,0.18)" transform="rotate(20 50 50)"/>
+        <ellipse cx="50" cy="36" rx="8" ry="16" fill="rgba(130,142,242,0.18)"/>
+        <line x1="50" y1="58" x2="50" y2="72" stroke="#828ef2" stroke-width="2.5" stroke-linecap="round" opacity="0.5"/>
+        <path d="M36 70 Q50 65 64 70" stroke="#828ef2" stroke-width="1.5" fill="none" opacity="0.3" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="sub">Fixed — all petals same opacity (0.18), depth from overlap</div>
+  </div>
+
+  <!-- Emoji - dark -->
+  <div class="col">
+    <div class="label">Emoji 🪷</div>
+    <div class="icon" style="width:120px;height:120px;">
+      <canvas id="darkLg" width="120" height="120"></canvas>
+    </div>
+    <div class="sub">Lotus emoji on indigo background</div>
+  </div>
+
+  <!-- Emoji - dark small -->
+  <div class="col">
+    <div class="label">Home screen size</div>
+    <div class="icon" style="width:60px;height:60px;">
+      <canvas id="darkSm" width="60" height="60"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+function drawEmoji(canvasId, bg, size) {
+  const c = document.getElementById(canvasId);
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, size, size);
+  const fs = Math.round(size * 0.56);
+  ctx.font = `${fs}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('🪷', size / 2, size / 2 + size * 0.02);
+}
+
+drawEmoji('lightLg', '#f0f7f3', 120);
+drawEmoji('lightSm', '#f0f7f3', 60);
+drawEmoji('darkLg',  '#111427', 120);
+drawEmoji('darkSm',  '#111427', 60);
+</script>
+</body>
+</html>

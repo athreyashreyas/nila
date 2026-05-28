@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nila — Logo Concepts</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #0e0e12;
+    color: #e8eaff;
+    min-height: 100vh;
+    padding: 32px 24px 60px;
+  }
+
+  h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; letter-spacing: -0.3px; }
+  .subtitle { font-size: 13px; color: #6b7280; margin-bottom: 32px; }
+
+  /* Concept selector */
+  .concept-tabs {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 36px;
+  }
+  .tab {
+    padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1.5px solid rgba(130,142,242,0.2);
+    background: rgba(130,142,242,0.06); color: #9ca3af;
+    transition: all 0.15s;
+  }
+  .tab.active {
+    background: rgba(130,142,242,0.18); border-color: #828ef2; color: #828ef2;
+  }
+
+  /* Main preview area */
+  .preview-row {
+    display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; margin-bottom: 40px;
+  }
+
+  /* Phone frame */
+  .phone {
+    width: 220px; border-radius: 40px; overflow: hidden;
+    border: 2px solid rgba(255,255,255,0.08);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    flex-shrink: 0;
+  }
+  .phone-notch {
+    height: 28px; display: flex; align-items: center; justify-content: center;
+    padding-top: 6px;
+  }
+  .phone-notch-pill {
+    width: 72px; height: 10px; border-radius: 10px;
+  }
+  .phone-screen {
+    padding: 20px 20px 28px;
+    min-height: 380px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+
+  /* App icon display */
+  .icon-showcase {
+    display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-start;
+  }
+  .icon-size-group {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  }
+  .icon-label { font-size: 10px; color: #4b5563; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  .icon-frame {
+    border-radius: 22.5%; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    flex-shrink: 0;
+  }
+
+  /* Concept description */
+  .concept-info {
+    max-width: 280px;
+    padding: 20px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.06);
+    margin-top: 8px;
+  }
+  .concept-info h3 { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .concept-info p { font-size: 12px; color: #6b7280; line-height: 1.6; }
+  .concept-info .keywords {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px;
+  }
+  .kw {
+    font-size: 10px; padding: 3px 10px; border-radius: 20px;
+    background: rgba(130,142,242,0.1); color: #828ef2; font-weight: 600;
+  }
+
+  /* All concepts grid */
+  .all-concepts {
+    display: flex; gap: 20px; flex-wrap: wrap; margin-top: 8px;
+  }
+  .mini-card {
+    display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer;
+    padding: 16px; border-radius: 20px;
+    border: 1.5px solid rgba(255,255,255,0.06);
+    background: rgba(255,255,255,0.02);
+    transition: all 0.15s;
+  }
+  .mini-card:hover { background: rgba(130,142,242,0.06); border-color: rgba(130,142,242,0.2); }
+  .mini-card.selected { background: rgba(130,142,242,0.1); border-color: #828ef2; }
+  .mini-card span { font-size: 11px; color: #6b7280; font-weight: 600; }
+
+  /* Divider */
+  .section-label {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    color: #374151; margin: 32px 0 16px;
+  }
+
+  /* ─── Color vars ─── */
+  :root {
+    --sage-bg: #f0f7f3;
+    --sage-surface: rgba(218,238,227,0.60);
+    --sage-accent: #16a34a;
+    --sage-fg: #0a2814;
+    --sage-muted: rgba(10,40,20,0.55);
+
+    --indigo-bg: #111427;
+    --indigo-surface: rgba(26,31,74,0.60);
+    --indigo-accent: #828ef2;
+    --indigo-fg: #e8eaff;
+    --indigo-muted: rgba(232,234,255,0.55);
+  }
+</style>
+</head>
+<body>
+
+<h1>Nila — Logo Concepts</h1>
+<p class="subtitle">Six symbols, light + dark · Click any concept to preview full-size</p>
+
+<!-- Mini concept grid for selection -->
+<div class="all-concepts" id="conceptGrid"></div>
+
+<div class="section-label">Preview</div>
+
+<!-- Main preview -->
+<div class="preview-row">
+
+  <!-- Light phone -->
+  <div class="phone" style="background: var(--sage-bg);">
+    <div class="phone-notch" style="background: var(--sage-bg);">
+      <div class="phone-notch-pill" style="background: rgba(10,40,20,0.12);"></div>
+    </div>
+    <div class="phone-screen" style="background: var(--sage-bg);">
+      <!-- Home screen grid simulation -->
+      <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 100%; margin-bottom: 16px;">
+        <div style="aspect-ratio:1; border-radius: 18%; background: rgba(10,40,20,0.06);"></div>
+        <div style="aspect-ratio:1; border-radius: 18%; background: rgba(10,40,20,0.06);"></div>
+        <div class="icon-frame" id="lightIconSm" style="width: 100%; aspect-ratio: 1;"></div>
+        <div style="aspect-ratio:1; border-radius: 18%; background: rgba(10,40,20,0.06);"></div>
+        <div style="aspect-ratio:1; border-radius: 18%; background: rgba(10,40,20,0.06);"></div>
+        <div style="aspect-ratio:1; border-radius: 18%; background: rgba(10,40,20,0.06);"></div>
+        <div style="aspect-ratio:1; border-radius: 18%; background: rgba(10,40,20,0.06);"></div>
+        <div style="aspect-ratio:1; border-radius: 18%; background: rgba(10,40,20,0.06);"></div>
+      </div>
+      <div style="font-size: 10px; font-weight: 700; margin-top: 2px; color: var(--sage-fg); opacity: 0.5; letter-spacing: 0.3px;">Nila</div>
+
+      <!-- Splash screen preview -->
+      <div style="margin-top: 20px; width: 100%; padding: 16px; border-radius: 16px; background: var(--sage-surface); border: 1px solid rgba(22,163,74,0.09); display: flex; flex-direction: column; align-items: center; gap: 10px;">
+        <div id="lightSplash" style="width: 56px; height: 56px;"></div>
+        <div style="font-size: 14px; font-weight: 700; color: var(--sage-fg);">Nila</div>
+        <div style="font-size: 10px; color: var(--sage-muted);">private by design</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dark phone -->
+  <div class="phone" style="background: var(--indigo-bg);">
+    <div class="phone-notch" style="background: var(--indigo-bg);">
+      <div class="phone-notch-pill" style="background: rgba(232,234,255,0.1);"></div>
+    </div>
+    <div class="phone-screen" style="background: var(--indigo-bg);">
+      <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 100%; margin-bottom: 16px;">
+        <div style="aspect-ratio:1; border-radius: 18%; background: rgba(232,234,255,0.05);"></div>
+        <div style="aspect-ratio:1; border-radius: 18%; background: rgba(232,234,255,0.05);"></div>
+        <div class="icon-frame" id="darkIconSm" style="width: 100%; aspect-ratio: 1;"></div>
+        <div style="aspect-ratio:1; border-radius: 18%; background: rgba(232,234,255,0.05);"></div>
+        <div style="aspect-ratio:1; border-radius: 18%; background: rgba(232,234,255,0.05);"></div>
+        <div style="aspect-ratio:1; border-radius: 18%; background: rgba(232,234,255,0.05);"></div>
+        <div style="aspect-ratio:1; border-radius: 18%; background: rgba(232,234,255,0.05);"></div>
+        <div style="aspect-ratio:1; border-radius: 18%; background: rgba(232,234,255,0.05);"></div>
+      </div>
+      <div style="font-size: 10px; font-weight: 700; margin-top: 2px; color: var(--indigo-fg); opacity: 0.5; letter-spacing: 0.3px;">Nila</div>
+
+      <div style="margin-top: 20px; width: 100%; padding: 16px; border-radius: 16px; background: var(--indigo-surface); border: 1px solid rgba(130,142,242,0.09); display: flex; flex-direction: column; align-items: center; gap: 10px;">
+        <div id="darkSplash" style="width: 56px; height: 56px;"></div>
+        <div style="font-size: 14px; font-weight: 700; color: var(--indigo-fg);">Nila</div>
+        <div style="font-size: 10px; color: var(--indigo-muted);">private by design</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Large icon sizes -->
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <div class="icon-size-group">
+      <div class="icon-label" style="color: #4b5563;">Light · 180px</div>
+      <div class="icon-frame" id="lightIcon180" style="width: 90px; height: 90px;"></div>
+    </div>
+    <div class="icon-size-group">
+      <div class="icon-label" style="color: #4b5563;">Dark · 180px</div>
+      <div class="icon-frame" id="darkIcon180" style="width: 90px; height: 90px;"></div>
+    </div>
+  </div>
+
+  <!-- 512px large -->
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <div class="icon-size-group">
+      <div class="icon-label" style="color: #4b5563;">Light · 512px</div>
+      <div class="icon-frame" id="lightIcon512" style="width: 120px; height: 120px;"></div>
+    </div>
+    <div class="icon-size-group">
+      <div class="icon-label" style="color: #4b5563;">Dark · 512px</div>
+      <div class="icon-frame" id="darkIcon512" style="width: 120px; height: 120px;"></div>
+    </div>
+  </div>
+
+  <!-- Concept info card -->
+  <div class="concept-info" id="conceptInfo">
+    <h3 id="conceptName">—</h3>
+    <p id="conceptDesc">—</p>
+    <div class="keywords" id="conceptKeywords"></div>
+  </div>
+</div>
+
+<script>
+// ─── SVG logo generators ──────────────────────────────────────────────────────
+// Each returns an SVG string. size = viewBox size (icons are square).
+// lightMode: true = sage theme, false = indigo theme
+
+const concepts = [
+  {
+    id: 'lotus',
+    name: 'Lotus',
+    desc: 'Five petals drawn as explicit bezier paths — all emerging from the same receptacle base, overlapping side-by-side like a real flower. The dome silhouette and stem make it unmistakably a lotus.',
+    keywords: ['feminine', 'cycle', 'bloom', 'classic'],
+    svg: (light) => {
+      const bg = light ? '#f0f7f3' : '#111427';
+      const accent = light ? '#16a34a' : '#828ef2';
+      return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" fill="${bg}"/>
+        <!-- Paint order: outermost → center, so center sits on top -->
+
+        <!-- Far-left petal: wide, curves outward to left -->
+        <path d="M47 67 C38 60 24 47 29 34 C38 31 47 50 47 67Z"
+              fill="${accent}" opacity="0.82"/>
+        <!-- Far-right petal: mirror -->
+        <path d="M53 67 C62 60 76 47 71 34 C62 31 53 50 53 67Z"
+              fill="${accent}" opacity="0.82"/>
+
+        <!-- Left inner petal: leans gently left, taller -->
+        <path d="M49 67 C43 57 39 42 44 28 C52 28 55 46 49 67Z"
+              fill="${accent}" opacity="0.82"/>
+        <!-- Right inner petal: mirror -->
+        <path d="M51 67 C57 57 61 42 56 28 C48 28 45 46 51 67Z"
+              fill="${accent}" opacity="0.82"/>
+
+        <!-- Center petal: tallest, fully upright, painted last -->
+        <path d="M50 67 C44 56 43 39 50 24 C57 39 56 56 50 67Z"
+              fill="${accent}" opacity="0.82"/>
+
+        <!-- Sepal leaves — sit just below the petal base -->
+        <path d="M44 69 C38 63 34 71 43 73Z" fill="${accent}" opacity="0.44"/>
+        <path d="M56 69 C62 63 66 71 57 73Z" fill="${accent}" opacity="0.44"/>
+
+        <!-- Stem -->
+        <line x1="50" y1="71" x2="50" y2="80"
+              stroke="${accent}" stroke-width="2" stroke-linecap="round" opacity="0.36"/>
+
+        <!-- Water surface -->
+        <path d="M35 79 Q50 75 65 79"
+              stroke="${accent}" stroke-width="1.5" fill="none" opacity="0.2" stroke-linecap="round"/>
+      </svg>`;
+    }
+  },
+  {
+    id: 'nletter',
+    name: 'N Bloom',
+    desc: 'The letter N with a petal growing from its spine — merging identity with organic form. The bloom suggests growth, the letterform grounds it.',
+    keywords: ['monogram', 'identity', 'modern', 'clean'],
+    svg: (light) => {
+      const bg = light ? '#f0f7f3' : '#111427';
+      const accent = light ? '#16a34a' : '#828ef2';
+      const soft = light ? 'rgba(22,163,74,0.15)' : 'rgba(130,142,242,0.15)';
+      return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" fill="${bg}"/>
+        <!-- petal bloom at top of N -->
+        <ellipse cx="50" cy="30" rx="11" ry="16" fill="${soft}" transform="rotate(-15 50 30)"/>
+        <ellipse cx="50" cy="30" rx="11" ry="16" fill="${soft}" transform="rotate(15 50 30)"/>
+        <ellipse cx="50" cy="28" rx="7" ry="13" fill="${accent}" opacity="0.85"/>
+        <!-- N letterform -->
+        <path d="M28 68 L28 38 L50 62 L72 38 L72 68"
+              stroke="${accent}" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>`;
+    }
+  },
+  {
+    id: 'waterlily',
+    name: 'Water Lily',
+    desc: 'Nila means "blue water" in Tamil. A floating water lily with concentric rings — stillness, depth, the surface of reflection.',
+    keywords: ['water', 'Tamil', 'tranquil', 'depth'],
+    svg: (light) => {
+      const bg = light ? '#f0f7f3' : '#111427';
+      const accent = light ? '#16a34a' : '#828ef2';
+      const ring = light ? 'rgba(22,163,74,0.12)' : 'rgba(130,142,242,0.12)';
+      const ring2 = light ? 'rgba(22,163,74,0.07)' : 'rgba(130,142,242,0.07)';
+      return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" fill="${bg}"/>
+        <!-- water rings -->
+        <ellipse cx="50" cy="60" rx="32" ry="8" fill="${ring2}"/>
+        <ellipse cx="50" cy="60" rx="22" ry="5" fill="${ring}"/>
+        <!-- lily pad -->
+        <path d="M50 60 A20 20 0 1 1 30 60 L50 60 Z" fill="${accent}" opacity="0.15"/>
+        <path d="M50 60 A20 20 0 1 1 30 60 L50 60 Z" stroke="${accent}" stroke-width="1.2" fill="none" opacity="0.4"/>
+        <!-- flower petals -->
+        <ellipse cx="50" cy="42" rx="5" ry="10" fill="${accent}" opacity="0.9" transform="rotate(0 50 52)"/>
+        <ellipse cx="50" cy="42" rx="5" ry="10" fill="${accent}" opacity="0.7" transform="rotate(45 50 52)"/>
+        <ellipse cx="50" cy="42" rx="5" ry="10" fill="${accent}" opacity="0.7" transform="rotate(-45 50 52)"/>
+        <ellipse cx="50" cy="42" rx="5" ry="10" fill="${accent}" opacity="0.55" transform="rotate(90 50 52)"/>
+        <ellipse cx="50" cy="42" rx="5" ry="10" fill="${accent}" opacity="0.55" transform="rotate(-90 50 52)"/>
+        <!-- centre -->
+        <circle cx="50" cy="52" r="4" fill="${accent}"/>
+      </svg>`;
+    }
+  },
+  {
+    id: 'moonpetal',
+    name: 'Moon + Petal',
+    desc: 'A crescent moon cradling a single leaf — lunar cycle and botanical life together. Simple, immediately readable at small sizes.',
+    keywords: ['moon', 'cycle', 'minimal', 'poetic'],
+    svg: (light) => {
+      const bg = light ? '#f0f7f3' : '#111427';
+      const accent = light ? '#16a34a' : '#828ef2';
+      const soft = light ? 'rgba(22,163,74,0.2)' : 'rgba(130,142,242,0.2)';
+      return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" fill="${bg}"/>
+        <!-- crescent moon -->
+        <circle cx="50" cy="46" r="20" fill="${accent}" opacity="0.85"/>
+        <circle cx="58" cy="40" r="16" fill="${bg}"/>
+        <!-- leaf in crescent cup -->
+        <path d="M44 58 C40 46 54 40 58 52 C54 54 48 60 44 58 Z" fill="${accent}"/>
+        <line x1="44" y1="58" x2="58" y2="52" stroke="${bg}" stroke-width="1.2" opacity="0.6"/>
+        <!-- small dots -->
+        <circle cx="38" cy="36" r="2" fill="${soft}"/>
+        <circle cx="63" cy="60" r="1.5" fill="${soft}"/>
+      </svg>`;
+    }
+  },
+  {
+    id: 'spiral',
+    name: 'Bloom Spiral',
+    desc: 'Six petals arranged in a Fibonacci spiral — nature\'s own cycle geometry. Mathematical, organic, and deeply feminine.',
+    keywords: ['fibonacci', 'organic', 'scientific', 'bold'],
+    svg: (light) => {
+      const bg = light ? '#f0f7f3' : '#111427';
+      const accent = light ? '#16a34a' : '#828ef2';
+      const soft = light ? 'rgba(22,163,74,0.25)' : 'rgba(130,142,242,0.25)';
+      const softer = light ? 'rgba(22,163,74,0.12)' : 'rgba(130,142,242,0.12)';
+      // Petals at 60° intervals
+      const petals = [0, 60, 120, 180, 240, 300];
+      const petalSVG = petals.map((angle, i) => {
+        const opacity = i % 2 === 0 ? 0.9 : 0.65;
+        const fill = i % 2 === 0 ? accent : soft;
+        return `<ellipse cx="50" cy="34" rx="7" ry="14" fill="${fill}" opacity="${opacity}" transform="rotate(${angle} 50 50)"/>`;
+      }).join('');
+      return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" fill="${bg}"/>
+        <circle cx="50" cy="50" r="28" fill="${softer}"/>
+        ${petalSVG}
+        <circle cx="50" cy="50" r="8" fill="${bg}"/>
+        <circle cx="50" cy="50" r="5" fill="${accent}"/>
+      </svg>`;
+    }
+  },
+  {
+    id: 'drop',
+    name: 'Nila Drop',
+    desc: 'A teardrop with a small leaf inside — water (nila) and nature merged. The drop references both femininity and the Tamil meaning of "blue water".',
+    keywords: ['water', 'simple', 'iconic', 'readable'],
+    svg: (light) => {
+      const bg = light ? '#f0f7f3' : '#111427';
+      const accent = light ? '#16a34a' : '#828ef2';
+      const soft = light ? 'rgba(22,163,74,0.18)' : 'rgba(130,142,242,0.18)';
+      return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <rect width="100" height="100" fill="${bg}"/>
+        <!-- drop shape -->
+        <path d="M50 20 C50 20 28 44 28 58 C28 70 38 78 50 78 C62 78 72 70 72 58 C72 44 50 20 50 20 Z"
+              fill="${accent}" opacity="0.9"/>
+        <!-- inner highlight -->
+        <path d="M50 20 C50 20 28 44 28 58 C28 70 38 78 50 78 C62 78 72 70 72 58 C72 44 50 20 50 20 Z"
+              fill="url(#dropGrad)"/>
+        <!-- leaf vein inside -->
+        <path d="M50 36 C44 48 44 60 50 70" stroke="${bg}" stroke-width="1.5" fill="none" opacity="0.4" stroke-linecap="round"/>
+        <path d="M50 46 C46 44 44 50 50 54" stroke="${bg}" stroke-width="1" fill="none" opacity="0.35" stroke-linecap="round"/>
+        <path d="M50 46 C54 44 56 50 50 54" stroke="${bg}" stroke-width="1" fill="none" opacity="0.35" stroke-linecap="round"/>
+        <defs>
+          <linearGradient id="dropGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="${soft}" stop-opacity="0.6"/>
+            <stop offset="100%" stop-color="${soft}" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+      </svg>`;
+    }
+  },
+];
+
+let selected = 0;
+
+function renderConcept(idx) {
+  selected = idx;
+  const c = concepts[idx];
+
+  // Update mini cards
+  document.querySelectorAll('.mini-card').forEach((el, i) => {
+    el.classList.toggle('selected', i === idx);
+  });
+
+  // Update all icon slots
+  const slots = [
+    { id: 'lightIconSm',   light: true  },
+    { id: 'darkIconSm',    light: false },
+    { id: 'lightIcon180',  light: true  },
+    { id: 'darkIcon180',   light: false },
+    { id: 'lightIcon512',  light: true  },
+    { id: 'darkIcon512',   light: false },
+    { id: 'lightSplash',   light: true  },
+    { id: 'darkSplash',    light: false },
+  ];
+  slots.forEach(({ id, light }) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = c.svg(light);
+    const svgEl = el?.querySelector('svg');
+    if (svgEl) { svgEl.style.width = '100%'; svgEl.style.height = '100%'; }
+  });
+
+  // Concept info
+  document.getElementById('conceptName').textContent = c.name;
+  document.getElementById('conceptDesc').textContent = c.desc;
+  const kw = document.getElementById('conceptKeywords');
+  kw.innerHTML = c.keywords.map(k => `<span class="kw">${k}</span>`).join('');
+}
+
+// Build mini card grid
+const grid = document.getElementById('conceptGrid');
+concepts.forEach((c, i) => {
+  const card = document.createElement('div');
+  card.className = 'mini-card';
+  card.innerHTML = `
+    <svg viewBox="0 0 100 100" style="width:52px;height:52px;border-radius:18%;" xmlns="http://www.w3.org/2000/svg">
+      ${c.svg(false).replace(/<svg[^>]*>/, '').replace('</svg>', '')}
+    </svg>
+    <span>${c.name}</span>
+  `;
+  card.onclick = () => renderConcept(i);
+  grid.appendChild(card);
+});
+
+renderConcept(0);
+</script>
+</body>
+</html>

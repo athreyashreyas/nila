@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Geist } from 'next/font/google';
 import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration';
 import { EncryptionProvider } from '@/lib/encryption/context';
+import { ThemeProvider } from '@/lib/theme/context';
 import './globals.css';
 
 const geist = Geist({
@@ -37,7 +38,7 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#0d0f1f' },
+    { media: '(prefers-color-scheme: dark)', color: '#111427' },
     { media: '(prefers-color-scheme: light)', color: '#f0f7f3' },
   ],
 };
@@ -50,6 +51,8 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geist.variable} h-full`}>
       <head>
+        {/* Anti-FOUC: apply stored theme before React hydrates */}
+        <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('nila-theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');else if(t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}` }} />
         {/* iOS-specific icon sizes */}
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png" />
@@ -90,9 +93,11 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col antialiased bg-[--color-background] text-[--color-foreground]">
         <ServiceWorkerRegistration />
-        <EncryptionProvider>
-          {children}
-        </EncryptionProvider>
+        <ThemeProvider>
+          <EncryptionProvider>
+            {children}
+          </EncryptionProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

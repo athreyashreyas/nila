@@ -15,8 +15,12 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 inset-x-0 z-50 flex items-start justify-around pt-3 border-t border-[--color-border] bg-[--color-background]"
-      style={{ paddingBottom: 'max(20px, env(safe-area-inset-bottom))' }}
+      className="fixed bottom-0 inset-x-0 z-50 flex items-start justify-around pt-2 border-t"
+      style={{
+        background: 'var(--color-background)',
+        borderColor: 'var(--color-border)',
+        paddingBottom: 'max(20px, env(safe-area-inset-bottom))',
+      }}
     >
       {TABS.map(({ href, label, icon }) => {
         const active = pathname === href || pathname.startsWith(href + '/');
@@ -24,21 +28,21 @@ export function BottomNav() {
           <Link
             key={href}
             href={href}
-            className="flex flex-col items-center gap-1 px-4 transition-opacity"
-            style={{ opacity: active ? 1 : 0.35 }}
+            className="flex flex-col items-center gap-0.5 px-5 py-1.5 rounded-2xl transition-all"
+            style={{
+              background: active ? 'var(--color-accent-soft)' : 'transparent',
+              opacity: active ? 1 : 0.38,
+            }}
           >
             <span
-              className="text-2xl leading-none transition-transform"
-              style={{
-                color: active ? 'var(--color-accent)' : 'var(--color-foreground)',
-                transform: active ? 'scale(1.1)' : 'scale(1)',
-              }}
+              className="text-xl leading-none"
+              style={{ color: active ? 'var(--color-accent)' : 'var(--color-foreground)' }}
             >
               {icon}
             </span>
             <span
               className="text-[10px] font-semibold tracking-wide"
-              style={{ color: active ? 'var(--color-accent)' : undefined }}
+              style={{ color: active ? 'var(--color-accent)' : 'var(--color-foreground)' }}
             >
               {label}
             </span>
