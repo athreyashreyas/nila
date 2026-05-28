@@ -19,7 +19,7 @@ type Step = 'phrase' | 'newpassword';
 const fade = {
   initial: { opacity: 0, y: 10 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.2, ease: 'easeOut' },
+  transition: { duration: 0.2, ease: 'easeOut' as const },
 };
 
 const inputStyle = {
