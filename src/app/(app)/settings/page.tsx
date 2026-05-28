@@ -6,9 +6,8 @@ import { createBrowserClient } from '@supabase/ssr';
 import { useEncryption } from '@/lib/encryption/context';
 import { useTheme, type ThemeMode } from '@/lib/theme/context';
 import { derivePasswordKey, wrapMasterKey, generateSalt } from '@/lib/encryption/core';
-import { clearKey as clearStoredKey } from '@/lib/encryption/keyStore';
-import { useCycles } from '@/hooks/useCycles';
-import { useDailyLog } from '@/hooks/useDailyLog';
+import { useAppData } from '@/lib/data/context';
+import { clearKey as clearIDBKey } from '@/lib/encryption/keyStore';
 import { registerPushSubscription, unregisterPushSubscription, isPushSupported } from '@/lib/push/register';
 
 function supabase() {
@@ -22,8 +21,7 @@ export default function SettingsPage() {
   const router = useRouter();
   const { getMasterKey, clearKey } = useEncryption();
   const { theme, setTheme } = useTheme();
-  const { cycles } = useCycles();
-  const { logs } = useDailyLog();
+  const { cycles, logs } = useAppData();
 
   const [pushEnabled, setPushEnabled] = useState(false);
   const [pushLoading, setPushLoading] = useState(false);
@@ -33,6 +31,9 @@ export default function SettingsPage() {
   const [pwLoading, setPwLoading] = useState(false);
   const [pwError, setPwError] = useState('');
   const [pwSuccess, setPwSuccess] = useState(false);
+  const [tapCount, setTapCount] = useState(0);
+  const [showDevReset, setShowDevReset] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
@@ -71,9 +72,34 @@ export default function SettingsPage() {
 
   async function handleSignOut() {
     clearKey();
-    await clearStoredKey();
+    await clearIDBKey();
     await supabase().auth.signOut();
     router.push('/login');
+  }
+
+  function handleVersionTap() {
+    setTapCount(n => {
+      const next = n + 1;
+      if (next >= 5) { setShowDevReset(true); return 0; }
+      return next;
+    });
+  }
+
+  async function handleDevReset() {
+    setResetting(true);
+    try {
+      Object.keys(localStorage)
+        .filter(k => k.startsWith('nila') || k.startsWith('sb-'))
+        .forEach(k => localStorage.removeItem(k));
+      await indexedDB.databases?.().then(dbs =>
+        Promise.all(dbs.map(db => db.name && indexedDB.deleteDatabase(db.name)))
+      ).catch(() => indexedDB.deleteDatabase('nila-ks'));
+      clearKey();
+      await supabase().auth.signOut();
+      router.replace('/login');
+    } finally {
+      setResetting(false);
+    }
   }
 
   async function handleChangePassword(e: React.FormEvent) {
@@ -233,7 +259,40 @@ export default function SettingsPage() {
           <Row label="Sign out" danger onClick={handleSignOut} />
         </div>
 
-        <p className="text-center text-[10px] opacity-30 mt-2">Nila · private by design</p>
+        <button
+          onClick={handleVersionTap}
+          className="w-full text-center text-[10px] py-2 mt-2 select-none"
+          style={{ opacity: 0.3, color: 'var(--color-foreground)' }}
+        >
+          Nila · private by design
+        </button>
+
+        {showDevReset && (
+          <div className="rounded-[var(--radius)] p-4 flex flex-col gap-3"
+            style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
+            <p className="text-xs font-semibold" style={{ color: '#f87171' }}>Dev reset</p>
+            <p className="text-xs" style={{ color: 'var(--color-foreground-muted)' }}>
+              Clears all local storage, IndexedDB, and signs out. You'll need to delete the Supabase user separately.
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDevReset(false)}
+                className="flex-1 py-2.5 rounded-xl text-xs font-medium"
+                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDevReset}
+                disabled={resetting}
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-white disabled:opacity-60"
+                style={{ background: '#ef4444' }}
+              >
+                {resetting ? 'Resetting…' : 'Reset everything'}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
