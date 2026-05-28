@@ -19,16 +19,24 @@
 <h1>Nila — Full Moon Icon</h1>
 <p>Preview below. Click Download to save all sizes → move files to <code>public/icons/</code></p>
 
-<div class="row" id="previews"></div>
+<p style="font-size:11px;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.8px;font-weight:700;">Dark — Indigo</p>
+<div class="row" id="previewsDark" style="margin-bottom:28px;"></div>
+<p style="font-size:11px;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.8px;font-weight:700;">Light — Sage</p>
+<div class="row" id="previewsLight" style="margin-bottom:28px;background:rgba(240,247,243,0.06);padding:16px;border-radius:16px;"></div>
 <button onclick="downloadAll()">Download all icons</button>
 
 <script>
 const ICONS = [
-  { file: 'icon-512.png',         size: 512, bg: '#111427', accent: [130,142,242] },
-  { file: 'icon-192.png',         size: 192, bg: '#111427', accent: [130,142,242] },
-  { file: 'apple-touch-icon.png', size: 180, bg: '#111427', accent: [130,142,242] },
-  { file: 'icon-167.png',         size: 167, bg: '#111427', accent: [130,142,242] },
-  { file: 'icon-152.png',         size: 152, bg: '#111427', accent: [130,142,242] },
+  // Dark (indigo) — primary set, goes in public/icons/
+  { file: 'icon-512.png',               size: 512, bg: '#111427', accent: [130,142,242], group: 'Dark' },
+  { file: 'icon-192.png',               size: 192, bg: '#111427', accent: [130,142,242], group: 'Dark' },
+  { file: 'apple-touch-icon.png',       size: 180, bg: '#111427', accent: [130,142,242], group: 'Dark' },
+  { file: 'icon-167.png',               size: 167, bg: '#111427', accent: [130,142,242], group: 'Dark' },
+  { file: 'icon-152.png',               size: 152, bg: '#111427', accent: [130,142,242], group: 'Dark' },
+  // Light (sage) — save as icon-*-light.png, use for light theme if desired
+  { file: 'icon-512-light.png',         size: 512, bg: '#f0f7f3', accent: [22,163,74],   group: 'Light' },
+  { file: 'icon-192-light.png',         size: 192, bg: '#f0f7f3', accent: [22,163,74],   group: 'Light' },
+  { file: 'apple-touch-icon-light.png', size: 180, bg: '#f0f7f3', accent: [22,163,74],   group: 'Light' },
 ];
 
 function drawMoon(canvas, bg, accent) {
@@ -61,7 +69,7 @@ function drawMoon(canvas, bg, accent) {
 
   // Subtle craters
   const bgArr = bg === '#f0f7f3' ? '240,247,243' : '17,20,39';
-  [[−6, −4, 3, 0.14],[6, 4, 2, 0.11],[0, −9, 1.5, 0.09]].forEach(([dx, dy, r, a]) => {
+  [[-6, -4, 3, 0.14],[6, 4, 2, 0.11],[0, -9, 1.5, 0.09]].forEach(([dx, dy, r, a]) => {
     ctx.beginPath();
     ctx.arc(cx + dx * sc, cy + dy * sc, r * sc, 0, Math.PI * 2);
     ctx.fillStyle = `rgba(${bgArr},${a})`;
@@ -69,7 +77,6 @@ function drawMoon(canvas, bg, accent) {
   });
 }
 
-const previews = document.getElementById('previews');
 const canvases = {};
 
 ICONS.forEach(cfg => {
@@ -79,7 +86,7 @@ ICONS.forEach(cfg => {
   canvases[cfg.file] = c;
 
   const preview = document.createElement('canvas');
-  const ps = Math.min(cfg.size, 80);
+  const ps = Math.min(cfg.size, 72);
   preview.width = cfg.size; preview.height = cfg.size;
   drawMoon(preview, cfg.bg, cfg.accent.join(','));
   preview.style.width  = ps + 'px';
@@ -87,9 +94,11 @@ ICONS.forEach(cfg => {
 
   const col = document.createElement('div');
   col.className = 'col';
-  col.innerHTML = `<div class="lbl">${cfg.file.replace('.png','')}<br>${cfg.size}px</div>`;
+  col.innerHTML = `<div class="lbl">${cfg.size}px</div>`;
   col.appendChild(preview);
-  previews.appendChild(col);
+
+  const container = document.getElementById(cfg.group === 'Dark' ? 'previewsDark' : 'previewsLight');
+  container.appendChild(col);
 });
 
 function downloadAll() {
