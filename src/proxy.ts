@@ -28,6 +28,9 @@ export async function proxy(request: NextRequest) {
   // Refresh session to keep it alive
   const { data: { user } } = await supabase.auth.getUser();
 
+  // Server action requests must pass through — never redirect them
+  if (request.headers.has('Next-Action')) return supabaseResponse;
+
   const { pathname } = request.nextUrl;
   const isAuthRoute = pathname.startsWith('/login') ||
     pathname.startsWith('/signup') ||
