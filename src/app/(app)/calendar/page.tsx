@@ -98,7 +98,7 @@ export default function CalendarPage() {
       </div>
 
       {/* Days grid */}
-      <div className="grid grid-cols-7 gap-y-1">
+      <div className="grid grid-cols-7 gap-1">
         {/* Leading empty cells */}
         {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
 
@@ -118,10 +118,10 @@ export default function CalendarPage() {
               onClick={() => router.push(`/journal/${iso}`)}
               className="relative flex flex-col items-center justify-center aspect-square rounded-xl text-sm font-medium transition-all"
               style={{
-                background: phaseMeta ? `${phaseMeta.color}18` : 'transparent',
-                color: isToday ? 'var(--color-accent)' : undefined,
+                background: phaseMeta ? `${phaseMeta.color}28` : 'var(--color-surface)',
+                color: isToday ? 'var(--color-accent)' : 'var(--color-foreground)',
                 fontWeight: isToday ? 700 : 500,
-                border: isToday ? '1.5px solid var(--color-accent)' : '1.5px solid transparent',
+                border: isToday ? '1.5px solid var(--color-accent)' : '1px solid var(--color-border)',
               }}
             >
               {day}

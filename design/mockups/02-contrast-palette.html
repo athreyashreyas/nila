@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nila — Contrast & Palette Mockup</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-weight: 500; background: #111; color: #fff; }
+
+  .controls {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: #1a1a1a; border-bottom: 1px solid #333;
+    padding: 12px 20px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center;
+  }
+  .controls label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #888; display: flex; flex-direction: column; gap: 4px; }
+  .controls input[type=range] { width: 100px; }
+  .controls input[type=color] { width: 44px; height: 28px; border: none; background: none; cursor: pointer; }
+  .controls select { background: #222; color: #fff; border: 1px solid #444; padding: 4px 8px; border-radius: 6px; font-size: 12px; }
+  .palette-btn { padding: 6px 12px; border-radius: 8px; border: 1px solid #444; background: transparent; color: #fff; font-size: 11px; cursor: pointer; transition: all 0.15s; }
+  .palette-btn:hover { background: #333; }
+  .palette-btn.active { border-color: #818cf8; color: #818cf8; }
+
+  .screens { display: flex; gap: 0; margin-top: 90px; }
+  .phone { flex: 1; min-height: calc(100vh - 90px); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  .phone-label { text-align: center; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; padding: 8px; opacity: 0.4; }
+
+  /* Phone UI */
+  .screen { flex: 1; padding: 20px 16px 80px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+  .screen-header { display: flex; align-items: center; justify-content: space-between; padding-top: 8px; }
+  .screen-title { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+  .screen-date { font-size: 13px; margin-top: 2px; }
+  .moon-btn { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; border: none; cursor: pointer; }
+
+  .card { border-radius: 20px; padding: 18px; border: 1px solid transparent; }
+  .card-sm { border-radius: 12px; padding: 14px 16px; border: 1px solid transparent; display: flex; align-items: center; gap: 12px; }
+  .phase-label { font-size: 18px; font-weight: 700; }
+  .phase-desc { font-size: 13px; margin-top: 3px; line-height: 1.4; }
+  .phase-meta { font-size: 11px; margin-top: 8px; }
+
+  .section-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; }
+
+  .mood-row { display: flex; gap: 6px; }
+  .mood-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: 12px; border: 2px solid transparent; font-size: 20px; cursor: pointer; }
+  .mood-btn span { font-size: 9px; font-weight: 700; letter-spacing: 0.03em; }
+
+  .flow-row { display: flex; gap: 6px; }
+  .flow-btn { flex: 1; padding: 8px 4px; border-radius: 12px; border: 1.5px solid transparent; font-size: 11px; font-weight: 600; text-align: center; cursor: pointer; }
+
+  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { padding: 6px 12px; border-radius: 100px; font-size: 11px; font-weight: 600; border: 1.5px solid transparent; cursor: pointer; }
+
+  .save-btn { width: 100%; padding: 14px; border-radius: 20px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 4px; }
+
+  /* Ring placeholder */
+  .ring { width: 72px; height: 72px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; flex-shrink: 0; }
+
+  /* Bottom nav */
+  .bottom-nav { position: absolute; bottom: 0; left: 0; right: 0; display: flex; border-top: 1px solid transparent; padding: 10px 0 20px; z-index: 10; }
+  .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 4px; }
+  .nav-icon { font-size: 20px; line-height: 1; }
+  .nav-label { font-size: 10px; font-weight: 700; letter-spacing: 0.04em; }
+
+  /* Divider */
+  .divider { width: 1px; background: #333; }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <div style="display:flex; gap:8px; flex-wrap:wrap">
+    <button class="palette-btn active" onclick="applyPalette('sage-indigo')">Sage + Indigo</button>
+    <button class="palette-btn" onclick="applyPalette('warm-rose')">Warm Rose</button>
+    <button class="palette-btn" onclick="applyPalette('slate-violet')">Slate + Violet</button>
+    <button class="palette-btn" onclick="applyPalette('cream-plum')">Cream + Plum</button>
+    <button class="palette-btn" onclick="applyPalette('custom')">Custom</button>
+  </div>
+
+  <div style="display:flex; gap:16px; flex-wrap:wrap; padding-left: 12px; border-left: 1px solid #333">
+    <label>Surface opacity
+      <input type="range" min="5" max="60" value="30" id="surfaceOpacity" oninput="update()">
+      <span id="surfaceOpacityVal">30%</span>
+    </label>
+    <label>Border opacity
+      <input type="range" min="3" max="25" value="8" id="borderOpacity" oninput="update()">
+      <span id="borderOpacityVal">8%</span>
+    </label>
+    <label>Text contrast
+      <input type="range" min="50" max="100" value="85" id="textContrast" oninput="update()">
+      <span id="textContrastVal">85%</span>
+    </label>
+  </div>
+
+  <div style="display:flex; gap:16px; flex-wrap:wrap; padding-left: 12px; border-left: 1px solid #333" id="customControls">
+    <label>Light BG <input type="color" id="cLightBg" value="#f0f7f3" oninput="update()"></label>
+    <label>Light accent <input type="color" id="cLightAccent" value="#16a34a" oninput="update()"></label>
+    <label>Dark BG <input type="color" id="cDarkBg" value="#0d0f1f" oninput="update()"></label>
+    <label>Dark accent <input type="color" id="cDarkAccent" value="#818cf8" oninput="update()"></label>
+  </div>
+</div>
+
+<div class="screens">
+  <!-- LIGHT -->
+  <div class="phone" id="lightPhone">
+    <div class="phone-label">Light mode</div>
+    <div class="screen" id="lightScreen">
+      <div class="screen-header">
+        <div>
+          <div class="screen-title" id="l-title">Nila</div>
+          <div class="screen-date" id="l-date">Wednesday, 28 May</div>
+        </div>
+        <button class="moon-btn" id="l-moon">🌙</button>
+      </div>
+
+      <div class="card" id="l-card1">
+        <div style="display:flex;gap:16px;align-items:center">
+          <div class="ring" id="l-ring">14</div>
+          <div>
+            <div class="phase-label" style="color:#c084fc">Luteal</div>
+            <div class="phase-desc" id="l-desc">Winding down. Honour the need for more rest.</div>
+            <div class="phase-meta" id="l-meta">Day 14 · next period in 7 days</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-sm" id="l-pill">
+        <span style="font-size:20px">🗓</span>
+        <div>
+          <div style="font-size:11px" id="l-pill-label">Next period</div>
+          <div style="font-size:11px;margin-top:2px" id="l-pill-sub">±2 days</div>
+        </div>
+        <div style="margin-left:auto;font-size:14px;font-weight:700">4 Jun</div>
+      </div>
+
+      <div>
+        <div class="section-label" id="l-mood-label">How are you feeling?</div>
+        <div class="mood-row">
+          <div class="mood-btn" id="l-mb1">😊<span id="l-mbs1">Great</span></div>
+          <div class="mood-btn" id="l-mb2" style="border-color:var(--la)">🙂<span id="l-mbs2">Good</span></div>
+          <div class="mood-btn" id="l-mb3">😐<span id="l-mbs3">Okay</span></div>
+          <div class="mood-btn" id="l-mb4">😔<span id="l-mbs4">Low</span></div>
+          <div class="mood-btn" id="l-mb5">😴<span id="l-mbs5">Tired</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label" id="l-flow-label">Flow</div>
+        <div class="flow-row">
+          <div class="flow-btn" id="l-fl1">None</div>
+          <div class="flow-btn" id="l-fl2">Spotting</div>
+          <div class="flow-btn" id="l-fl3" style="border-color:var(--la);color:var(--la)">Light</div>
+          <div class="flow-btn" id="l-fl4">Medium</div>
+          <div class="flow-btn" id="l-fl5">Heavy</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label" id="l-sym-label">Symptoms</div>
+        <div class="chip-row">
+          <div class="chip" id="l-c1" style="border-color:var(--la);color:var(--la)">cramps</div>
+          <div class="chip" id="l-c2">bloating</div>
+          <div class="chip" id="l-c3">headache</div>
+          <div class="chip" id="l-c4">fatigue</div>
+          <div class="chip" id="l-c5">mood swings</div>
+          <div class="chip" id="l-c6">backache</div>
+        </div>
+      </div>
+
+      <button class="save-btn" id="l-save">Save check-in</button>
+    </div>
+
+    <nav class="bottom-nav" id="l-nav">
+      <div class="nav-item">
+        <div class="nav-icon" id="l-ni1">○</div>
+        <div class="nav-label" id="l-nl1">Today</div>
+      </div>
+      <div class="nav-item">
+        <div class="nav-icon" id="l-ni2">◫</div>
+        <div class="nav-label" id="l-nl2">Calendar</div>
+      </div>
+      <div class="nav-item">
+        <div class="nav-icon" id="l-ni3">◈</div>
+        <div class="nav-label" id="l-nl3">Insights</div>
+      </div>
+      <div class="nav-item">
+        <div class="nav-icon" id="l-ni4">◎</div>
+        <div class="nav-label" id="l-nl4">Settings</div>
+      </div>
+    </nav>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- DARK -->
+  <div class="phone" id="darkPhone">
+    <div class="phone-label">Dark mode</div>
+    <div class="screen" id="darkScreen">
+      <div class="screen-header">
+        <div>
+          <div class="screen-title" id="d-title">Nila</div>
+          <div class="screen-date" id="d-date">Wednesday, 28 May</div>
+        </div>
+        <button class="moon-btn" id="d-moon">☀️</button>
+      </div>
+
+      <div class="card" id="d-card1">
+        <div style="display:flex;gap:16px;align-items:center">
+          <div class="ring" id="d-ring">14</div>
+          <div>
+            <div class="phase-label" style="color:#c084fc">Luteal</div>
+            <div class="phase-desc" id="d-desc">Winding down. Honour the need for more rest.</div>
+            <div class="phase-meta" id="d-meta">Day 14 · next period in 7 days</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-sm" id="d-pill">
+        <span style="font-size:20px">🗓</span>
+        <div>
+          <div style="font-size:11px" id="d-pill-label">Next period</div>
+          <div style="font-size:11px;margin-top:2px" id="d-pill-sub">±2 days</div>
+        </div>
+        <div style="margin-left:auto;font-size:14px;font-weight:700">4 Jun</div>
+      </div>
+
+      <div>
+        <div class="section-label" id="d-mood-label">How are you feeling?</div>
+        <div class="mood-row">
+          <div class="mood-btn" id="d-mb1">😊<span id="d-mbs1">Great</span></div>
+          <div class="mood-btn" id="d-mb2" style="border-color:var(--da)">🙂<span id="d-mbs2">Good</span></div>
+          <div class="mood-btn" id="d-mb3">😐<span id="d-mbs3">Okay</span></div>
+          <div class="mood-btn" id="d-mb4">😔<span id="d-mbs4">Low</span></div>
+          <div class="mood-btn" id="d-mb5">😴<span id="d-mbs5">Tired</span></div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label" id="d-flow-label">Flow</div>
+        <div class="flow-row">
+          <div class="flow-btn" id="d-fl1">None</div>
+          <div class="flow-btn" id="d-fl2">Spotting</div>
+          <div class="flow-btn" id="d-fl3" style="border-color:var(--da);color:var(--da)">Light</div>
+          <div class="flow-btn" id="d-fl4">Medium</div>
+          <div class="flow-btn" id="d-fl5">Heavy</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="section-label" id="d-sym-label">Symptoms</div>
+        <div class="chip-row">
+          <div class="chip" id="d-c1" style="border-color:var(--da);color:var(--da)">cramps</div>
+          <div class="chip" id="d-c2">bloating</div>
+          <div class="chip" id="d-c3">headache</div>
+          <div class="chip" id="d-c4">fatigue</div>
+          <div class="chip" id="d-c5">mood swings</div>
+          <div class="chip" id="d-c6">backache</div>
+        </div>
+      </div>
+
+      <button class="save-btn" id="d-save">Save check-in</button>
+    </div>
+
+    <nav class="bottom-nav" id="d-nav">
+      <div class="nav-item">
+        <div class="nav-icon" id="d-ni1">○</div>
+        <div class="nav-label" id="d-nl1">Today</div>
+      </div>
+      <div class="nav-item">
+        <div class="nav-icon" id="d-ni2">◫</div>
+        <div class="nav-label" id="d-nl2">Calendar</div>
+      </div>
+      <div class="nav-item">
+        <div class="nav-icon" id="d-ni3">◈</div>
+        <div class="nav-label" id="d-nl3">Insights</div>
+      </div>
+      <div class="nav-item">
+        <div class="nav-icon" id="d-ni4">◎</div>
+        <div class="nav-label" id="d-nl4">Settings</div>
+      </div>
+    </nav>
+  </div>
+</div>
+
+<script>
+const PALETTES = {
+  'sage-indigo': {
+    lbg: '#f0f7f3', lsurface: '218,238,227', lfg: '#0a2814', lfgm: '#4a7c5e', la: '#16a34a',
+    dbg: '#0d0f1f', dsurface: '26,31,74',     dfg: '#e8eaff', dfgm: '#9ba3d4', da: '#818cf8',
+  },
+  'warm-rose': {
+    lbg: '#fff5f5', lsurface: '255,220,220', lfg: '#1a0808', lfgm: '#7c4a4a', la: '#e11d48',
+    dbg: '#1a0a0a', dsurface: '74,20,20',    dfg: '#ffe4e6', dfgm: '#c4868e', da: '#fb7185',
+  },
+  'slate-violet': {
+    lbg: '#f5f5ff', lsurface: '210,210,255', lfg: '#0f0a1e', lfgm: '#5a4a8e', la: '#7c3aed',
+    dbg: '#0a0a1a', dsurface: '30,20,60',    dfg: '#ede9fe', dfgm: '#9d8ec4', da: '#a78bfa',
+  },
+  'cream-plum': {
+    lbg: '#fdf8f0', lsurface: '240,220,190', lfg: '#1a1008', lfgm: '#7c5e3a', la: '#92400e',
+    dbg: '#110d08', dsurface: '60,35,15',    dfg: '#fef3c7', dfgm: '#b89a6a', da: '#d97706',
+  },
+};
+
+let current = 'sage-indigo';
+
+function applyPalette(name) {
+  current = name;
+  document.querySelectorAll('.palette-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[onclick="applyPalette('${name}')"]`).classList.add('active');
+  if (name !== 'custom' && PALETTES[name]) {
+    const p = PALETTES[name];
+    document.getElementById('cLightBg').value = p.lbg;
+    document.getElementById('cLightAccent').value = p.la;
+    document.getElementById('cDarkBg').value = p.dbg;
+    document.getElementById('cDarkAccent').value = p.da;
+  }
+  update();
+}
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `${r},${g},${b}`;
+}
+
+function lighten(hex, amount) {
+  let r = parseInt(hex.slice(1,3),16);
+  let g = parseInt(hex.slice(3,5),16);
+  let b = parseInt(hex.slice(5,7),16);
+  r = Math.min(255, r + amount);
+  g = Math.min(255, g + amount);
+  b = Math.min(255, b + amount);
+  return `rgb(${r},${g},${b})`;
+}
+
+function update() {
+  const surfOp = document.getElementById('surfaceOpacity').value;
+  const borderOp = document.getElementById('borderOpacity').value;
+  const textC = document.getElementById('textContrast').value;
+
+  document.getElementById('surfaceOpacityVal').textContent = surfOp + '%';
+  document.getElementById('borderOpacityVal').textContent = borderOp + '%';
+  document.getElementById('textContrastVal').textContent = textC + '%';
+
+  const lbg = document.getElementById('cLightBg').value;
+  const la  = document.getElementById('cLightAccent').value;
+  const dbg = document.getElementById('cDarkBg').value;
+  const da  = document.getElementById('cDarkAccent').value;
+
+  const p = current !== 'custom' && PALETTES[current] ? PALETTES[current] : {
+    lsurface: hexToRgb(lbg), lfg: '#0a0a0a', lfgm: '#555',
+    dsurface: hexToRgb(dbg), dfg: '#f0f0f0', dfgm: '#999',
+  };
+
+  const lsRgb = p.lsurface || hexToRgb(lbg);
+  const dsRgb = p.dsurface || hexToRgb(dbg);
+  const lfg = p.lfg;
+  const lfgm = p.lfgm;
+  const dfg = p.dfg;
+  const dfgm = p.dfgm;
+
+  const textAlpha = textC / 100;
+  const mutedAlpha = (textC / 100) * 0.55;
+
+  // Light CSS vars
+  document.documentElement.style.setProperty('--la', la);
+  document.documentElement.style.setProperty('--da', da);
+
+  // Apply light
+  const lPhone = document.getElementById('lightPhone');
+  lPhone.style.background = lbg;
+
+  const lScreen = document.getElementById('lightScreen');
+  lScreen.style.color = lfg;
+
+  document.getElementById('l-title').style.color = lfg;
+  ['l-date','l-desc','l-meta','l-pill-label','l-pill-sub','l-mood-label','l-flow-label','l-sym-label'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.color = lfgm;
+  });
+  ['l-mbs1','l-mbs2','l-mbs3','l-mbs4','l-mbs5'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.color = lfgm;
+  });
+
+  const lSurf = `rgba(${lsRgb},${surfOp/100})`;
+  const lBord = `rgba(0,0,0,${borderOp/100})`;
+
+  ['l-card1','l-pill'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.background = lSurf; el.style.borderColor = lBord; }
+  });
+  ['l-mb1','l-mb2','l-mb3','l-mb4','l-mb5'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.background = lSurf; }
+  });
+  ['l-fl1','l-fl2','l-fl3','l-fl4','l-fl5'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.background = lSurf; }
+  });
+  ['l-c1','l-c2','l-c3','l-c4','l-c5','l-c6'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    if (el && i !== 0) { el.style.background = lSurf; el.style.color = lfgm; }
+  });
+
+  document.getElementById('l-ring').style.background = lSurf;
+  document.getElementById('l-ring').style.color = la;
+  document.getElementById('l-moon').style.background = lSurf;
+  document.getElementById('l-moon').style.color = la;
+  document.getElementById('l-save').style.background = la;
+  document.getElementById('l-save').style.color = '#fff';
+
+  const lNav = document.getElementById('l-nav');
+  lNav.style.background = lbg;
+  lNav.style.borderColor = lBord;
+  ['l-ni1','l-nl1'].forEach(id => { const el = document.getElementById(id); if(el) el.style.color = la; });
+  ['l-ni2','l-ni3','l-ni4','l-nl2','l-nl3','l-nl4'].forEach(id => { const el = document.getElementById(id); if(el) el.style.color = lfgm; });
+
+  // Apply dark
+  const dPhone = document.getElementById('darkPhone');
+  dPhone.style.background = dbg;
+
+  const dScreen = document.getElementById('darkScreen');
+  dScreen.style.color = dfg;
+
+  document.getElementById('d-title').style.color = dfg;
+  ['d-date','d-desc','d-meta','d-pill-label','d-pill-sub','d-mood-label','d-flow-label','d-sym-label'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.color = dfgm;
+  });
+  ['d-mbs1','d-mbs2','d-mbs3','d-mbs4','d-mbs5'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.color = dfgm;
+  });
+
+  const dSurf = `rgba(${dsRgb},${surfOp/100})`;
+  const dBord = `rgba(255,255,255,${borderOp/100})`;
+
+  ['d-card1','d-pill'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.background = dSurf; el.style.borderColor = dBord; }
+  });
+  ['d-mb1','d-mb2','d-mb3','d-mb4','d-mb5'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.background = dSurf; }
+  });
+  ['d-fl1','d-fl2','d-fl3','d-fl4','d-fl5'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.style.background = dSurf; }
+  });
+  ['d-c1','d-c2','d-c3','d-c4','d-c5','d-c6'].forEach((id,i) => {
+    const el = document.getElementById(id);
+    if (el && i !== 0) { el.style.background = dSurf; el.style.color = dfgm; }
+  });
+
+  document.getElementById('d-ring').style.background = dSurf;
+  document.getElementById('d-ring').style.color = da;
+  document.getElementById('d-moon').style.background = dSurf;
+  document.getElementById('d-moon').style.color = da;
+  document.getElementById('d-save').style.background = da;
+  document.getElementById('d-save').style.color = '#fff';
+
+  const dNav = document.getElementById('d-nav');
+  dNav.style.background = dbg;
+  dNav.style.borderColor = dBord;
+  ['d-ni1','d-nl1'].forEach(id => { const el = document.getElementById(id); if(el) el.style.color = da; });
+  ['d-ni2','d-ni3','d-ni4','d-nl2','d-nl3','d-nl4'].forEach(id => { const el = document.getElementById(id); if(el) el.style.color = dfgm; });
+}
+
+applyPalette('sage-indigo');
+</script>
+</body>
+</html>
