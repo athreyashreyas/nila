@@ -96,7 +96,7 @@ export async function unwrapMasterKey(
     wrappingKey,
     { name: 'AES-KW' },
     { name: 'AES-GCM', length: 256 },
-    false,
+    true,
     ['encrypt', 'decrypt']
   );
 }

@@ -85,14 +85,6 @@ export default function HomePage() {
   const today = new Date();
   const dateStr = today.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
-  if (!isUnlocked) {
-    return (
-      <div className="flex items-center justify-center min-h-screen opacity-40 text-sm">
-        Unlocking…
-      </div>
-    );
-  }
-
   return (
     <div className="px-5 pt-4 pb-28 flex flex-col gap-5">
       {/* Header */}

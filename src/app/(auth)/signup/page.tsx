@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { createBrowserClient } from '@supabase/ssr';
 import { setupEncryption } from '@/lib/encryption/setup';
+import { saveKey } from '@/lib/encryption/keyStore';
 import { useEncryption } from '@/lib/encryption/context';
 import { createProfile } from '@/app/actions/createProfile';
 
@@ -63,6 +64,7 @@ export default function SignupPage() {
       });
       if (profileError) throw new Error(profileError);
 
+      await saveKey(masterKey);
       mountKey(masterKey);
       setRecoveryPhrase(phrase);
       setStep('phrase');

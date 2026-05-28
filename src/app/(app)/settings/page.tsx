@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import { useEncryption } from '@/lib/encryption/context';
 import { derivePasswordKey, wrapMasterKey, generateSalt } from '@/lib/encryption/core';
+import { clearKey as clearStoredKey } from '@/lib/encryption/keyStore';
 import { useCycles } from '@/hooks/useCycles';
 import { useDailyLog } from '@/hooks/useDailyLog';
 import { registerPushSubscription, unregisterPushSubscription, isPushSupported } from '@/lib/push/register';
@@ -68,6 +69,7 @@ export default function SettingsPage() {
 
   async function handleSignOut() {
     clearKey();
+    await clearStoredKey();
     await supabase().auth.signOut();
     router.push('/login');
   }

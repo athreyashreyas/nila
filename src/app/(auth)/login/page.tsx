@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { createBrowserClient } from '@supabase/ssr';
 import { derivePasswordKey, unwrapMasterKey } from '@/lib/encryption/core';
+import { saveKey } from '@/lib/encryption/keyStore';
 import { useEncryption } from '@/lib/encryption/context';
 
 const inputStyle = {
@@ -46,6 +47,7 @@ function LoginForm() {
 
       const pdk = await derivePasswordKey(password, profile.key_salt, profile.pbkdf2_iterations);
       const masterKey = await unwrapMasterKey(profile.wrapped_key, pdk);
+      await saveKey(masterKey);
       mountKey(masterKey);
       router.push('/home');
     } catch (err) {
