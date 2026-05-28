@@ -55,12 +55,13 @@ export default function SignupPage() {
         throw new Error('This email is already registered. Check your inbox for a confirmation link, or sign in if already confirmed.');
       }
 
-      await createProfile(data.user.id, {
+      const { error: profileError } = await createProfile(data.user.id, {
         key_salt: profileKeyData.key_salt,
         wrapped_key: profileKeyData.wrapped_key,
         recovery_wrapped_key: profileKeyData.recovery_wrapped_key ?? null,
         pbkdf2_iterations: profileKeyData.pbkdf2_iterations,
       });
+      if (profileError) throw new Error(profileError);
 
       mountKey(masterKey);
       setRecoveryPhrase(phrase);
