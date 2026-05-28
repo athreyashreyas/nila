@@ -3,11 +3,67 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useEncryption } from '@/lib/encryption/context';
 import { derivePasswordKey, unwrapMasterKey } from '@/lib/encryption/core';
 import { loadKey, saveKey } from '@/lib/encryption/keyStore';
 import { BottomNav } from '@/components/ui/BottomNav';
-import { AppDataProvider } from '@/lib/data/context';
+import { AppDataProvider, useAppData } from '@/lib/data/context';
+
+const QUOTES = [
+  'Your body keeps its own rhythm.',
+  'Every cycle is a new beginning.',
+  'Rest is a form of strength.',
+  'You know yourself better than anyone.',
+  'Strong, cyclical, whole.',
+  'Your story is safe here.',
+  'Tuning into your inner cycles…',
+  'Good things take just a moment.',
+];
+
+function DataGate({ children }: { children: React.ReactNode }) {
+  const { isReady } = useAppData();
+  const [quoteIdx, setQuoteIdx] = useState(() => Math.floor(Math.random() * QUOTES.length));
+
+  useEffect(() => {
+    if (isReady) return;
+    const id = setInterval(() => setQuoteIdx(i => (i + 1) % QUOTES.length), 2800);
+    return () => clearInterval(id);
+  }, [isReady]);
+
+  if (isReady) return <>{children}</>;
+
+  return (
+    <div
+      className="min-h-screen flex flex-col items-center justify-center gap-5"
+      style={{ background: 'var(--color-background)' }}
+    >
+      <motion.div
+        animate={{ scale: [1, 1.06, 1], opacity: [0.9, 1, 0.9] }}
+        transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
+        className="text-5xl select-none"
+      >
+        🌕
+      </motion.div>
+      <div className="text-2xl font-bold tracking-tight" style={{ color: 'var(--color-foreground)' }}>
+        Nila
+      </div>
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={quoteIdx}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
+          className="text-sm text-center max-w-[200px] leading-relaxed"
+          style={{ color: 'var(--color-foreground-muted)' }}
+        >
+          {QUOTES[quoteIdx]}
+        </motion.p>
+      </AnimatePresence>
+    </div>
+  );
+}
 
 const TAB_ROUTES = ['/home', '/calendar', '/insights', '/settings', '/journal'];
 
@@ -132,12 +188,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <AppDataProvider>
-      <div className="flex flex-col min-h-screen">
-        <main className="flex-1 overflow-y-auto">
-          {children}
-        </main>
-        <BottomNav />
-      </div>
+      <DataGate>
+        <div className="flex flex-col min-h-screen">
+          <main className="flex-1 overflow-y-auto">
+            {children}
+          </main>
+          <BottomNav />
+        </div>
+      </DataGate>
     </AppDataProvider>
   );
 }

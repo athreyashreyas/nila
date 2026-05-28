@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useRef, useCallback, useMemo, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useCallback, useMemo, useState, type ReactNode } from 'react';
 import { useEncryption } from '@/lib/encryption/context';
 import { useCycles } from '@/hooks/useCycles';
 import { useDailyLog } from '@/hooks/useDailyLog';
@@ -11,6 +11,7 @@ interface AppData {
   cycles: DecryptedCycle[];
   logs: DecryptedDailyLog[];
   prediction: PredictionResult;
+  isReady: boolean;
   cyclesLoading: boolean;
   logsLoading: boolean;
   addCycle: (payload: CyclePayload) => Promise<void>;
@@ -29,12 +30,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const logsHook = useDailyLog();
   const prediction = usePrediction(cyclesHook.cycles);
   const initialized = useRef(false);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     if (isUnlocked && !initialized.current) {
       initialized.current = true;
-      cyclesHook.fetchAll();
-      logsHook.fetchAll();
+      Promise.all([cyclesHook.fetchAll(), logsHook.fetchAll()])
+        .finally(() => setIsReady(true));
     }
   }, [isUnlocked, cyclesHook.fetchAll, logsHook.fetchAll]);
 
@@ -46,6 +48,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     cycles: cyclesHook.cycles,
     logs: logsHook.logs,
     prediction,
+    isReady,
     cyclesLoading: cyclesHook.loading,
     logsLoading: logsHook.loading,
     addCycle: cyclesHook.addCycle,
@@ -57,7 +60,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   }), [
     cyclesHook.cycles, cyclesHook.loading, cyclesHook.addCycle, cyclesHook.updateCycle, cyclesHook.deleteCycle,
     logsHook.logs, logsHook.loading, logsHook.upsertLog, logsHook.deleteLog,
-    prediction, refresh,
+    prediction, isReady, refresh,
   ]);
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

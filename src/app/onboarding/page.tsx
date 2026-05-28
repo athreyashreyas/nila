@@ -59,8 +59,19 @@ export default function OnboardingPage() {
       style={{ background: 'var(--color-background)' }}>
       <div className="w-full max-w-sm">
 
+        {/* Welcome header */}
+        <div className="text-center mb-10">
+          <div className="text-4xl mb-3">🌕</div>
+          <h1 className="text-2xl font-bold tracking-tight" style={{ color: 'var(--color-foreground)' }}>
+            Welcome to Nila
+          </h1>
+          <p className="text-sm mt-1.5" style={{ color: 'var(--color-foreground-muted)' }}>
+            Three quick questions to personalise your experience.
+          </p>
+        </div>
+
         {/* Progress */}
-        <div className="flex gap-1.5 mb-12 justify-center">
+        <div className="flex gap-1.5 mb-10 justify-center">
           {[1, 2, 3].map((s) => (
             <div key={s} className="h-1 rounded-full transition-all duration-300"
               style={{
@@ -73,11 +84,10 @@ export default function OnboardingPage() {
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div key="step1" {...fade}>
-              <div className="text-4xl mb-5">🗓</div>
-              <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--color-foreground)' }}>
+              <h2 className="text-lg font-semibold mb-1.5" style={{ color: 'var(--color-foreground)' }}>
                 How long is your cycle?
-              </h1>
-              <p className="text-sm mb-8" style={{ color: 'var(--color-foreground-muted)' }}>
+              </h2>
+              <p className="text-sm mb-6" style={{ color: 'var(--color-foreground-muted)' }}>
                 From the first day of one period to the first day of the next.
               </p>
               <div className="grid grid-cols-2 gap-2 mb-4">
@@ -101,11 +111,10 @@ export default function OnboardingPage() {
 
           {step === 2 && (
             <motion.div key="step2" {...fade}>
-              <div className="text-4xl mb-5">🩸</div>
-              <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--color-foreground)' }}>
+              <h2 className="text-lg font-semibold mb-1.5" style={{ color: 'var(--color-foreground)' }}>
                 How long does your period last?
-              </h1>
-              <p className="text-sm mb-8" style={{ color: 'var(--color-foreground-muted)' }}>
+              </h2>
+              <p className="text-sm mb-6" style={{ color: 'var(--color-foreground-muted)' }}>
                 Count from the first to the last day of bleeding.
               </p>
               <div className="grid grid-cols-2 gap-2 mb-4">
@@ -130,10 +139,9 @@ export default function OnboardingPage() {
           {step === 3 && (
             <motion.div key="step3" {...fade} className="flex flex-col gap-5">
               <div>
-                <div className="text-4xl mb-5">📍</div>
-                <h1 className="text-2xl font-bold mb-2" style={{ color: 'var(--color-foreground)' }}>
+                <h2 className="text-lg font-semibold mb-1.5" style={{ color: 'var(--color-foreground)' }}>
                   When did your last period start?
-                </h1>
+                </h2>
                 <p className="text-sm" style={{ color: 'var(--color-foreground-muted)' }}>
                   Your best guess is fine — this helps predict your next period right away.
                 </p>
