@@ -6,7 +6,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     >
       <div className="flex flex-col items-center gap-1 mb-8 select-none">
         <span className="text-4xl">🌕</span>
-        <span className="text-2xl font-bold tracking-tight" style={{ color: 'var(--color-foreground)' }}>Nila</span>
+        <span className="font-display text-2xl font-bold tracking-tight" style={{ color: 'var(--color-foreground)' }}>Nila</span>
       </div>
       {children}
     </main>

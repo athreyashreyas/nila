@@ -145,7 +145,7 @@ export default function HomePage() {
       {/* Header */}
       <div className="flex items-center justify-between pt-2">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{greeting}</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight">{greeting}</h1>
           <p className="text-sm mt-0.5" style={{ color: 'var(--color-foreground-muted)' }}>{dateStr}</p>
         </div>
         <button
@@ -167,7 +167,7 @@ export default function HomePage() {
       >
         <PhaseRing prediction={prediction} />
         <div className="flex-1 min-w-0">
-          <div className="text-lg font-bold" style={{ color: meta.color }}>{meta.label}</div>
+          <div className="font-display text-xl font-bold" style={{ color: meta.color }}>{meta.label}</div>
           <div className="text-sm mt-0.5 leading-snug" style={{ color: 'var(--color-foreground-muted)' }}>
             {PHASE_WARMTH[prediction.currentPhase] ?? meta.description}
           </div>

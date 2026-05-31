@@ -84,8 +84,21 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         mountKey(key);
         try {
           if (!localStorage.getItem('nila-onboarded')) {
-            router.replace('/onboarding');
-            return;
+            // May be a new device for an existing account — check Supabase before onboarding
+            const db = createBrowserClient(
+              process.env.NEXT_PUBLIC_SUPABASE_URL!,
+              process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+            );
+            const { count } = await db
+              .from('cycles')
+              .select('*', { count: 'exact', head: true });
+            if (count && count > 0) {
+              // Already onboarded on another device — mark locally and continue
+              localStorage.setItem('nila-onboarded', 'true');
+            } else {
+              router.replace('/onboarding');
+              return;
+            }
           }
         } catch {}
       }
@@ -125,8 +138,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       try {
         if (!localStorage.getItem('nila-onboarded')) {
-          router.replace('/onboarding');
-          return;
+          const { count } = await supabase
+            .from('cycles')
+            .select('*', { count: 'exact', head: true });
+          if (count && count > 0) {
+            localStorage.setItem('nila-onboarded', 'true');
+          } else {
+            router.replace('/onboarding');
+            return;
+          }
         }
       } catch {}
     } catch (err) {

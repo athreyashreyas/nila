@@ -1,13 +1,23 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist } from 'next/font/google';
+import { Nunito, Playfair_Display } from 'next/font/google';
 import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration';
 import { EncryptionProvider } from '@/lib/encryption/context';
 import { ThemeProvider } from '@/lib/theme/context';
 import './globals.css';
 
-const geist = Geist({
-  variable: '--font-geist-sans',
+const nunito = Nunito({
+  variable: '--font-sans',
   subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  display: 'swap',
+});
+
+const playfair = Playfair_Display({
+  variable: '--font-display',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  style: ['normal', 'italic'],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -38,8 +48,8 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#111427' },
-    { media: '(prefers-color-scheme: light)', color: '#f0f7f3' },
+    { media: '(prefers-color-scheme: dark)', color: '#160a22' },
+    { media: '(prefers-color-scheme: light)', color: '#fff4f7' },
   ],
 };
 
@@ -49,7 +59,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geist.variable} h-full`}>
+    <html lang="en" className={`${nunito.variable} ${playfair.variable} h-full`}>
       <head>
         {/* Anti-FOUC: apply stored theme before React hydrates */}
         <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('nila-theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');else if(t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}` }} />

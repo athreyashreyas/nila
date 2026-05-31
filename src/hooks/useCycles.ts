@@ -55,7 +55,9 @@ export function useCycles() {
     if (!masterKey) throw new Error('Encryption key not loaded.');
     const { enc_data, enc_data_iv } = await encryptJSON(payload, masterKey);
     const db = supabase();
-    const { error: dbError } = await db.from('cycles').insert({ enc_data, enc_data_iv });
+    const { data: { user } } = await db.auth.getUser();
+    if (!user) throw new Error('Not authenticated.');
+    const { error: dbError } = await db.from('cycles').insert({ user_id: user.id, enc_data, enc_data_iv });
     if (dbError) throw dbError;
     await fetchAll();
   }, [getMasterKey, fetchAll]);

@@ -1,27 +1,27 @@
 @import "tailwindcss";
 
 /* ─── Nila Design Tokens ──────────────────────────────────────
-   Light = Golden Hour · Dark = Deep Dusk
-   Inspired by the warm spectrum of a technicolor sunset.
+   Light = Jardin de Versailles (blush roses, warm ivory, gold)
+   Dark  = Twilight Garden (deep plum sky, rose-petal glow)
    Radius: 20px · Weight: 500
    ─────────────────────────────────────────────────────────── */
 
 :root {
-  /* Light mode — Golden Hour */
-  --background:        #fff6ee;
-  --surface:           rgba(255, 212, 170, 0.42);
-  --surface-solid:     #ffd9b8;
-  --foreground:        #1e0c04;
-  --foreground-muted:  rgba(30, 12, 4, 0.56);
-  --border:            rgba(200, 64, 20, 0.10);
-  --accent:            #c8401a;
-  --accent-soft:       rgba(200, 64, 26, 0.12);
+  /* Light — Jardin de Versailles */
+  --background:        #fff4f7;
+  --surface:           rgba(246, 208, 222, 0.46);
+  --surface-solid:     #f5d0dc;
+  --foreground:        #2c0a18;
+  --foreground-muted:  rgba(44, 10, 24, 0.55);
+  --border:            rgba(183, 28, 90, 0.10);
+  --accent:            #b7285a;
+  --accent-soft:       rgba(183, 40, 90, 0.12);
 
-  /* Phase colors — sunset spectrum */
-  --phase-period:      #f43f5e;
-  --phase-follicular:  #f59e0b;
-  --phase-ovulation:   #f97316;
-  --phase-luteal:      #a78bfa;
+  /* Phase colors — floral sunset spectrum */
+  --phase-period:      #d81b60;
+  --phase-follicular:  #d97706;
+  --phase-ovulation:   #db2777;
+  --phase-luteal:      #7c3aed;
 
   /* Layout tokens */
   --radius:            20px;
@@ -36,39 +36,39 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Dark mode — Deep Dusk (system preference) */
-    --background:       #0c0716;
-    --surface:          rgba(50, 14, 60, 0.62);
-    --surface-solid:    #1c0a28;
-    --foreground:       #ffe9d6;
-    --foreground-muted: rgba(255, 233, 214, 0.56);
-    --border:           rgba(240, 100, 60, 0.12);
-    --accent:           #ff6b47;
-    --accent-soft:      rgba(255, 107, 71, 0.18);
+    /* Dark — Twilight Garden (system preference) */
+    --background:       #160a22;
+    --surface:          rgba(72, 20, 85, 0.52);
+    --surface-solid:    #2a0a36;
+    --foreground:       #fae8ef;
+    --foreground-muted: rgba(250, 232, 239, 0.55);
+    --border:           rgba(232, 120, 168, 0.12);
+    --accent:           #f06292;
+    --accent-soft:      rgba(240, 98, 146, 0.18);
   }
 }
 
 /* Explicit theme overrides — always win over system preference */
 [data-theme="light"] {
-  --background:        #fff6ee;
-  --surface:           rgba(255, 212, 170, 0.42);
-  --surface-solid:     #ffd9b8;
-  --foreground:        #1e0c04;
-  --foreground-muted:  rgba(30, 12, 4, 0.56);
-  --border:            rgba(200, 64, 20, 0.10);
-  --accent:            #c8401a;
-  --accent-soft:       rgba(200, 64, 26, 0.12);
+  --background:        #fff4f7;
+  --surface:           rgba(246, 208, 222, 0.46);
+  --surface-solid:     #f5d0dc;
+  --foreground:        #2c0a18;
+  --foreground-muted:  rgba(44, 10, 24, 0.55);
+  --border:            rgba(183, 28, 90, 0.10);
+  --accent:            #b7285a;
+  --accent-soft:       rgba(183, 40, 90, 0.12);
 }
 
 [data-theme="dark"] {
-  --background:       #0c0716;
-  --surface:          rgba(50, 14, 60, 0.62);
-  --surface-solid:    #1c0a28;
-  --foreground:       #ffe9d6;
-  --foreground-muted: rgba(255, 233, 214, 0.56);
-  --border:           rgba(240, 100, 60, 0.12);
-  --accent:           #ff6b47;
-  --accent-soft:      rgba(255, 107, 71, 0.18);
+  --background:       #160a22;
+  --surface:          rgba(72, 20, 85, 0.52);
+  --surface-solid:    #2a0a36;
+  --foreground:       #fae8ef;
+  --foreground-muted: rgba(250, 232, 239, 0.55);
+  --border:           rgba(232, 120, 168, 0.12);
+  --accent:           #f06292;
+  --accent-soft:      rgba(240, 98, 146, 0.18);
 }
 
 @theme inline {
@@ -84,7 +84,8 @@
   --color-phase-follicular: var(--phase-follicular);
   --color-phase-ovulation:  var(--phase-ovulation);
   --color-phase-luteal:     var(--phase-luteal);
-  --font-sans:              var(--font-geist-sans);
+  --font-sans:              var(--font-sans);
+  --font-display:           var(--font-display);
 }
 
 /* ─── Base ────────────────────────────────────────────────── */
@@ -98,11 +99,15 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
+  font-family: var(--font-sans, 'Nunito', system-ui, -apple-system, sans-serif);
   font-weight: 500;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
   height: 100dvh;
+}
+
+.font-display {
+  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
 }
 
 * {
