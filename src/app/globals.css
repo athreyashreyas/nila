@@ -1,26 +1,27 @@
 @import "tailwindcss";
 
 /* ─── Nila Design Tokens ──────────────────────────────────────
-   Light = Soft Sage · Dark = Deep Indigo
-   Radius: 20px · Weight: 500 · Surface: 60% opacity
+   Light = Golden Hour · Dark = Deep Dusk
+   Inspired by the warm spectrum of a technicolor sunset.
+   Radius: 20px · Weight: 500
    ─────────────────────────────────────────────────────────── */
 
 :root {
-  /* Light mode — Soft Sage */
-  --background:        #f0f7f3;
-  --surface:           rgba(218, 238, 227, 0.60);
-  --surface-solid:     #daeee3;
-  --foreground:        #0a2814;
-  --foreground-muted:  rgba(10, 40, 20, 0.65);
-  --border:            rgba(22, 163, 74, 0.09);
-  --accent:            #16a34a;
-  --accent-soft:       rgba(22, 163, 74, 0.10);
+  /* Light mode — Golden Hour */
+  --background:        #fff6ee;
+  --surface:           rgba(255, 212, 170, 0.42);
+  --surface-solid:     #ffd9b8;
+  --foreground:        #1e0c04;
+  --foreground-muted:  rgba(30, 12, 4, 0.56);
+  --border:            rgba(200, 64, 20, 0.10);
+  --accent:            #c8401a;
+  --accent-soft:       rgba(200, 64, 26, 0.12);
 
-  /* Phase colors */
-  --phase-period:      #e879f9;
-  --phase-follicular:  #4ade80;
-  --phase-ovulation:   #fbbf24;
-  --phase-luteal:      #60a5fa;
+  /* Phase colors — sunset spectrum */
+  --phase-period:      #f43f5e;
+  --phase-follicular:  #f59e0b;
+  --phase-ovulation:   #f97316;
+  --phase-luteal:      #a78bfa;
 
   /* Layout tokens */
   --radius:            20px;
@@ -35,39 +36,39 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Dark mode — Deep Indigo (system preference) */
-    --background:       #111427;
-    --surface:          rgba(26, 31, 74, 0.60);
-    --surface-solid:    #1a1f4a;
-    --foreground:       #e8eaff;
-    --foreground-muted: rgba(232, 234, 255, 0.65);
-    --border:           rgba(130, 142, 242, 0.09);
-    --accent:           #828ef2;
-    --accent-soft:      rgba(130, 142, 242, 0.12);
+    /* Dark mode — Deep Dusk (system preference) */
+    --background:       #0c0716;
+    --surface:          rgba(50, 14, 60, 0.62);
+    --surface-solid:    #1c0a28;
+    --foreground:       #ffe9d6;
+    --foreground-muted: rgba(255, 233, 214, 0.56);
+    --border:           rgba(240, 100, 60, 0.12);
+    --accent:           #ff6b47;
+    --accent-soft:      rgba(255, 107, 71, 0.18);
   }
 }
 
 /* Explicit theme overrides — always win over system preference */
 [data-theme="light"] {
-  --background:        #f0f7f3;
-  --surface:           rgba(218, 238, 227, 0.60);
-  --surface-solid:     #daeee3;
-  --foreground:        #0a2814;
-  --foreground-muted:  rgba(10, 40, 20, 0.65);
-  --border:            rgba(22, 163, 74, 0.09);
-  --accent:            #16a34a;
-  --accent-soft:       rgba(22, 163, 74, 0.10);
+  --background:        #fff6ee;
+  --surface:           rgba(255, 212, 170, 0.42);
+  --surface-solid:     #ffd9b8;
+  --foreground:        #1e0c04;
+  --foreground-muted:  rgba(30, 12, 4, 0.56);
+  --border:            rgba(200, 64, 20, 0.10);
+  --accent:            #c8401a;
+  --accent-soft:       rgba(200, 64, 26, 0.12);
 }
 
 [data-theme="dark"] {
-  --background:       #111427;
-  --surface:          rgba(26, 31, 74, 0.60);
-  --surface-solid:    #1a1f4a;
-  --foreground:       #e8eaff;
-  --foreground-muted: rgba(232, 234, 255, 0.65);
-  --border:           rgba(130, 142, 242, 0.09);
-  --accent:           #828ef2;
-  --accent-soft:      rgba(130, 142, 242, 0.12);
+  --background:       #0c0716;
+  --surface:          rgba(50, 14, 60, 0.62);
+  --surface-solid:    #1c0a28;
+  --foreground:       #ffe9d6;
+  --foreground-muted: rgba(255, 233, 214, 0.56);
+  --border:           rgba(240, 100, 60, 0.12);
+  --accent:           #ff6b47;
+  --accent-soft:      rgba(255, 107, 71, 0.18);
 }
 
 @theme inline {
@@ -100,11 +101,8 @@ body {
   font-family: var(--font-sans, system-ui, -apple-system, sans-serif);
   font-weight: 500;
   -webkit-font-smoothing: antialiased;
-  padding-top: var(--safe-top);
-  padding-bottom: var(--safe-bottom);
-  /* iOS momentum scrolling */
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
+  overflow: hidden;
+  height: 100dvh;
 }
 
 * {

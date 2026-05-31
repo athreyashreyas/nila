@@ -180,8 +180,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AppDataProvider>
       <DataGate>
-        <div className="flex flex-col min-h-screen">
-          <main className="flex-1 overflow-y-auto">
+        <div
+          className="flex flex-col h-dvh overflow-hidden"
+          style={{ paddingTop: 'env(safe-area-inset-top)' }}
+        >
+          <main className="flex-1 min-h-0 overflow-y-auto overscroll-none">
             {children}
           </main>
           <BottomNav />

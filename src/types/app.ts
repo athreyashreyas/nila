@@ -81,22 +81,22 @@ export type Symptom = typeof SYMPTOMS[number];
 export const PHASE_META: Record<CyclePhase, { label: string; color: string; description: string }> = {
   period: {
     label: 'Period',
-    color: '#c084fc',   // soft purple
-    description: 'Rest and be gentle with yourself.',
+    color: '#f43f5e',
+    description: 'Your body is working hard. Rest isn\'t laziness — it\'s exactly right.',
   },
   follicular: {
     label: 'Follicular',
-    color: '#86efac',   // soft green
-    description: 'Energy returning. Good time to start new things.',
+    color: '#f59e0b',
+    description: 'New energy is quietly building. A good time to begin things.',
   },
   ovulation: {
     label: 'Ovulation',
-    color: '#fde68a',   // warm yellow
-    description: 'Peak energy. You may feel social and confident.',
+    color: '#f97316',
+    description: 'You\'re at your peak. This warmth and clarity won\'t last — enjoy it.',
   },
   luteal: {
     label: 'Luteal',
-    color: '#93c5fd',   // soft blue
-    description: 'Winding down. Honour the need for more rest.',
+    color: '#a78bfa',
+    description: 'Soften your pace. Your body is winding down, beautifully.',
   },
 };

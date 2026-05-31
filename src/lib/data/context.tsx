@@ -44,6 +44,17 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     await Promise.all([cyclesHook.fetchAll(), logsHook.fetchAll()]);
   }, [cyclesHook.fetchAll, logsHook.fetchAll]);
 
+  // Re-sync whenever the tab/app comes back into view (covers iPhone ↔ iPad state drift)
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && initialized.current) {
+        void Promise.all([cyclesHook.fetchAll(), logsHook.fetchAll()]);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
+  }, [cyclesHook.fetchAll, logsHook.fetchAll]);
+
   const value = useMemo<AppData>(() => ({
     cycles: cyclesHook.cycles,
     logs: logsHook.logs,

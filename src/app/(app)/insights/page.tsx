@@ -2,13 +2,20 @@
 
 import { useAppData } from '@/lib/data/context';
 import { PHASE_META } from '@/types/app';
-import { daysBetween, fromISODate } from '@/lib/utils/dates';
+import { daysBetween, fromISODate, toISODate } from '@/lib/utils/dates';
+import { getRecommendations } from '@/lib/recommendations/data';
 
 const CHART_H = 120;
 const CHART_W = 300;
 
 export default function InsightsPage() {
-  const { cycles, prediction } = useAppData();
+  const { cycles, logs, prediction } = useAppData();
+
+  const todayISO = toISODate(new Date());
+  const todayLog = logs.find(l => l.payload.date === todayISO);
+  const recentSymptoms = todayLog?.payload.symptoms ?? [];
+
+  const recs = getRecommendations(prediction.currentPhase, recentSymptoms);
 
   const sorted = [...cycles].sort((a, b) => a.payload.periodStart.localeCompare(b.payload.periodStart));
   const lengths: number[] = [];
@@ -34,11 +41,13 @@ export default function InsightsPage() {
 
   const avg = prediction.estimatedCycleLength;
   const avgPeriod = prediction.estimatedPeriodLength;
+  const meta = PHASE_META[prediction.currentPhase];
 
   return (
     <div className="px-5 pt-4 pb-28">
       <h1 className="text-2xl font-bold pt-2 mb-5">Insights</h1>
 
+      {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-5">
         {[
           { label: 'Avg cycle', value: `${avg}d`, sub: prediction.confidence + ' confidence' },
@@ -54,6 +63,70 @@ export default function InsightsPage() {
         ))}
       </div>
 
+      {/* Recommendations */}
+      <div className="rounded-[var(--radius)] p-4 mb-5"
+        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+        <div className="flex items-start justify-between mb-1">
+          <h2 className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-foreground-muted)' }}>
+            {recs.headline}
+          </h2>
+          <span className="text-xs font-semibold ml-2 px-2 py-0.5 rounded-full"
+            style={{ background: `${meta.color}22`, color: meta.color }}>
+            {meta.label}
+          </span>
+        </div>
+
+        <p className="text-xs mb-4 leading-relaxed" style={{ color: 'var(--color-foreground-muted)' }}>
+          {recs.bodyNote}
+        </p>
+
+        {recs.symptomTriggers.length > 0 && (
+          <p className="text-[10px] mb-3 font-medium" style={{ color: meta.color }}>
+            Personalised for: {recs.symptomTriggers.join(', ')}
+          </p>
+        )}
+
+        <div className="flex flex-col gap-2.5 mb-4">
+          {recs.foods.map((food, i) => (
+            <div key={food.name} className="flex items-start gap-3">
+              <span className="text-lg leading-none mt-0.5">{food.emoji}</span>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-semibold">{food.name}</span>
+                  {i === 0 && recs.symptomTriggers.length > 0 && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                      style={{ background: `${meta.color}20`, color: meta.color }}>
+                      top pick
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs leading-snug" style={{ color: 'var(--color-foreground-muted)' }}>{food.reason}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="rounded-[var(--radius-sm)] p-3 mb-3"
+          style={{ background: `${meta.color}12`, border: `1px solid ${meta.color}30` }}>
+          <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground)' }}>{recs.lifestyle}</p>
+        </div>
+
+        <div>
+          <p className="text-[10px] font-semibold tracking-widest uppercase mb-1.5" style={{ color: 'var(--color-foreground-muted)' }}>
+            Go easy on
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {recs.avoid.map(item => (
+              <span key={item} className="text-xs px-2.5 py-1 rounded-full"
+                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', opacity: 0.7 }}>
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Cycle chart */}
       <div className="rounded-[var(--radius)] p-4 mb-5"
         style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
         <h2 className="text-xs font-semibold mb-3 tracking-widest uppercase" style={{ color: 'var(--color-foreground-muted)' }}>
@@ -80,26 +153,27 @@ export default function InsightsPage() {
         )}
       </div>
 
+      {/* Phase breakdown */}
       <div className="rounded-[var(--radius)] p-4"
         style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
         <h2 className="text-xs font-semibold mb-3 tracking-widest uppercase" style={{ color: 'var(--color-foreground-muted)' }}>
           Current cycle
         </h2>
         {(['period', 'follicular', 'ovulation', 'luteal'] as const).map((phase) => {
-          const meta = PHASE_META[phase];
+          const pMeta = PHASE_META[phase];
           const durations = { period: avgPeriod, follicular: avg - 14 - avgPeriod - 4, ovulation: 5, luteal: 14 };
           const pct = (durations[phase] / avg) * 100;
           const isCurrent = prediction.currentPhase === phase;
           return (
             <div key={phase} className="flex items-center gap-3 mb-2">
-              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: meta.color }} />
+              <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: pMeta.color }} />
               <div className="flex-1">
                 <div className="flex justify-between text-xs mb-1">
-                  <span className={isCurrent ? 'font-bold' : ''}>{meta.label}</span>
+                  <span className={isCurrent ? 'font-bold' : ''}>{pMeta.label}</span>
                   <span className="opacity-50">{durations[phase]}d</span>
                 </div>
                 <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--color-border)' }}>
-                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: meta.color, opacity: isCurrent ? 1 : 0.4 }} />
+                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: pMeta.color, opacity: isCurrent ? 1 : 0.35 }} />
                 </div>
               </div>
             </div>

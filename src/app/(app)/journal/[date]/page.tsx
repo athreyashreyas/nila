@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAppData } from '@/lib/data/context';
+import { Toast, useToast } from '@/components/ui/Toast';
 import { SYMPTOMS } from '@/types/app';
 import type { MoodLevel, FlowIntensity } from '@/types/app';
 
@@ -26,6 +27,7 @@ export default function JournalDatePage() {
   const { date } = useParams<{ date: string }>();
   const router = useRouter();
   const { logs, upsertLog, deleteLog } = useAppData();
+  const { toastMsg, showToast } = useToast();
 
   const existing = logs.find((l) => l.payload.date === date);
 
@@ -54,7 +56,10 @@ export default function JournalDatePage() {
     setSaving(true);
     try {
       await upsertLog({ date, mood, energy: null, symptoms, flow, notes });
-      router.back();
+      showToast(existing ? 'Entry updated ✓' : 'Entry saved ✓');
+      setTimeout(() => router.back(), 700);
+    } catch {
+      showToast('Save failed — try again');
     } finally {
       setSaving(false);
     }
@@ -77,6 +82,7 @@ export default function JournalDatePage() {
 
   return (
     <div className="px-5 pt-4 pb-28 flex flex-col gap-5">
+      <Toast message={toastMsg ?? ''} visible={!!toastMsg} />
       <div className="flex items-center gap-3 pt-2">
         <button onClick={() => router.back()} className="text-xl" style={{ color: 'var(--color-accent)' }}>‹</button>
         <div>
