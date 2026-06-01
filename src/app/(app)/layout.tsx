@@ -71,14 +71,15 @@ function PullToRefreshMain({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const el = mainRef.current;
     if (!el) return;
+    const node = el;
 
     function onTouchStart(e: TouchEvent) {
-      if (el.scrollTop > 0) return;
+      if (node.scrollTop > 0) return;
       startY.current = e.touches[0].clientY;
     }
 
     function onTouchMove(e: TouchEvent) {
-      if (el.scrollTop > 0) { pulling.current = false; return; }
+      if (node.scrollTop > 0) { pulling.current = false; return; }
       const delta = e.touches[0].clientY - startY.current;
       if (delta > 4) {
         e.preventDefault();
@@ -101,16 +102,16 @@ function PullToRefreshMain({ children }: { children: React.ReactNode }) {
       }
     }
 
-    el.addEventListener('touchstart', onTouchStart, { passive: true });
-    el.addEventListener('touchmove', onTouchMove, { passive: false });
-    el.addEventListener('touchend', onTouchEnd, { passive: true });
-    el.addEventListener('touchcancel', onTouchEnd, { passive: true });
+    node.addEventListener('touchstart', onTouchStart, { passive: true });
+    node.addEventListener('touchmove', onTouchMove, { passive: false });
+    node.addEventListener('touchend', onTouchEnd, { passive: true });
+    node.addEventListener('touchcancel', onTouchEnd, { passive: true });
 
     return () => {
-      el.removeEventListener('touchstart', onTouchStart);
-      el.removeEventListener('touchmove', onTouchMove);
-      el.removeEventListener('touchend', onTouchEnd);
-      el.removeEventListener('touchcancel', onTouchEnd);
+      node.removeEventListener('touchstart', onTouchStart);
+      node.removeEventListener('touchmove', onTouchMove);
+      node.removeEventListener('touchend', onTouchEnd);
+      node.removeEventListener('touchcancel', onTouchEnd);
     };
   }, [refresh]);
 
