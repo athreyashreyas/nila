@@ -29,6 +29,7 @@ const fade = {
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const [ready, setReady] = useState(false);
   const [step, setStep] = useState(1);
   const [name, setName] = useState('');
   const [cycleLength, setCycleLength] = useState<number | null>(null);
@@ -37,9 +38,15 @@ export default function OnboardingPage() {
 
   useEffect(() => {
     try {
-      if (localStorage.getItem('nila-onboarded')) router.replace('/home');
+      if (localStorage.getItem('nila-onboarded')) {
+        router.replace('/home');
+        return; // don't setReady — we're redirecting
+      }
     } catch {}
+    setReady(true);
   }, [router]);
+
+  if (!ready) return null;
 
   function finish(dateVal: string | null) {
     try {

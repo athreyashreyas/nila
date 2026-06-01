@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useAppData } from '@/lib/data/context';
 import { PHASE_META } from '@/types/app';
 import { daysBetween, fromISODate, toISODate } from '@/lib/utils/dates';
@@ -8,14 +9,33 @@ import { getRecommendations } from '@/lib/recommendations/data';
 const CHART_H = 120;
 const CHART_W = 300;
 
+function readIsVeg(): boolean {
+  try { return JSON.parse(localStorage.getItem('nila-prefs') ?? '{}').diet === 'veg'; }
+  catch { return false; }
+}
+
+function saveIsVeg(v: boolean) {
+  try {
+    const prefs = JSON.parse(localStorage.getItem('nila-prefs') ?? '{}');
+    localStorage.setItem('nila-prefs', JSON.stringify({ ...prefs, diet: v ? 'veg' : 'all' }));
+  } catch {}
+}
+
 export default function InsightsPage() {
   const { cycles, logs, prediction } = useAppData();
+  const [isVeg, setIsVeg] = useState(readIsVeg);
+
+  function toggleVeg() {
+    const next = !isVeg;
+    setIsVeg(next);
+    saveIsVeg(next);
+  }
 
   const todayISO = toISODate(new Date());
   const todayLog = logs.find(l => l.payload.date === todayISO);
   const recentSymptoms = todayLog?.payload.symptoms ?? [];
 
-  const recs = getRecommendations(prediction.currentPhase, recentSymptoms);
+  const recs = getRecommendations(prediction.currentPhase, recentSymptoms, isVeg);
 
   const sorted = [...cycles].sort((a, b) => a.payload.periodStart.localeCompare(b.payload.periodStart));
   const lengths: number[] = [];
@@ -66,14 +86,29 @@ export default function InsightsPage() {
       {/* Recommendations */}
       <div className="rounded-[var(--radius)] p-4 mb-5"
         style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-        <div className="flex items-start justify-between mb-1">
-          <h2 className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-foreground-muted)' }}>
-            {recs.headline}
-          </h2>
-          <span className="text-xs font-semibold ml-2 px-2 py-0.5 rounded-full"
-            style={{ background: `${meta.color}22`, color: meta.color }}>
-            {meta.label}
-          </span>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-start gap-2 flex-1">
+            <h2 className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-foreground-muted)' }}>
+              {recs.headline}
+            </h2>
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
+              style={{ background: `${meta.color}22`, color: meta.color }}>
+              {meta.label}
+            </span>
+          </div>
+          {/* Veg toggle */}
+          <button
+            onClick={toggleVeg}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold flex-shrink-0 ml-2"
+            style={{
+              background: isVeg ? 'rgba(34,197,94,0.15)' : 'var(--color-border)',
+              color: isVeg ? '#16a34a' : 'var(--color-foreground-muted)',
+              border: `1px solid ${isVeg ? 'rgba(34,197,94,0.4)' : 'transparent'}`,
+              transition: 'all 0.15s ease',
+            }}
+          >
+            🌿 {isVeg ? 'Veg on' : 'Veg'}
+          </button>
         </div>
 
         <p className="text-xs mb-4 leading-relaxed" style={{ color: 'var(--color-foreground-muted)' }}>
@@ -90,13 +125,19 @@ export default function InsightsPage() {
           {recs.foods.map((food, i) => (
             <div key={food.name} className="flex items-start gap-3">
               <span className="text-lg leading-none mt-0.5">{food.emoji}</span>
-              <div>
+              <div className="flex-1">
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-semibold">{food.name}</span>
                   {i === 0 && recs.symptomTriggers.length > 0 && (
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
                       style={{ background: `${meta.color}20`, color: meta.color }}>
                       top pick
+                    </span>
+                  )}
+                  {food.veg && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                      style={{ background: 'rgba(34,197,94,0.12)', color: '#16a34a' }}>
+                      🌿
                     </span>
                   )}
                 </div>

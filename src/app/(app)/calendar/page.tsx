@@ -1,13 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useAppData } from '@/lib/data/context';
 import { PHASE_META } from '@/types/app';
-import { getDaysInMonth, getFirstDayOfMonth, toISODate, addDays } from '@/lib/utils/dates';
-import type { CyclePhase, PredictionResult } from '@/types/app';
+import { getDaysInMonth, getFirstDayOfMonth, toISODate, addDays, fromISODate } from '@/lib/utils/dates';
+import type { CyclePhase, PredictionResult, MoodLevel } from '@/types/app';
 
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
+const MOOD_EMOJI: Record<MoodLevel, string> = {
+  great: '😊', good: '🙂', okay: '😐', low: '😔', 'low-energy': '😴',
+};
+const MOOD_LABEL: Record<MoodLevel, string> = {
+  great: 'Great', good: 'Good', okay: 'Okay', low: 'Low', 'low-energy': 'Tired',
+};
 
 function getPhaseForDate(date: Date, prediction: PredictionResult): CyclePhase | null {
   const today = new Date();
@@ -25,14 +32,22 @@ function getPhaseForDate(date: Date, prediction: PredictionResult): CyclePhase |
   return 'luteal';
 }
 
+interface DaySheet {
+  iso: string;
+  date: Date;
+  phase: CyclePhase | null;
+  hasPeriod: boolean;
+  hasLog: boolean;
+}
+
 export default function CalendarPage() {
-  const router = useRouter();
   const { cycles, logs, prediction } = useAppData();
 
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [tappedDate, setTappedDate] = useState<string | null>(null);
+  const [sheet, setSheet] = useState<DaySheet | null>(null);
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
@@ -40,8 +55,8 @@ export default function CalendarPage() {
 
   const periodDates = new Set(
     cycles.flatMap((c) => {
-      const start = new Date(c.payload.periodStart);
-      const end = c.payload.periodEnd ? new Date(c.payload.periodEnd) : start;
+      const start = fromISODate(c.payload.periodStart);
+      const end = c.payload.periodEnd ? fromISODate(c.payload.periodEnd) : start;
       const days: string[] = [];
       let d = start;
       while (d <= end) { days.push(toISODate(d)); d = addDays(d, 1); }
@@ -49,7 +64,7 @@ export default function CalendarPage() {
     })
   );
 
-  const logDates = new Set(logs.map((l) => l.payload.date));
+  const logMap = new Map(logs.map(l => [l.payload.date, l.payload]));
 
   function prevMonth() {
     if (month === 0) { setYear(y => y - 1); setMonth(11); }
@@ -61,6 +76,16 @@ export default function CalendarPage() {
   }
 
   const monthName = new Date(year, month).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+
+  function openSheet(iso: string, date: Date) {
+    const phase = getPhaseForDate(date, prediction);
+    const hasPeriod = periodDates.has(iso);
+    const hasLog = logMap.has(iso);
+    setSheet({ iso, date, phase, hasPeriod, hasLog });
+  }
+
+  const sheetLog = sheet ? logMap.get(sheet.iso) : null;
+  const sheetMeta = sheet?.phase ? PHASE_META[sheet.phase] : null;
 
   return (
     <div className="px-5 pt-4 pb-28">
@@ -87,7 +112,7 @@ export default function CalendarPage() {
           const iso = toISODate(date);
           const isToday = iso === todayISO;
           const hasPeriod = periodDates.has(iso);
-          const hasLog = logDates.has(iso);
+          const hasLog = logMap.has(iso);
           const phase = getPhaseForDate(date, prediction);
           const phaseMeta = phase ? PHASE_META[phase] : null;
 
@@ -98,7 +123,7 @@ export default function CalendarPage() {
               onPointerUp={() => setTappedDate(null)}
               onPointerLeave={() => setTappedDate(null)}
               onPointerCancel={() => setTappedDate(null)}
-              onClick={() => router.push(`/journal/${iso}`)}
+              onClick={() => openSheet(iso, date)}
               className="relative flex flex-col items-center justify-center aspect-square rounded-xl text-sm font-medium"
               style={{
                 background: phaseMeta ? `${phaseMeta.color}28` : 'var(--color-surface)',
@@ -127,6 +152,145 @@ export default function CalendarPage() {
           </div>
         ))}
       </div>
+
+      {/* Day detail bottom sheet */}
+      <AnimatePresence>
+        {sheet && (
+          <>
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40"
+              style={{ background: 'rgba(0,0,0,0.45)' }}
+              onClick={() => setSheet(null)}
+            />
+            <motion.div
+              key="sheet"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
+              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl"
+              style={{
+                background: 'var(--color-background)',
+                paddingBottom: 'max(2rem, env(safe-area-inset-bottom))',
+                maxHeight: '70vh',
+                overflowY: 'auto',
+              }}
+            >
+              {/* drag handle */}
+              <div className="flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 rounded-full" style={{ background: 'var(--color-border)' }} />
+              </div>
+
+              <div className="px-6 pt-3 pb-2">
+                {/* Date header */}
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <div className="font-display text-xl font-bold"
+                      style={{ color: sheetMeta?.color ?? 'var(--color-foreground)' }}>
+                      {sheet.date.toLocaleDateString('en-GB', { weekday: 'long' })}
+                    </div>
+                    <div className="text-sm mt-0.5" style={{ color: 'var(--color-foreground-muted)' }}>
+                      {sheet.date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </div>
+                  </div>
+                  {sheetMeta && (
+                    <span className="text-xs font-semibold px-3 py-1.5 rounded-full mt-1"
+                      style={{ background: `${sheetMeta.color}22`, color: sheetMeta.color }}>
+                      {sheetMeta.label}
+                    </span>
+                  )}
+                </div>
+
+                {/* Phase context */}
+                {sheetMeta && (
+                  <div className="rounded-2xl px-4 py-3 mb-4"
+                    style={{ background: `${sheetMeta.color}12`, border: `1px solid ${sheetMeta.color}30` }}>
+                    <p className="text-sm leading-relaxed" style={{ color: 'var(--color-foreground)' }}>
+                      {sheetMeta.description}
+                    </p>
+                  </div>
+                )}
+
+                {/* Period indicator */}
+                {sheet.hasPeriod && (
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-2 h-2 rounded-full" style={{ background: PHASE_META.period.color }} />
+                    <span className="text-sm font-medium" style={{ color: PHASE_META.period.color }}>Period day</span>
+                  </div>
+                )}
+
+                {/* Logged data */}
+                {sheetLog ? (
+                  <div className="flex flex-col gap-3">
+                    {sheetLog.mood && (
+                      <div className="flex items-center gap-3 rounded-2xl px-4 py-3"
+                        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                        <span className="text-2xl">{MOOD_EMOJI[sheetLog.mood]}</span>
+                        <div>
+                          <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-foreground-muted)' }}>Mood</div>
+                          <div className="text-sm font-medium">{MOOD_LABEL[sheetLog.mood]}</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {sheetLog.energy && (
+                      <div className="flex items-center gap-3 rounded-2xl px-4 py-3"
+                        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                        <span className="text-2xl">⚡</span>
+                        <div>
+                          <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-foreground-muted)' }}>Energy</div>
+                          <div className="flex gap-0.5 mt-1">
+                            {[1,2,3,4,5].map(n => (
+                              <div key={n} className="w-4 h-1.5 rounded-full"
+                                style={{ background: n <= (sheetLog.energy ?? 0) ? 'var(--color-accent)' : 'var(--color-border)' }} />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {sheetLog.flow && sheetLog.flow !== 'none' && (
+                      <div className="flex items-center gap-3 rounded-2xl px-4 py-3"
+                        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                        <span className="text-2xl">🩸</span>
+                        <div>
+                          <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-foreground-muted)' }}>Flow</div>
+                          <div className="text-sm font-medium capitalize">{sheetLog.flow}</div>
+                        </div>
+                      </div>
+                    )}
+
+                    {sheetLog.symptoms.length > 0 && (
+                      <div className="rounded-2xl px-4 py-3"
+                        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                        <div className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--color-foreground-muted)' }}>Symptoms</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {sheetLog.symptoms.map(s => (
+                            <span key={s} className="text-xs px-2.5 py-1 rounded-full"
+                              style={{ background: 'var(--color-accent-soft)', color: 'var(--color-accent)', border: '1px solid var(--color-accent)' }}>
+                              {s}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 opacity-40">
+                    <div className="text-3xl mb-2">🌿</div>
+                    <p className="text-sm">Nothing logged for this day</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
