@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTheme } from '@/lib/theme/context';
 import { useAppData } from '@/lib/data/context';
 import { PhaseRing } from '@/components/ui/PhaseRing';
@@ -9,11 +9,21 @@ import { PHASE_META, SYMPTOMS } from '@/types/app';
 import type { MoodLevel, FlowIntensity, CyclePhase } from '@/types/app';
 import { toISODate } from '@/lib/utils/dates';
 
+// ─── Module-level store ──────────────────────────────────────
+// Survives SPA tab-switching (module stays loaded); resets on full page reload.
+// _lastLogId tracks which server log version we last synced from — when it changes
+// (new save or cross-device update) we re-sync from server automatically.
+const _store = {
+  mood: null as MoodLevel | null,
+  flow: 'none' as FlowIntensity,
+  symptoms: [] as string[],
+  energy: 0,
+};
+let _lastLogId = '';
+
 // ─── Constants ────────────────────────────────────────────────
 
 const TODAY = toISODate(new Date());
-const DRAFT_KEY = `nila-draft-${TODAY}`;
-const SESSION_KEY = `nila-session-synced-${TODAY}`;
 
 const MOODS: { value: MoodLevel; emoji: string; label: string }[] = [
   { value: 'great',      emoji: '😊', label: 'Great' },
@@ -33,11 +43,59 @@ const FLOWS: { value: FlowIntensity; label: string }[] = [
 
 const ENERGY_LABELS = ['', 'Drained', 'Low', 'Okay', 'Good', 'Vibrant'] as const;
 
-const PHASE_GREETINGS: Record<CyclePhase, { emoji: string; line: string }> = {
-  period:     { emoji: '🌸', line: 'Your body is doing something extraordinary.' },
-  follicular: { emoji: '✨', line: 'Something new is quietly taking shape.' },
-  ovulation:  { emoji: '🌷', line: 'At your most radiant — let the world feel it.' },
-  luteal:     { emoji: '🌙', line: 'Quiet strength carries you through.' },
+const PHASE_EMOJI: Record<CyclePhase, string> = {
+  period: '🌸', follicular: '✨', ovulation: '🌷', luteal: '🌙',
+};
+
+const PHASE_LINES: Record<CyclePhase, string[]> = {
+  period: [
+    'Your body is doing something extraordinary.',
+    'Rest is not weakness — it\'s your superpower right now.',
+    'Be softer with yourself than you think you need to be.',
+    'You are allowed to take it slow today.',
+    'Give yourself the grace you\'d give someone you love.',
+    'This too is part of the cycle. You are whole.',
+    'Warmth and rest — that\'s the assignment today.',
+    'Not every day needs to be productive. Today, just be.',
+    'Your body is asking for gentleness. Listen.',
+    'Strength looks like rest today.',
+  ],
+  follicular: [
+    'Something new is quietly taking shape.',
+    'New energy is building — lean into the clarity.',
+    'The fog is lifting. Notice how sharp things feel.',
+    'Fresh starts live here. What\'s been waiting for you?',
+    'This is the season of beginnings.',
+    'You\'re coming back to yourself, steadily and surely.',
+    'Ideas are sharper, energy is returning. Use it well.',
+    'A wonderful time to start what you\'ve been putting off.',
+    'Your mind is clear, your body is ready.',
+    'Something is unfolding. Stay curious.',
+  ],
+  ovulation: [
+    'At your most radiant — let the world feel it.',
+    'Peak energy. Peak you. Make the most of it.',
+    'You\'re magnetic right now. Use it wisely.',
+    'Everything is a little easier and brighter today.',
+    'You\'re glowing, and there\'s science behind that.',
+    'The world feels more yours right now. It is.',
+    'High stakes, big conversations — all easier right now.',
+    'This warmth and clarity won\'t last. Savour it.',
+    'Bold choices. Big energy. This is your moment.',
+    'People feel your warmth today. Share it.',
+  ],
+  luteal: [
+    'Quiet strength carries you through.',
+    'Your intuition is sharpest now. Trust it.',
+    'The world can wait. This moment is yours.',
+    'Slowing down isn\'t falling behind.',
+    'Softer, slower, deeper — that\'s the energy today.',
+    'You\'ve earned every moment of rest this phase brings.',
+    'Honour the slower rhythm. It\'s not a weakness.',
+    'Turn inward. The answers are already there.',
+    'Your body knows what it needs. Listen closely.',
+    'Creativity and reflection thrive here. Let them.',
+  ],
 };
 
 const PHASE_FOCUS: Record<CyclePhase, string> = {
@@ -49,9 +107,9 @@ const PHASE_FOCUS: Record<CyclePhase, string> = {
 
 // ─── Hormone graph ─────────────────────────────────────────────
 
-const E2  = [[0,.12],[.18,.18],[.36,.55],[.46,.96],[.50,.58],[.57,.42],[.64,.58],[.75,.50],[.89,.26],[1,.12]] as [number,number][];
-const P4  = [[0,.06],[.46,.06],[.50,.12],[.57,.32],[.64,.88],[.71,.95],[.79,.68],[.89,.22],[1,.06]] as [number,number][];
-const LH  = [[0,.06],[.43,.07],[.46,.45],[.50,1.0],[.54,.22],[.58,.07],[1,.06]] as [number,number][];
+const E2_CTRL = [[0,.12],[.18,.18],[.36,.55],[.46,.96],[.50,.58],[.57,.42],[.64,.58],[.75,.50],[.89,.26],[1,.12]] as [number,number][];
+const P4_CTRL = [[0,.06],[.46,.06],[.50,.12],[.57,.32],[.64,.88],[.71,.95],[.79,.68],[.89,.22],[1,.06]] as [number,number][];
+const LH_CTRL = [[0,.06],[.43,.07],[.46,.45],[.50,1.0],[.54,.22],[.58,.07],[1,.06]] as [number,number][];
 
 function lerp2(t: number, ctrl: [number,number][]): number {
   const c = Math.max(0, Math.min(1, t));
@@ -64,6 +122,22 @@ function lerp2(t: number, ctrl: [number,number][]): number {
   return ctrl[ctrl.length-1][1];
 }
 
+function phaseForDay(day: number, cycleLength: number, periodLength: number): CyclePhase {
+  const ovDay = cycleLength - 14;
+  if (day <= periodLength) return 'period';
+  if (day < ovDay - 2) return 'follicular';
+  if (day <= ovDay + 2) return 'ovulation';
+  return 'luteal';
+}
+
+function hormoneLabel(v: number): string {
+  if (v < 0.18) return 'Very low';
+  if (v < 0.38) return 'Low';
+  if (v < 0.62) return 'Rising';
+  if (v < 0.82) return 'High';
+  return 'Peak';
+}
+
 function HormoneGraph({ dayInCycle, cycleLength, estimatedPeriodLength }: {
   dayInCycle: number;
   cycleLength: number;
@@ -71,9 +145,14 @@ function HormoneGraph({ dayInCycle, cycleLength, estimatedPeriodLength }: {
 }) {
   const W = 320, H = 72, PX = 8, PY = 6;
   const iW = W - PX * 2, iH = H - PY * 2;
-  const xP = (d: number) => PX + ((d - 1) / Math.max(cycleLength - 1, 1)) * iW;
-  const yP = (v: number) => PY + (1 - v) * iH;
+  const svgRef = useRef<SVGSVGElement>(null);
+  const isDown = useRef(false);
+  const [scrubDay, setScrubDay] = useState<number | null>(null);
+
   const N = cycleLength;
+  const xP = (d: number) => PX + ((d - 1) / Math.max(N - 1, 1)) * iW;
+  const yP = (v: number) => PY + (1 - v) * iH;
+
   const days = Array.from({ length: N }, (_, i) => i + 1);
 
   function pathFor(ctrl: [number,number][]) {
@@ -83,95 +162,135 @@ function HormoneGraph({ dayInCycle, cycleLength, estimatedPeriodLength }: {
     }).join(' L ');
   }
 
-  const cur = Math.max(1, Math.min(dayInCycle, N));
-  const curT = (cur - 1) / Math.max(N - 1, 1);
-  const cx = xP(cur);
+  function getDay(clientX: number): number {
+    const rect = svgRef.current?.getBoundingClientRect();
+    if (!rect) return dayInCycle;
+    const relX = (clientX - rect.left - PX) / (rect.width - PX * 2);
+    return Math.max(1, Math.min(N, Math.round(relX * (N - 1)) + 1));
+  }
+
+  const displayDay = scrubDay ?? dayInCycle;
+  const displayT = (displayDay - 1) / Math.max(N - 1, 1);
+  const cx = xP(displayDay);
+  const displayPhase = phaseForDay(displayDay, N, estimatedPeriodLength);
+  const phaseMeta = PHASE_META[displayPhase];
 
   const pEnd = xP(Math.min(estimatedPeriodLength, N));
   const ovD = N - 14;
   const fEnd = xP(Math.max(1, ovD - 2));
   const oEnd = xP(Math.min(N, ovD + 2));
 
+  const e2Val = lerp2(displayT, E2_CTRL);
+  const p4Val = lerp2(displayT, P4_CTRL);
+
   return (
     <div>
-      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: H }}>
+      <svg
+        ref={svgRef}
+        viewBox={`0 0 ${W} ${H}`}
+        style={{ width: '100%', height: H, touchAction: 'none', cursor: 'crosshair', userSelect: 'none' }}
+        onPointerDown={(e) => {
+          isDown.current = true;
+          (e.currentTarget as SVGSVGElement).setPointerCapture(e.pointerId);
+          setScrubDay(getDay(e.clientX));
+        }}
+        onPointerMove={(e) => { if (isDown.current) setScrubDay(getDay(e.clientX)); }}
+        onPointerUp={() => { isDown.current = false; setScrubDay(null); }}
+        onPointerCancel={() => { isDown.current = false; setScrubDay(null); }}
+      >
         {/* Phase bands */}
-        <rect x={PX} y={PY} width={Math.max(0, pEnd - PX)} height={iH} fill="#f43f5e" fillOpacity={0.10} rx={2} />
-        <rect x={pEnd} y={PY} width={Math.max(0, fEnd - pEnd)} height={iH} fill="#f59e0b" fillOpacity={0.09} rx={2} />
-        <rect x={fEnd} y={PY} width={Math.max(0, oEnd - fEnd)} height={iH} fill="#f97316" fillOpacity={0.11} rx={2} />
-        <rect x={oEnd} y={PY} width={Math.max(0, PX + iW - oEnd)} height={iH} fill="#a78bfa" fillOpacity={0.10} rx={2} />
+        <rect x={PX} y={PY} width={Math.max(0, pEnd - PX)} height={iH} fill="#f43f5e" fillOpacity={0.09} rx={2} />
+        <rect x={pEnd} y={PY} width={Math.max(0, fEnd - pEnd)} height={iH} fill="#f59e0b" fillOpacity={0.08} rx={2} />
+        <rect x={fEnd} y={PY} width={Math.max(0, oEnd - fEnd)} height={iH} fill="#f97316" fillOpacity={0.10} rx={2} />
+        <rect x={oEnd} y={PY} width={Math.max(0, PX + iW - oEnd)} height={iH} fill="#a78bfa" fillOpacity={0.09} rx={2} />
         {/* Curves */}
-        <path d={pathFor(E2)} fill="none" stroke="#f06292" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
-        <path d={pathFor(P4)} fill="none" stroke="#c084fc" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
-        <path d={pathFor(LH)} fill="none" stroke="#fbbf24" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
-        {/* Today line */}
-        <line x1={cx} y1={PY - 2} x2={cx} y2={H - PY + 2} stroke="var(--color-foreground)" strokeWidth={1} strokeDasharray="2,3" strokeOpacity={0.3} />
-        {/* Today dots on E2 and P4 */}
-        <circle cx={cx} cy={yP(lerp2(curT, E2))} r={3.5} fill="#f06292" />
-        <circle cx={cx} cy={yP(lerp2(curT, P4))} r={3.5} fill="#c084fc" />
+        <path d={pathFor(E2_CTRL)} fill="none" stroke="#f06292" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+        <path d={pathFor(P4_CTRL)} fill="none" stroke="#c084fc" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+        <path d={pathFor(LH_CTRL)} fill="none" stroke="#fbbf24" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
+        {/* Active day line */}
+        <line
+          x1={cx} y1={PY - 2} x2={cx} y2={H - PY + 2}
+          stroke={scrubDay ? phaseMeta.color : 'var(--color-foreground)'}
+          strokeWidth={scrubDay ? 1.5 : 1}
+          strokeDasharray="2,3"
+          strokeOpacity={scrubDay ? 0.7 : 0.3}
+        />
+        {/* Dots on E2 and P4 */}
+        <circle cx={cx} cy={yP(e2Val)} r={scrubDay ? 4.5 : 3.5} fill="#f06292" />
+        <circle cx={cx} cy={yP(p4Val)} r={scrubDay ? 4.5 : 3.5} fill="#c084fc" />
       </svg>
-      <div className="flex items-center gap-4 mt-1.5 px-1">
-        {[{ color: '#f06292', label: 'Oestrogen' }, { color: '#c084fc', label: 'Progesterone' }, { color: '#fbbf24', label: 'LH surge' }].map(({ color, label }) => (
-          <div key={label} className="flex items-center gap-1.5">
-            <div className="w-4 h-0.5 rounded-full" style={{ background: color }} />
-            <span className="text-[10px]" style={{ color: 'var(--color-foreground-muted)' }}>{label}</span>
+
+      {/* Info row: static legend or scrub overlay */}
+      {scrubDay ? (
+        <div className="flex items-center justify-between mt-1.5 px-1 gap-2">
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full" style={{ background: phaseMeta.color }} />
+            <span className="text-[11px] font-semibold" style={{ color: phaseMeta.color }}>
+              Day {scrubDay} · {phaseMeta.label}
+            </span>
           </div>
-        ))}
-      </div>
+          <div className="flex gap-3">
+            <span className="text-[10px]" style={{ color: '#f06292' }}>E {hormoneLabel(e2Val)}</span>
+            <span className="text-[10px]" style={{ color: '#c084fc' }}>P4 {hormoneLabel(p4Val)}</span>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center gap-4 mt-1.5 px-1">
+          {[{ color: '#f06292', label: 'Oestrogen' }, { color: '#c084fc', label: 'Progesterone' }, { color: '#fbbf24', label: 'LH surge' }].map(({ color, label }) => (
+            <div key={label} className="flex items-center gap-1.5">
+              <div className="w-4 h-0.5 rounded-full" style={{ background: color }} />
+              <span className="text-[10px]" style={{ color: 'var(--color-foreground-muted)' }}>{label}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
-}
-
-// ─── Draft helpers ─────────────────────────────────────────────
-
-function readDraft(): { mood?: MoodLevel; flow?: FlowIntensity; symptoms?: string[]; energy?: number } | null {
-  try { return JSON.parse(localStorage.getItem(DRAFT_KEY) ?? 'null'); }
-  catch { return null; }
 }
 
 // ─── Home page ─────────────────────────────────────────────────
 
 export default function HomePage() {
   const { theme, setTheme } = useTheme();
-  const { cycles, logs, prediction, upsertLog, addCycle, updateCycle } = useAppData();
+  const { cycles, logs, prediction, upsertLog, addCycle, updateCycle, deleteCycle } = useAppData();
   const { toastMsg, showToast } = useToast();
 
   const openCycle = cycles.find(c => !c.payload.periodEnd) ?? null;
   const todayLog = logs.find((l) => l.payload.date === TODAY);
 
-  const draft = readDraft();
-  const [mood, setMood] = useState<MoodLevel | null>(draft?.mood ?? null);
-  const [flow, setFlow] = useState<FlowIntensity>(draft?.flow ?? 'none');
-  const [symptoms, setSymptoms] = useState<string[]>(draft?.symptoms ?? []);
-  const [energy, setEnergy] = useState<number>(draft?.energy ?? 0);
+  // Initialize state from module-level store (persists across tab switches)
+  const [mood, setMood] = useState<MoodLevel | null>(_store.mood);
+  const [flow, setFlow] = useState<FlowIntensity>(_store.flow);
+  const [symptoms, setSymptoms] = useState<string[]>(_store.symptoms);
+  const [energy, setEnergy] = useState<number>(_store.energy);
   const [saving, setSaving] = useState(false);
   const [periodError, setPeriodError] = useState('');
-  const serverSynced = useRef(false);
 
-  // First-mount server sync: only if no session flag (fresh page load, not tab switch)
+  // Sync from server when log ID changes (new save or cross-device update)
   useEffect(() => {
-    if (todayLog && !serverSynced.current) {
-      serverSynced.current = true;
-      if (!sessionStorage.getItem(SESSION_KEY)) {
-        sessionStorage.setItem(SESSION_KEY, '1');
-        setMood(todayLog.payload.mood);
-        setFlow(todayLog.payload.flow);
-        setSymptoms(todayLog.payload.symptoms);
-        setEnergy((todayLog.payload.energy as number | null) ?? 0);
+    const id = todayLog?.id ?? '';
+    if (id !== _lastLogId) {
+      _lastLogId = id;
+      if (todayLog) {
+        const m = todayLog.payload.mood ?? null;
+        const f = todayLog.payload.flow ?? 'none';
+        const s = todayLog.payload.symptoms ?? [];
+        const e = (todayLog.payload.energy as number | null) ?? 0;
+        setMood(m); setFlow(f); setSymptoms(s); setEnergy(e);
+        _store.mood = m; _store.flow = f; _store.symptoms = s; _store.energy = e;
+      } else {
+        // No log today — reset to defaults (new day)
+        setMood(null); setFlow('none'); setSymptoms([]); setEnergy(0);
+        _store.mood = null; _store.flow = 'none'; _store.symptoms = []; _store.energy = 0;
       }
     }
   }, [todayLog]);
 
-  // Persist draft to localStorage on every change
-  const writeDraft = useCallback(() => {
-    try {
-      if (mood || flow !== 'none' || symptoms.length > 0 || energy > 0) {
-        localStorage.setItem(DRAFT_KEY, JSON.stringify({ mood, flow, symptoms, energy }));
-      }
-    } catch {}
-  }, [mood, flow, symptoms, energy]);
-
-  useEffect(() => { writeDraft(); }, [writeDraft]);
+  // Keep module store in sync with local state
+  useEffect(() => { _store.mood = mood; }, [mood]);
+  useEffect(() => { _store.flow = flow; }, [flow]);
+  useEffect(() => { _store.symptoms = symptoms; }, [symptoms]);
+  useEffect(() => { _store.energy = energy; }, [energy]);
 
   function toggleSymptom(s: string) {
     setSymptoms(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
@@ -186,6 +305,20 @@ export default function HomePage() {
       showToast('Period started — tracking day 1 🩸');
     } catch {
       setPeriodError('Couldn\'t start period — please try again.');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function undoPeriod() {
+    if (!openCycle) return;
+    setSaving(true);
+    try {
+      await deleteCycle(openCycle.id);
+      setFlow('none');
+      showToast('Period log removed ✓');
+    } catch {
+      showToast('Couldn\'t remove — try again');
     } finally {
       setSaving(false);
     }
@@ -215,13 +348,11 @@ export default function HomePage() {
             .sort((a, b) => b.payload.date.localeCompare(a.payload.date))[0];
           const periodEnd = lastFlowLog?.payload.date ?? openCycle.payload.periodStart;
           await updateCycle(openCycle.id, { ...openCycle.payload, periodEnd });
-          localStorage.removeItem(DRAFT_KEY);
           showToast('Period ended — cycle logged ✓');
           return;
         }
       }
 
-      localStorage.removeItem(DRAFT_KEY);
       showToast(todayLog ? 'Check-in updated ✓' : 'Check-in saved ✓');
     } catch {
       showToast('Something went wrong — try again');
@@ -233,6 +364,7 @@ export default function HomePage() {
   const periodDayCount = openCycle
     ? Math.round((new Date().getTime() - new Date(openCycle.payload.periodStart).getTime()) / 86400000) + 1
     : 0;
+  const periodStartedToday = openCycle?.payload.periodStart === TODAY;
 
   const meta = PHASE_META[prediction.currentPhase];
   const today = new Date();
@@ -245,7 +377,19 @@ export default function HomePage() {
 
   const hour = today.getHours();
   const timePrefix = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  const phaseGreet = PHASE_GREETINGS[prediction.currentPhase];
+  const phaseEmoji = PHASE_EMOJI[prediction.currentPhase];
+
+  // Random greeting line — picks on each mount, stays stable within a session
+  const greetLineRef = useRef<string | null>(null);
+  if (!greetLineRef.current) {
+    const pool = PHASE_LINES[prediction.currentPhase];
+    greetLineRef.current = pool[Math.floor(Math.random() * pool.length)];
+  }
+  const greetLine = greetLineRef.current;
+
+  const greetingName = userName
+    ? `${timePrefix}, ${userName} ${phaseEmoji}`
+    : `${timePrefix} ${phaseEmoji}`;
 
   const daysLabel = prediction.daysUntilNextPeriod > 1
     ? `${prediction.daysUntilNextPeriod} days away`
@@ -253,7 +397,6 @@ export default function HomePage() {
     : prediction.daysUntilNextPeriod === 0 ? 'today'
     : `${Math.abs(prediction.daysUntilNextPeriod)} days late`;
 
-  // Cycle day (estimated from prediction)
   const cycleDay = Math.max(1, prediction.estimatedCycleLength - prediction.daysUntilNextPeriod);
 
   return (
@@ -263,14 +406,11 @@ export default function HomePage() {
       {/* Header */}
       <div className="flex items-start justify-between pt-2">
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-semibold mb-1" style={{ color: 'var(--color-foreground-muted)' }}>
-            {timePrefix} {phaseGreet.emoji}
-          </p>
           <h1 className="font-display text-3xl font-bold tracking-tight leading-tight">
-            {userName ?? 'Welcome'}
+            {greetingName}
           </h1>
           <p className="font-display text-sm italic mt-0.5 leading-snug" style={{ color: 'var(--color-foreground-muted)' }}>
-            {phaseGreet.line}
+            {greetLine}
           </p>
           <p className="text-xs mt-1.5" style={{ color: 'var(--color-foreground-muted)', opacity: 0.7 }}>{dateStr}</p>
         </div>
@@ -286,11 +426,9 @@ export default function HomePage() {
         </button>
       </div>
 
-      {/* Phase card */}
-      <div
-        className="rounded-[var(--radius)] p-5"
-        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
-      >
+      {/* Phase card + hormone graph */}
+      <div className="rounded-[var(--radius)] p-5"
+        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
         <div className="flex gap-4 items-center mb-4">
           <PhaseRing prediction={prediction} />
           <div className="flex-1 min-w-0">
@@ -304,25 +442,19 @@ export default function HomePage() {
             </div>
           </div>
         </div>
-
-        {/* Hormone graph */}
-        <div className="mt-1">
-          <p className="text-[10px] font-semibold tracking-widest uppercase mb-2" style={{ color: 'var(--color-foreground-muted)' }}>
-            Hormone activity · Day {cycleDay} of {prediction.estimatedCycleLength}
-          </p>
-          <HormoneGraph
-            dayInCycle={cycleDay}
-            cycleLength={prediction.estimatedCycleLength}
-            estimatedPeriodLength={prediction.estimatedPeriodLength}
-          />
-        </div>
+        <p className="text-[10px] font-semibold tracking-widest uppercase mb-2" style={{ color: 'var(--color-foreground-muted)' }}>
+          Hormone activity — drag to explore
+        </p>
+        <HormoneGraph
+          dayInCycle={cycleDay}
+          cycleLength={prediction.estimatedCycleLength}
+          estimatedPeriodLength={prediction.estimatedPeriodLength}
+        />
       </div>
 
-      {/* Phase focus card */}
-      <div
-        className="rounded-[var(--radius-sm)] px-4 py-3"
-        style={{ background: `${meta.color}12`, border: `1px solid ${meta.color}30` }}
-      >
+      {/* Phase focus */}
+      <div className="rounded-[var(--radius-sm)] px-4 py-3"
+        style={{ background: `${meta.color}12`, border: `1px solid ${meta.color}30` }}>
         <p className="text-xs font-semibold mb-1" style={{ color: meta.color }}>Today's focus</p>
         <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground)' }}>
           {PHASE_FOCUS[prediction.currentPhase]}
@@ -337,8 +469,7 @@ export default function HomePage() {
         </p>
         <div className="flex gap-2">
           {MOODS.map(({ value, emoji, label }) => (
-            <button
-              key={value}
+            <button key={value}
               onPointerDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
               onPointerUp={(e) => e.currentTarget.style.transform = ''}
               onPointerLeave={(e) => e.currentTarget.style.transform = ''}
@@ -362,12 +493,11 @@ export default function HomePage() {
       <div>
         <p className="text-[11px] font-semibold tracking-widest uppercase mb-3"
           style={{ color: 'var(--color-foreground-muted)' }}>
-          Energy level {energy > 0 ? `· ${ENERGY_LABELS[energy]}` : ''}
+          Energy level{energy > 0 ? ` · ${ENERGY_LABELS[energy]}` : ''}
         </p>
         <div className="flex gap-2">
           {[1,2,3,4,5].map((lvl) => (
-            <button
-              key={lvl}
+            <button key={lvl}
               onPointerDown={(e) => e.currentTarget.style.transform = 'scale(0.92)'}
               onPointerUp={(e) => e.currentTarget.style.transform = ''}
               onPointerLeave={(e) => e.currentTarget.style.transform = ''}
@@ -383,9 +513,7 @@ export default function HomePage() {
                 <div key={bar} className="w-full rounded-sm"
                   style={{
                     height: 3 + bar,
-                    background: bar <= lvl && energy >= lvl
-                      ? 'var(--color-accent)'
-                      : 'var(--color-border)',
+                    background: bar <= lvl && energy >= lvl ? 'var(--color-accent)' : 'var(--color-border)',
                     opacity: bar <= lvl && energy >= lvl ? 1 : 0.35,
                     transition: 'background 0.1s, opacity 0.1s',
                   }}
@@ -414,8 +542,7 @@ export default function HomePage() {
           </div>
           <div className="flex gap-1.5">
             {FLOWS.map(({ value, label }) => (
-              <button
-                key={value}
+              <button key={value}
                 onPointerDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
                 onPointerUp={(e) => e.currentTarget.style.transform = ''}
                 onPointerLeave={(e) => e.currentTarget.style.transform = ''}
@@ -438,6 +565,17 @@ export default function HomePage() {
               Saving 'None' will close this cycle.
             </p>
           )}
+          {/* Undo period — only show if started today */}
+          {periodStartedToday && (
+            <button
+              onClick={undoPeriod}
+              disabled={saving}
+              className="mt-3 text-xs w-full text-center py-2 rounded-[var(--radius-sm)] disabled:opacity-50"
+              style={{ color: 'var(--color-foreground-muted)', background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+            >
+              Logged by mistake — undo
+            </button>
+          )}
         </div>
       ) : (
         <div>
@@ -448,17 +586,10 @@ export default function HomePage() {
             onClick={startPeriod}
             disabled={saving}
             className="w-full py-3.5 rounded-[var(--radius)] text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2"
-            style={{
-              background: 'var(--color-surface)',
-              border: '1.5px solid var(--color-border)',
-              transition: 'transform 0.08s ease',
-            }}
+            style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', transition: 'transform 0.08s ease' }}
           >
-            {saving ? (
-              <span style={{ color: 'var(--color-foreground-muted)' }}>Starting…</span>
-            ) : (
-              <><span>🩸</span><span>My period started today</span></>
-            )}
+            {saving ? <span style={{ color: 'var(--color-foreground-muted)' }}>Starting…</span>
+              : <><span>🩸</span><span>My period started today</span></>}
           </button>
           {periodError && <p className="text-xs mt-2 text-red-400">{periodError}</p>}
         </div>
@@ -472,8 +603,7 @@ export default function HomePage() {
         </p>
         <div className="flex flex-wrap gap-2">
           {SYMPTOMS.map((s) => (
-            <button
-              key={s}
+            <button key={s}
               onPointerDown={(e) => e.currentTarget.style.transform = 'scale(0.93)'}
               onPointerUp={(e) => e.currentTarget.style.transform = ''}
               onPointerLeave={(e) => e.currentTarget.style.transform = ''}

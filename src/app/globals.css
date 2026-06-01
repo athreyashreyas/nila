@@ -37,14 +37,14 @@
 @media (prefers-color-scheme: dark) {
   :root {
     /* Dark — Twilight Garden (system preference) */
-    --background:       #160a22;
-    --surface:          rgba(72, 20, 85, 0.52);
-    --surface-solid:    #2a0a36;
+    --background:       #1e0d2c;
+    --surface:          rgba(80, 28, 95, 0.48);
+    --surface-solid:    #2e1040;
     --foreground:       #fae8ef;
-    --foreground-muted: rgba(250, 232, 239, 0.55);
-    --border:           rgba(232, 120, 168, 0.12);
+    --foreground-muted: rgba(250, 232, 239, 0.58);
+    --border:           rgba(240, 130, 175, 0.14);
     --accent:           #f06292;
-    --accent-soft:      rgba(240, 98, 146, 0.18);
+    --accent-soft:      rgba(240, 98, 146, 0.20);
   }
 }
 
@@ -61,14 +61,14 @@
 }
 
 [data-theme="dark"] {
-  --background:       #160a22;
-  --surface:          rgba(72, 20, 85, 0.52);
-  --surface-solid:    #2a0a36;
+  --background:       #1e0d2c;
+  --surface:          rgba(80, 28, 95, 0.48);
+  --surface-solid:    #2e1040;
   --foreground:       #fae8ef;
-  --foreground-muted: rgba(250, 232, 239, 0.55);
-  --border:           rgba(232, 120, 168, 0.12);
+  --foreground-muted: rgba(250, 232, 239, 0.58);
+  --border:           rgba(240, 130, 175, 0.14);
   --accent:           #f06292;
-  --accent-soft:      rgba(240, 98, 146, 0.18);
+  --accent-soft:      rgba(240, 98, 146, 0.20);
 }
 
 @theme inline {
@@ -118,3 +118,7 @@ body {
 
 .safe-bottom { padding-bottom: max(1rem, var(--safe-bottom)); }
 .safe-top    { padding-top:    max(1rem, var(--safe-top)); }
+
+@keyframes nila-spin {
+  to { transform: rotate(360deg); }
+}

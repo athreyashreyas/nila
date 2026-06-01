@@ -20,36 +20,39 @@ function applyIcons(resolved: 'light' | 'dark') {
   });
 }
 
+function applyDataTheme(t: ThemeMode) {
+  const html = document.documentElement;
+  if (t === 'dark') html.setAttribute('data-theme', 'dark');
+  else if (t === 'light') html.setAttribute('data-theme', 'light');
+  else html.removeAttribute('data-theme');
+}
+
+function resolvedTheme(t: ThemeMode): 'light' | 'dark' {
+  return t === 'system'
+    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : t;
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>('system');
 
+  // On mount: re-apply data-theme from localStorage.
+  // Critical: Next.js hydration may clear the attribute added by the inline anti-FOUC script.
   useEffect(() => {
     try {
       const stored = (localStorage.getItem('nila-theme') ?? 'system') as ThemeMode;
-      const valid = stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
+      const valid: ThemeMode = stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
       setThemeState(valid);
-      // Sync icons to stored preference on first load
-      const resolved = valid === 'system'
-        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-        : valid;
-      applyIcons(resolved);
+      applyDataTheme(valid);
+      applyIcons(resolvedTheme(valid));
     } catch {}
   }, []);
 
   function setTheme(t: ThemeMode) {
     setThemeState(t);
     try { localStorage.setItem('nila-theme', t); } catch {}
-
-    const html = document.documentElement;
-    if (t === 'dark')       html.setAttribute('data-theme', 'dark');
-    else if (t === 'light') html.setAttribute('data-theme', 'light');
-    else                    html.removeAttribute('data-theme');
-
-    // Update icons so correct version is cached if user adds to home screen after changing theme
-    const resolved = t === 'system'
-      ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-      : t;
-    applyIcons(resolved);
+    applyDataTheme(t);
+    applyIcons(resolvedTheme(t));
   }
 
   return (

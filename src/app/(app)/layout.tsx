@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,6 +9,7 @@ import { derivePasswordKey, unwrapMasterKey } from '@/lib/encryption/core';
 import { loadKey, saveKey } from '@/lib/encryption/keyStore';
 import { BottomNav } from '@/components/ui/BottomNav';
 import { AppDataProvider, useAppData } from '@/lib/data/context';
+import { useTheme } from '@/lib/theme/context';
 
 const QUOTES = [
   'Your body keeps its own rhythm.',
@@ -30,20 +31,15 @@ function LoadingScreen() {
   }, []);
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center gap-5"
-      style={{ background: 'var(--color-background)' }}
-    >
+    <div className="min-h-screen flex flex-col items-center justify-center gap-5"
+      style={{ background: 'var(--color-background)' }}>
       <motion.div
         animate={{ scale: [1, 1.06, 1], opacity: [0.9, 1, 0.9] }}
         transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
-        className="text-5xl select-none"
-      >
+        className="text-5xl select-none">
         🌕
       </motion.div>
-      <div className="text-2xl font-bold tracking-tight" style={{ color: 'var(--color-foreground)' }}>
-        Nila
-      </div>
+      <div className="text-2xl font-bold tracking-tight" style={{ color: 'var(--color-foreground)' }}>Nila</div>
       <AnimatePresence mode="wait">
         <motion.p
           key={quoteIdx}
@@ -52,14 +48,154 @@ function LoadingScreen() {
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
           className="text-sm text-center max-w-[200px] leading-relaxed"
-          style={{ color: 'var(--color-foreground-muted)' }}
-        >
+          style={{ color: 'var(--color-foreground-muted)' }}>
           {QUOTES[quoteIdx]}
         </motion.p>
       </AnimatePresence>
     </div>
   );
 }
+
+// ─── Pull-to-refresh main container ──────────────────────────
+
+function PullToRefreshMain({ children }: { children: React.ReactNode }) {
+  const { refresh } = useAppData();
+  const [pull, setPull] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const mainRef = useRef<HTMLElement>(null);
+  const startY = useRef(0);
+  const pulling = useRef(false);
+  const pullVal = useRef(0);
+  const THRESHOLD = 72;
+
+  useEffect(() => {
+    const el = mainRef.current;
+    if (!el) return;
+
+    function onTouchStart(e: TouchEvent) {
+      if (el.scrollTop > 0) return;
+      startY.current = e.touches[0].clientY;
+    }
+
+    function onTouchMove(e: TouchEvent) {
+      if (el.scrollTop > 0) { pulling.current = false; return; }
+      const delta = e.touches[0].clientY - startY.current;
+      if (delta > 4) {
+        e.preventDefault();
+        pulling.current = true;
+        const v = Math.min(delta * 0.45, THRESHOLD);
+        pullVal.current = v;
+        setPull(v);
+      }
+    }
+
+    function onTouchEnd() {
+      if (!pulling.current) return;
+      pulling.current = false;
+      const v = pullVal.current;
+      pullVal.current = 0;
+      setPull(0);
+      if (v >= THRESHOLD * 0.88) {
+        setRefreshing(true);
+        refresh().finally(() => setTimeout(() => setRefreshing(false), 500));
+      }
+    }
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+    el.addEventListener('touchcancel', onTouchEnd, { passive: true });
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+      el.removeEventListener('touchcancel', onTouchEnd);
+    };
+  }, [refresh]);
+
+  const indicatorH = refreshing ? 52 : pull;
+
+  return (
+    <main ref={mainRef} className="flex-1 min-h-0 overflow-y-auto overscroll-none">
+      {/* Pull indicator */}
+      <div
+        style={{
+          height: indicatorH,
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: pull === 0 ? 'height 0.22s ease' : 'none',
+        }}
+      >
+        {(pull > 16 || refreshing) && (
+          <div
+            style={{
+              width: 22,
+              height: 22,
+              borderRadius: '50%',
+              border: '2.5px solid var(--color-accent)',
+              borderTopColor: 'transparent',
+              animation: refreshing ? 'nila-spin 0.65s linear infinite' : 'none',
+              transform: refreshing ? undefined : `rotate(${(pull / THRESHOLD) * 260}deg)`,
+              transition: refreshing ? 'none' : 'transform 0.05s linear',
+              opacity: Math.min(pull / 30, 1),
+            }}
+          />
+        )}
+      </div>
+      {children}
+    </main>
+  );
+}
+
+// ─── Cross-device theme sync ──────────────────────────────────
+
+function ThemeSync() {
+  const { theme, setTheme } = useTheme();
+  const isFirstRender = useRef(true);
+
+  // On mount: read Supabase preference and apply (cross-device sync)
+  useEffect(() => {
+    async function load() {
+      const db = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      const { data: { user } } = await db.auth.getUser();
+      if (!user) return;
+      const { data } = await db.from('profiles').select('preferences').eq('id', user.id).single();
+      const t = (data?.preferences as Record<string, string> | null)?.theme;
+      if (t === 'light' || t === 'dark' || t === 'system') {
+        setTheme(t);
+      }
+    }
+    load().catch(() => {}); // silently fails if preferences column not yet migrated
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // On theme change: persist to Supabase
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    async function save() {
+      const db = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+      const { data: { user } } = await db.auth.getUser();
+      if (!user) return;
+      const { data } = await db.from('profiles').select('preferences').eq('id', user.id).single();
+      const existing = (data?.preferences as object | null) ?? {};
+      await db.from('profiles').update({ preferences: { ...existing, theme } }).eq('id', user.id);
+    }
+    save().catch(() => {});
+  }, [theme]);
+
+  return null;
+}
+
+// ─── Auth gate ────────────────────────────────────────────────
 
 function DataGate({ children }: { children: React.ReactNode }) {
   const { isReady } = useAppData();
@@ -84,16 +220,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         mountKey(key);
         try {
           if (!localStorage.getItem('nila-onboarded')) {
-            // May be a new device for an existing account — check Supabase before onboarding
             const db = createBrowserClient(
               process.env.NEXT_PUBLIC_SUPABASE_URL!,
               process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
             );
-            const { count } = await db
-              .from('cycles')
-              .select('*', { count: 'exact', head: true });
+            const { count } = await db.from('cycles').select('*', { count: 'exact', head: true });
             if (count && count > 0) {
-              // Already onboarded on another device — mark locally and continue
               localStorage.setItem('nila-onboarded', 'true');
             } else {
               router.replace('/onboarding');
@@ -138,9 +270,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
       try {
         if (!localStorage.getItem('nila-onboarded')) {
-          const { count } = await supabase
-            .from('cycles')
-            .select('*', { count: 'exact', head: true });
+          const { count } = await supabase.from('cycles').select('*', { count: 'exact', head: true });
           if (count && count > 0) {
             localStorage.setItem('nila-onboarded', 'true');
           } else {
@@ -151,8 +281,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       } catch {}
     } catch (err) {
       setError(
-        err instanceof DOMException
-          ? 'Incorrect password.'
+        err instanceof DOMException ? 'Incorrect password.'
           : err instanceof Error ? err.message : 'Something went wrong.'
       );
     } finally {
@@ -160,7 +289,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Show loading screen immediately — no blank flash during IDB key check
   if (checking) return <LoadingScreen />;
 
   if (!isUnlocked) {
@@ -200,13 +328,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AppDataProvider>
       <DataGate>
-        <div
-          className="flex flex-col h-dvh overflow-hidden"
-          style={{ paddingTop: 'env(safe-area-inset-top)' }}
-        >
-          <main className="flex-1 min-h-0 overflow-y-auto overscroll-none">
+        <ThemeSync />
+        <div className="flex flex-col h-dvh overflow-hidden"
+          style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+          <PullToRefreshMain>
             {children}
-          </main>
+          </PullToRefreshMain>
           <BottomNav />
         </div>
       </DataGate>
