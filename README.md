@@ -1,6 +1,6 @@
 # Nila
 
-A privacy-first menstrual cycle tracking PWA for iPhone and iPad. All health data is encrypted client-side — the server stores only encrypted blobs and never sees period dates, symptoms, mood, or any health content.
+A privacy-first menstrual cycle tracking PWA for iPhone and iPad. All health data is encrypted client-side. The server stores only encrypted blobs and never sees period dates, symptoms, mood, or any health content.
 
 ## Features
 
