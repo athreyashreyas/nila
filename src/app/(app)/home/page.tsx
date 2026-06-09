@@ -5,9 +5,12 @@ import { useTheme } from '@/lib/theme/context';
 import { useAppData } from '@/lib/data/context';
 import { PhaseRing } from '@/components/ui/PhaseRing';
 import { Toast, useToast } from '@/components/ui/Toast';
+import { SmartLogSheet } from '@/components/ui/SmartLogSheet';
+import { EndPeriodSheet } from '@/components/ui/EndPeriodSheet';
 import { PHASE_META, SYMPTOMS } from '@/types/app';
-import type { MoodLevel, FlowIntensity, CyclePhase } from '@/types/app';
-import { toISODate } from '@/lib/utils/dates';
+import type { MoodLevel, FlowIntensity, CyclePhase, DecryptedDailyLog, DecryptedCycle } from '@/types/app';
+import { toISODate, fromISODate, daysBetween } from '@/lib/utils/dates';
+import { SYMPTOM_TIPS, PHASE_INSIGHT_TIPS } from '@/lib/insights/data';
 
 // ─── Module-level store ──────────────────────────────────────
 // Survives SPA tab-switching (module stays loaded); resets on full page reload.
@@ -22,8 +25,6 @@ const _store = {
 let _lastLogId = '';
 
 // ─── Constants ────────────────────────────────────────────────
-
-const TODAY = toISODate(new Date());
 
 const MOODS: { value: MoodLevel; emoji: string; label: string }[] = [
   { value: 'great',      emoji: '😊', label: 'Great' },
@@ -105,6 +106,48 @@ const PHASE_FOCUS: Record<CyclePhase, string> = {
   luteal:     'Intuition is sharper now. Reflect, create quietly, and honour the slower rhythm.',
 };
 
+// ─── Daily insight ─────────────────────────────────────────────
+
+function getDailyInsight(
+  phase: CyclePhase,
+  todaySymptoms: string[],
+  logs: DecryptedDailyLog[],
+  cycles: DecryptedCycle[],
+): string {
+  // 1. Symptom pattern: symptom present today that appeared in ≥3 of last 5 same-phase logs
+  if (todaySymptoms.length > 0 && logs.length > 0 && cycles.length > 0) {
+    const phaseLogs = logs
+      .filter(l => {
+        const logDate = fromISODate(l.payload.date);
+        const totalDays = daysBetween(fromISODate(cycles[cycles.length - 1].payload.periodStart), logDate);
+        const cycleLen = 28;
+        const dayInCycle = ((totalDays % cycleLen) + cycleLen) % cycleLen;
+        const periodLen = 5;
+        const ovDay = cycleLen - 14;
+        let logPhase: CyclePhase;
+        if (dayInCycle < periodLen) logPhase = 'period';
+        else if (dayInCycle < ovDay - 2) logPhase = 'follicular';
+        else if (dayInCycle <= ovDay + 2) logPhase = 'ovulation';
+        else logPhase = 'luteal';
+        return logPhase === phase;
+      })
+      .slice(-5);
+
+    for (const symptom of todaySymptoms) {
+      const matchCount = phaseLogs.filter(l => l.payload.symptoms.includes(symptom)).length;
+      if (matchCount >= 3 && SYMPTOM_TIPS[symptom]) {
+        const phaseLabel = PHASE_META[phase].label.toLowerCase();
+        return `You tend to experience ${symptom} in your ${phaseLabel} phase. ${SYMPTOM_TIPS[symptom]}`;
+      }
+    }
+  }
+
+  // 2. Phase fallback tip (rotates based on cycle day approximation to avoid always showing same tip)
+  const tips = PHASE_INSIGHT_TIPS[phase];
+  const tipIndex = Math.floor(Date.now() / 86400000) % tips.length;
+  return tips[tipIndex];
+}
+
 // ─── Hormone graph ─────────────────────────────────────────────
 
 const E2_CTRL = [[0,.12],[.18,.18],[.36,.55],[.46,.96],[.50,.58],[.57,.42],[.64,.58],[.75,.50],[.89,.26],[1,.12]] as [number,number][];
@@ -153,12 +196,11 @@ function HormoneGraph({ dayInCycle, cycleLength, estimatedPeriodLength }: {
   const xP = (d: number) => PX + ((d - 1) / Math.max(N - 1, 1)) * iW;
   const yP = (v: number) => PY + (1 - v) * iH;
 
-  const days = Array.from({ length: N }, (_, i) => i + 1);
-
   function pathFor(ctrl: [number,number][]) {
-    return 'M ' + days.map(d => {
-      const t = (d - 1) / Math.max(N - 1, 1);
-      return `${xP(d).toFixed(1)},${yP(lerp2(t, ctrl)).toFixed(1)}`;
+    const SAMPLES = 180;
+    return 'M ' + Array.from({ length: SAMPLES + 1 }, (_, i) => {
+      const t = i / SAMPLES;
+      return `${(PX + t * iW).toFixed(1)},${yP(lerp2(t, ctrl)).toFixed(1)}`;
     }).join(' L ');
   }
 
@@ -251,6 +293,7 @@ function HormoneGraph({ dayInCycle, cycleLength, estimatedPeriodLength }: {
 // ─── Home page ─────────────────────────────────────────────────
 
 export default function HomePage() {
+  const TODAY = toISODate(new Date());
   const { theme, setTheme } = useTheme();
   const { cycles, logs, prediction, upsertLog, addCycle, updateCycle, deleteCycle } = useAppData();
   const { toastMsg, showToast } = useToast();
@@ -258,13 +301,25 @@ export default function HomePage() {
   const openCycle = cycles.find(c => !c.payload.periodEnd) ?? null;
   const todayLog = logs.find((l) => l.payload.date === TODAY);
 
-  // Initialize state from module-level store (persists across tab switches)
+  // ─── Period status (5 explicit states) ──────────────────────
+  type PeriodStatus = 'none' | 'approaching' | 'late' | 'active-today' | 'active-ongoing';
+  const periodStatus: PeriodStatus = (() => {
+    if (openCycle) {
+      return openCycle.payload.periodStart === TODAY ? 'active-today' : 'active-ongoing';
+    }
+    if (prediction.daysUntilNextPeriod < 0) return 'late';
+    if (prediction.daysUntilNextPeriod <= 3) return 'approaching';
+    return 'none';
+  })();
+
+  // ─── Local UI state ──────────────────────────────────────────
   const [mood, setMood] = useState<MoodLevel | null>(_store.mood);
   const [flow, setFlow] = useState<FlowIntensity>(_store.flow);
   const [symptoms, setSymptoms] = useState<string[]>(_store.symptoms);
   const [energy, setEnergy] = useState<number>(_store.energy);
   const [saving, setSaving] = useState(false);
-  const [periodError, setPeriodError] = useState('');
+  const [logSheetOpen, setLogSheetOpen] = useState(false);
+  const [endSheetOpen, setEndSheetOpen] = useState(false);
 
   // Sync from server when log ID changes (new save or cross-device update)
   useEffect(() => {
@@ -279,7 +334,6 @@ export default function HomePage() {
         setMood(m); setFlow(f); setSymptoms(s); setEnergy(e);
         _store.mood = m; _store.flow = f; _store.symptoms = s; _store.energy = e;
       } else {
-        // No log today — reset to defaults (new day)
         setMood(null); setFlow('none'); setSymptoms([]); setEnergy(0);
         _store.mood = null; _store.flow = 'none'; _store.symptoms = []; _store.energy = 0;
       }
@@ -296,18 +350,20 @@ export default function HomePage() {
     setSymptoms(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
   }
 
-  async function startPeriod() {
-    setPeriodError('');
-    setSaving(true);
-    try {
-      await addCycle({ periodStart: TODAY, periodEnd: null, flowIntensity: 'medium', notes: '' });
+  async function logPeriod(startDate: string, endDate: string | null) {
+    await addCycle({ periodStart: startDate, periodEnd: endDate, flowIntensity: 'medium', notes: '' });
+    if (!endDate) {
       setFlow('medium');
-      showToast('Period started — tracking day 1 🩸');
-    } catch {
-      setPeriodError('Couldn\'t start period — please try again.');
-    } finally {
-      setSaving(false);
+      showToast('Period started — tracking begins 🩸');
+    } else {
+      showToast('Period logged ✓');
     }
+  }
+
+  async function endPeriod(endDate: string) {
+    if (!openCycle) return;
+    await updateCycle(openCycle.id, { ...openCycle.payload, periodEnd: endDate });
+    showToast('Period ended — cycle logged ✓');
   }
 
   async function undoPeriod() {
@@ -336,23 +392,6 @@ export default function HomePage() {
         flow: openCycle ? flow : 'none',
         notes: todayLog?.payload.notes ?? '',
       });
-
-      // Auto-close: flow='none' + open cycle started ≥ 2 days ago
-      if (openCycle && flow === 'none') {
-        const daysDiff = Math.round(
-          (new Date().getTime() - new Date(openCycle.payload.periodStart).getTime()) / 86400000
-        );
-        if (daysDiff >= 2) {
-          const lastFlowLog = [...logs]
-            .filter(l => l.payload.date !== TODAY && l.payload.flow && l.payload.flow !== 'none')
-            .sort((a, b) => b.payload.date.localeCompare(a.payload.date))[0];
-          const periodEnd = lastFlowLog?.payload.date ?? openCycle.payload.periodStart;
-          await updateCycle(openCycle.id, { ...openCycle.payload, periodEnd });
-          showToast('Period ended — cycle logged ✓');
-          return;
-        }
-      }
-
       showToast(todayLog ? 'Check-in updated ✓' : 'Check-in saved ✓');
     } catch {
       showToast('Something went wrong — try again');
@@ -361,25 +400,25 @@ export default function HomePage() {
     }
   }
 
+  // ─── Derived display values ──────────────────────────────────
+
   const periodDayCount = openCycle
-    ? Math.round((new Date().getTime() - new Date(openCycle.payload.periodStart).getTime()) / 86400000) + 1
+    ? Math.round((new Date().getTime() - new Date(openCycle.payload.periodStart + 'T00:00').getTime()) / 86400000) + 1
     : 0;
-  const periodStartedToday = openCycle?.payload.periodStart === TODAY;
 
   const meta = PHASE_META[prediction.currentPhase];
-  const today = new Date();
-  const dateStr = today.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+  const todayDate = new Date();
+  const dateStr = todayDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
 
   const userName = (() => {
     try { return (JSON.parse(localStorage.getItem('nila-prefs') ?? '{}').name as string | null) ?? null; }
     catch { return null; }
   })();
 
-  const hour = today.getHours();
+  const hour = todayDate.getHours();
   const timePrefix = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const phaseEmoji = PHASE_EMOJI[prediction.currentPhase];
 
-  // Random greeting line — picks on each mount, stays stable within a session
   const greetLineRef = useRef<string | null>(null);
   if (!greetLineRef.current) {
     const pool = PHASE_LINES[prediction.currentPhase];
@@ -399,9 +438,48 @@ export default function HomePage() {
 
   const cycleDay = Math.max(1, prediction.estimatedCycleLength - prediction.daysUntilNextPeriod);
 
+  const dailyInsight = getDailyInsight(
+    prediction.currentPhase,
+    todayLog?.payload.symptoms ?? symptoms,
+    logs,
+    cycles,
+  );
+
+  // ─── Period section button label ─────────────────────────────
+
+  const logPeriodLabel = (() => {
+    if (periodStatus === 'approaching') {
+      return `🩸 Period due soon — log it`;
+    }
+    if (periodStatus === 'late') {
+      const days = Math.abs(prediction.daysUntilNextPeriod);
+      return `🩸 Period overdue by ${days} day${days === 1 ? '' : 's'} — log it`;
+    }
+    return `🩸 Log period`;
+  })();
+
   return (
     <div className="px-5 pt-4 pb-28 flex flex-col gap-5">
       <Toast message={toastMsg ?? ''} visible={!!toastMsg} />
+
+      {/* Smart log sheet */}
+      <SmartLogSheet
+        open={logSheetOpen}
+        onClose={() => setLogSheetOpen(false)}
+        prediction={prediction}
+        onConfirm={logPeriod}
+      />
+
+      {/* End period sheet */}
+      {openCycle && (
+        <EndPeriodSheet
+          open={endSheetOpen}
+          onClose={() => setEndSheetOpen(false)}
+          openCycle={openCycle}
+          logs={logs}
+          onConfirm={endPeriod}
+        />
+      )}
 
       {/* Header */}
       <div className="flex items-start justify-between pt-2">
@@ -458,6 +536,15 @@ export default function HomePage() {
         <p className="text-xs font-semibold mb-1" style={{ color: meta.color }}>Today's focus</p>
         <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground)' }}>
           {PHASE_FOCUS[prediction.currentPhase]}
+        </p>
+      </div>
+
+      {/* Daily insight */}
+      <div className="rounded-[var(--radius-sm)] px-4 py-3 flex gap-3 items-start"
+        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+        <span className="text-base mt-0.5 flex-shrink-0">💡</span>
+        <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground)' }}>
+          {dailyInsight}
         </p>
       </div>
 
@@ -528,8 +615,8 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Period / Flow */}
-      {openCycle ? (
+      {/* Period / Flow — driven by periodStatus */}
+      {(periodStatus === 'active-today' || periodStatus === 'active-ongoing') ? (
         <div>
           <div className="flex items-center justify-between mb-3">
             <p className="text-[11px] font-semibold tracking-widest uppercase"
@@ -560,22 +647,28 @@ export default function HomePage() {
               </button>
             ))}
           </div>
-          {flow === 'none' && periodDayCount >= 2 && (
-            <p className="text-xs mt-2" style={{ color: 'var(--color-foreground-muted)' }}>
-              Saving 'None' will close this cycle.
-            </p>
-          )}
-          {/* Undo period — only show if started today */}
-          {periodStartedToday && (
+          <div className="flex gap-2 mt-3">
+            {/* End period button — always visible when active */}
             <button
-              onClick={undoPeriod}
+              onClick={() => setEndSheetOpen(true)}
               disabled={saving}
-              className="mt-3 text-xs w-full text-center py-2 rounded-[var(--radius-sm)] disabled:opacity-50"
-              style={{ color: 'var(--color-foreground-muted)', background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+              className="flex-1 text-xs py-2 rounded-[var(--radius-sm)] font-medium disabled:opacity-50"
+              style={{ color: PHASE_META.period.color, background: `${PHASE_META.period.color}12`, border: `1px solid ${PHASE_META.period.color}30` }}
             >
-              Logged by mistake — undo
+              End period
             </button>
-          )}
+            {/* Undo — only if started today */}
+            {periodStatus === 'active-today' && (
+              <button
+                onClick={undoPeriod}
+                disabled={saving}
+                className="flex-1 text-xs py-2 rounded-[var(--radius-sm)] disabled:opacity-50"
+                style={{ color: 'var(--color-foreground-muted)', background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+              >
+                Logged by mistake — undo
+              </button>
+            )}
+          </div>
         </div>
       ) : (
         <div>
@@ -583,15 +676,17 @@ export default function HomePage() {
             onPointerDown={(e) => e.currentTarget.style.transform = 'scale(0.97)'}
             onPointerUp={(e) => e.currentTarget.style.transform = ''}
             onPointerLeave={(e) => e.currentTarget.style.transform = ''}
-            onClick={startPeriod}
-            disabled={saving}
-            className="w-full py-3.5 rounded-[var(--radius)] text-sm font-semibold disabled:opacity-60 flex items-center justify-center gap-2"
-            style={{ background: 'var(--color-surface)', border: '1.5px solid var(--color-border)', transition: 'transform 0.08s ease' }}
+            onClick={() => setLogSheetOpen(true)}
+            className="w-full py-3.5 rounded-[var(--radius)] text-sm font-semibold flex items-center justify-center gap-2"
+            style={{
+              background: periodStatus === 'late' ? `${PHASE_META.period.color}15` : 'var(--color-surface)',
+              border: `1.5px solid ${periodStatus === 'late' ? PHASE_META.period.color : 'var(--color-border)'}`,
+              color: periodStatus === 'late' ? PHASE_META.period.color : undefined,
+              transition: 'transform 0.08s ease',
+            }}
           >
-            {saving ? <span style={{ color: 'var(--color-foreground-muted)' }}>Starting…</span>
-              : <><span>🩸</span><span>My period started today</span></>}
+            {logPeriodLabel}
           </button>
-          {periodError && <p className="text-xs mt-2 text-red-400">{periodError}</p>}
         </div>
       )}
 
