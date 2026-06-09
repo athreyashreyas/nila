@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useAppData } from '@/lib/data/context';
 import { PHASE_META } from '@/types/app';
-import { getDaysInMonth, getFirstDayOfMonth, toISODate, addDays, startOfDay, daysBetween } from '@/lib/utils/dates';
+import { getDaysInMonth, getFirstDayOfMonth, toISODate, addDays, fromISODate, startOfDay, daysBetween } from '@/lib/utils/dates';
 import { phaseForCycleDay } from '@/lib/algorithm/prediction';
 import type { CyclePhase, PredictionResult, MoodLevel } from '@/types/app';
 
@@ -18,6 +19,8 @@ const MOOD_LABEL: Record<MoodLevel, string> = {
 };
 
 function getPhaseForDate(date: Date, prediction: PredictionResult): CyclePhase | null {
+  // No cycle history yet — don't paint a speculative cycle across the whole calendar
+  if (!prediction.hasData) return null;
   const { estimatedCycleLength, estimatedPeriodLength, daysUntilNextPeriod } = prediction;
   const diff = daysBetween(startOfDay(new Date()), startOfDay(date));
   const todayCycleDay = estimatedCycleLength - daysUntilNextPeriod;
@@ -38,6 +41,7 @@ interface DaySheet {
 }
 
 export default function CalendarPage() {
+  const router = useRouter();
   const { cycles, logs, prediction } = useAppData();
 
   const now = new Date();
@@ -252,6 +256,17 @@ export default function CalendarPage() {
                     <div className="text-3xl mb-2">🌿</div>
                     <p className="text-sm">Nothing logged for this day</p>
                   </div>
+                )}
+
+                {/* Add / edit journal entry — only for today or past dates */}
+                {sheet.iso <= todayISO && (
+                  <button
+                    onClick={() => router.push(`/journal/${sheet.iso}`)}
+                    className="w-full mt-4 py-3 rounded-[var(--radius)] text-sm font-semibold"
+                    style={{ background: 'var(--color-accent)', color: '#fff' }}
+                  >
+                    {sheet.hasLog ? 'Edit entry' : 'Add entry'}
+                  </button>
                 )}
           </div>
         )}

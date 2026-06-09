@@ -202,8 +202,15 @@ export default function InsightsPage() {
         </h2>
         {(['period', 'follicular', 'ovulation', 'luteal'] as const).map((phase) => {
           const pMeta = PHASE_META[phase];
-          const durations = { period: avgPeriod, follicular: avg - 14 - avgPeriod - 4, ovulation: 5, luteal: 14 };
-          const pct = (durations[phase] / avg) * 100;
+          // Follicular fills whatever's left after period (avgPeriod), ovulation (5) and luteal (14).
+          // Clamp at 0 so short-cycle / long-period combos never produce negative widths.
+          const durations = {
+            period: avgPeriod,
+            follicular: Math.max(0, avg - 14 - avgPeriod - 5),
+            ovulation: 5,
+            luteal: 14,
+          };
+          const pct = Math.max(0, Math.min(100, (durations[phase] / avg) * 100));
           const isCurrent = prediction.currentPhase === phase;
           return (
             <div key={phase} className="flex items-center gap-3 mb-2">

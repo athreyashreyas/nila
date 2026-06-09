@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { predictCycle, toCycleRecord } from '@/lib/algorithm/prediction';
+import { addDays, fromISODate, toISODate } from '@/lib/utils/dates';
 import type { DecryptedCycle, PredictionResult } from '@/types/app';
 
 export function usePrediction(
@@ -24,7 +25,11 @@ export function usePrediction(
         if (prefs.cycleLength) defaultCycleLen = prefs.cycleLength;
         if (prefs.periodLength) defaultPeriodLen = prefs.periodLength;
         if (records.length === 0 && prefs.lastPeriodDate) {
-          allRecords = [toCycleRecord({ periodStart: prefs.lastPeriodDate, periodEnd: null })];
+          // Onboarding seed: lastPeriodDate is a *past* period start, not an active period.
+          // Give it an estimated end so the prediction treats it as a closed historical
+          // cycle — otherwise periodEnd:null marks it as an ongoing period forever.
+          const estimatedEnd = toISODate(addDays(fromISODate(prefs.lastPeriodDate), defaultPeriodLen));
+          allRecords = [toCycleRecord({ periodStart: prefs.lastPeriodDate, periodEnd: estimatedEnd })];
         }
       }
     } catch {}
