@@ -64,7 +64,26 @@ export interface PredictionResult {
   estimatedPeriodLength: number;       // days
   confidence: ConfidenceLevel;
   daysUntilNextPeriod: number;         // negative = overdue
+  hasData: boolean;                    // false when no cycles have been logged yet
 }
+
+// ─── UI option lists (single source of truth for forms) ──────
+
+export const MOODS: { value: MoodLevel; emoji: string; label: string }[] = [
+  { value: 'great',      emoji: '😊', label: 'Great' },
+  { value: 'good',       emoji: '🙂', label: 'Good' },
+  { value: 'okay',       emoji: '😐', label: 'Okay' },
+  { value: 'low',        emoji: '😔', label: 'Low' },
+  { value: 'low-energy', emoji: '😴', label: 'Tired' },
+];
+
+export const FLOWS: { value: FlowIntensity; label: string }[] = [
+  { value: 'none',     label: 'None' },
+  { value: 'spotting', label: 'Spotting' },
+  { value: 'light',    label: 'Light' },
+  { value: 'medium',   label: 'Medium' },
+  { value: 'heavy',    label: 'Heavy' },
+];
 
 // ─── Symptoms catalogue ───────────────────────────────────────
 

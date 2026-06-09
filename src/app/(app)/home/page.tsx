@@ -7,10 +7,11 @@ import { PhaseRing } from '@/components/ui/PhaseRing';
 import { Toast, useToast } from '@/components/ui/Toast';
 import { SmartLogSheet } from '@/components/ui/SmartLogSheet';
 import { EndPeriodSheet } from '@/components/ui/EndPeriodSheet';
-import { PHASE_META, SYMPTOMS } from '@/types/app';
-import type { MoodLevel, FlowIntensity, CyclePhase, DecryptedDailyLog, DecryptedCycle } from '@/types/app';
-import { toISODate, fromISODate, daysBetween } from '@/lib/utils/dates';
-import { SYMPTOM_TIPS, PHASE_INSIGHT_TIPS } from '@/lib/insights/data';
+import { PHASE_META, SYMPTOMS, MOODS, FLOWS } from '@/types/app';
+import type { MoodLevel, FlowIntensity, CyclePhase } from '@/types/app';
+import { toISODate } from '@/lib/utils/dates';
+import { phaseForCycleDay } from '@/lib/algorithm/prediction';
+import { getDailyInsight } from '@/lib/insights/engine';
 
 // ─── Module-level store ──────────────────────────────────────
 // Survives SPA tab-switching (module stays loaded); resets on full page reload.
@@ -25,22 +26,6 @@ const _store = {
 let _lastLogId = '';
 
 // ─── Constants ────────────────────────────────────────────────
-
-const MOODS: { value: MoodLevel; emoji: string; label: string }[] = [
-  { value: 'great',      emoji: '😊', label: 'Great' },
-  { value: 'good',       emoji: '🙂', label: 'Good' },
-  { value: 'okay',       emoji: '😐', label: 'Okay' },
-  { value: 'low',        emoji: '😔', label: 'Low' },
-  { value: 'low-energy', emoji: '😴', label: 'Tired' },
-];
-
-const FLOWS: { value: FlowIntensity; label: string }[] = [
-  { value: 'none',     label: 'None' },
-  { value: 'spotting', label: 'Spotting' },
-  { value: 'light',    label: 'Light' },
-  { value: 'medium',   label: 'Medium' },
-  { value: 'heavy',    label: 'Heavy' },
-];
 
 const ENERGY_LABELS = ['', 'Drained', 'Low', 'Okay', 'Good', 'Vibrant'] as const;
 
@@ -106,48 +91,6 @@ const PHASE_FOCUS: Record<CyclePhase, string> = {
   luteal:     'Intuition is sharper now. Reflect, create quietly, and honour the slower rhythm.',
 };
 
-// ─── Daily insight ─────────────────────────────────────────────
-
-function getDailyInsight(
-  phase: CyclePhase,
-  todaySymptoms: string[],
-  logs: DecryptedDailyLog[],
-  cycles: DecryptedCycle[],
-): string {
-  // 1. Symptom pattern: symptom present today that appeared in ≥3 of last 5 same-phase logs
-  if (todaySymptoms.length > 0 && logs.length > 0 && cycles.length > 0) {
-    const phaseLogs = logs
-      .filter(l => {
-        const logDate = fromISODate(l.payload.date);
-        const totalDays = daysBetween(fromISODate(cycles[cycles.length - 1].payload.periodStart), logDate);
-        const cycleLen = 28;
-        const dayInCycle = ((totalDays % cycleLen) + cycleLen) % cycleLen;
-        const periodLen = 5;
-        const ovDay = cycleLen - 14;
-        let logPhase: CyclePhase;
-        if (dayInCycle < periodLen) logPhase = 'period';
-        else if (dayInCycle < ovDay - 2) logPhase = 'follicular';
-        else if (dayInCycle <= ovDay + 2) logPhase = 'ovulation';
-        else logPhase = 'luteal';
-        return logPhase === phase;
-      })
-      .slice(-5);
-
-    for (const symptom of todaySymptoms) {
-      const matchCount = phaseLogs.filter(l => l.payload.symptoms.includes(symptom)).length;
-      if (matchCount >= 3 && SYMPTOM_TIPS[symptom]) {
-        const phaseLabel = PHASE_META[phase].label.toLowerCase();
-        return `You tend to experience ${symptom} in your ${phaseLabel} phase. ${SYMPTOM_TIPS[symptom]}`;
-      }
-    }
-  }
-
-  // 2. Phase fallback tip (rotates based on cycle day approximation to avoid always showing same tip)
-  const tips = PHASE_INSIGHT_TIPS[phase];
-  const tipIndex = Math.floor(Date.now() / 86400000) % tips.length;
-  return tips[tipIndex];
-}
-
 // ─── Hormone graph ─────────────────────────────────────────────
 
 const E2_CTRL = [[0,.12],[.18,.18],[.36,.55],[.46,.96],[.50,.58],[.57,.42],[.64,.58],[.75,.50],[.89,.26],[1,.12]] as [number,number][];
@@ -163,14 +106,6 @@ function lerp2(t: number, ctrl: [number,number][]): number {
     }
   }
   return ctrl[ctrl.length-1][1];
-}
-
-function phaseForDay(day: number, cycleLength: number, periodLength: number): CyclePhase {
-  const ovDay = cycleLength - 14;
-  if (day <= periodLength) return 'period';
-  if (day < ovDay - 2) return 'follicular';
-  if (day <= ovDay + 2) return 'ovulation';
-  return 'luteal';
 }
 
 function hormoneLabel(v: number): string {
@@ -214,7 +149,7 @@ function HormoneGraph({ dayInCycle, cycleLength, estimatedPeriodLength }: {
   const displayDay = scrubDay ?? dayInCycle;
   const displayT = (displayDay - 1) / Math.max(N - 1, 1);
   const cx = xP(displayDay);
-  const displayPhase = phaseForDay(displayDay, N, estimatedPeriodLength);
+  const displayPhase = phaseForCycleDay(displayDay, N, estimatedPeriodLength);
   const phaseMeta = PHASE_META[displayPhase];
 
   const pEnd = xP(Math.min(estimatedPeriodLength, N));
@@ -436,13 +371,16 @@ export default function HomePage() {
     : prediction.daysUntilNextPeriod === 0 ? 'today'
     : `${Math.abs(prediction.daysUntilNextPeriod)} days late`;
 
-  const cycleDay = Math.max(1, prediction.estimatedCycleLength - prediction.daysUntilNextPeriod);
+  // Clamp so overdue cycles don't push the active-day indicator past the graph edge
+  const cycleDay = Math.min(
+    prediction.estimatedCycleLength,
+    Math.max(1, prediction.estimatedCycleLength - prediction.daysUntilNextPeriod),
+  );
 
   const dailyInsight = getDailyInsight(
-    prediction.currentPhase,
+    prediction,
     todayLog?.payload.symptoms ?? symptoms,
     logs,
-    cycles,
   );
 
   // ─── Period section button label ─────────────────────────────
@@ -507,46 +445,61 @@ export default function HomePage() {
       {/* Phase card + hormone graph */}
       <div className="rounded-[var(--radius)] p-5"
         style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-        <div className="flex gap-4 items-center mb-4">
-          <PhaseRing prediction={prediction} />
-          <div className="flex-1 min-w-0">
-            <div className="font-display text-xl font-bold" style={{ color: meta.color }}>{meta.label}</div>
-            <div className="text-sm mt-0.5 leading-snug" style={{ color: 'var(--color-foreground-muted)' }}>
-              Day {prediction.dayInPhase} of phase · Cycle day {cycleDay}
+        {prediction.hasData ? (
+          <>
+            <div className="flex gap-4 items-center mb-4">
+              <PhaseRing prediction={prediction} />
+              <div className="flex-1 min-w-0">
+                <div className="font-display text-xl font-bold" style={{ color: meta.color }}>{meta.label}</div>
+                <div className="text-sm mt-0.5 leading-snug" style={{ color: 'var(--color-foreground-muted)' }}>
+                  Day {prediction.dayInPhase} of phase · Cycle day {cycleDay}
+                </div>
+                <div className="text-xs mt-1.5 flex items-center gap-1.5">
+                  <span style={{ color: 'var(--color-foreground-muted)' }}>Next period</span>
+                  <span className="font-semibold" style={{ color: meta.color }}>{daysLabel}</span>
+                </div>
+              </div>
             </div>
-            <div className="text-xs mt-1.5 flex items-center gap-1.5">
-              <span style={{ color: 'var(--color-foreground-muted)' }}>Next period</span>
-              <span className="font-semibold" style={{ color: meta.color }}>{daysLabel}</span>
-            </div>
+            <p className="text-[10px] font-semibold tracking-widest uppercase mb-2" style={{ color: 'var(--color-foreground-muted)' }}>
+              Hormone activity — drag to explore
+            </p>
+            <HormoneGraph
+              dayInCycle={cycleDay}
+              cycleLength={prediction.estimatedCycleLength}
+              estimatedPeriodLength={prediction.estimatedPeriodLength}
+            />
+          </>
+        ) : (
+          <div className="flex flex-col items-center py-4 gap-2 text-center">
+            <span className="text-3xl">🌸</span>
+            <p className="text-sm font-semibold">Log your first period to get started</p>
+            <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground-muted)' }}>
+              Nila will learn your cycle and show personalised insights here.
+            </p>
           </div>
-        </div>
-        <p className="text-[10px] font-semibold tracking-widest uppercase mb-2" style={{ color: 'var(--color-foreground-muted)' }}>
-          Hormone activity — drag to explore
-        </p>
-        <HormoneGraph
-          dayInCycle={cycleDay}
-          cycleLength={prediction.estimatedCycleLength}
-          estimatedPeriodLength={prediction.estimatedPeriodLength}
-        />
+        )}
       </div>
 
-      {/* Phase focus */}
-      <div className="rounded-[var(--radius-sm)] px-4 py-3"
-        style={{ background: `${meta.color}12`, border: `1px solid ${meta.color}30` }}>
-        <p className="text-xs font-semibold mb-1" style={{ color: meta.color }}>Today's focus</p>
-        <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground)' }}>
-          {PHASE_FOCUS[prediction.currentPhase]}
-        </p>
-      </div>
+      {/* Phase focus + daily insight — only meaningful once there's data */}
+      {prediction.hasData && (
+        <>
+          <div className="rounded-[var(--radius-sm)] px-4 py-3"
+            style={{ background: `${meta.color}12`, border: `1px solid ${meta.color}30` }}>
+            <p className="text-xs font-semibold mb-1" style={{ color: meta.color }}>Today's focus</p>
+            <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground)' }}>
+              {PHASE_FOCUS[prediction.currentPhase]}
+            </p>
+          </div>
 
-      {/* Daily insight */}
-      <div className="rounded-[var(--radius-sm)] px-4 py-3 flex gap-3 items-start"
-        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-        <span className="text-base mt-0.5 flex-shrink-0">💡</span>
-        <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground)' }}>
-          {dailyInsight}
-        </p>
-      </div>
+          <div className="rounded-[var(--radius-sm)] px-4 py-3 flex gap-3 items-start"
+            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+            <span className="text-base mt-0.5 flex-shrink-0">💡</span>
+            <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground)' }}>
+              {dailyInsight}
+            </p>
+          </div>
+        </>
+      )}
 
       {/* Mood */}
       <div>

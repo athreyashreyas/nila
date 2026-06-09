@@ -1,10 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { BottomSheet } from '@/components/ui/BottomSheet';
 import { useAppData } from '@/lib/data/context';
 import { PHASE_META } from '@/types/app';
-import { getDaysInMonth, getFirstDayOfMonth, toISODate, addDays, fromISODate } from '@/lib/utils/dates';
+import { getDaysInMonth, getFirstDayOfMonth, toISODate, addDays, startOfDay, daysBetween } from '@/lib/utils/dates';
+import { phaseForCycleDay } from '@/lib/algorithm/prediction';
 import type { CyclePhase, PredictionResult, MoodLevel } from '@/types/app';
 
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
@@ -17,19 +18,15 @@ const MOOD_LABEL: Record<MoodLevel, string> = {
 };
 
 function getPhaseForDate(date: Date, prediction: PredictionResult): CyclePhase | null {
-  const today = new Date();
-  const diff = Math.round((date.getTime() - today.getTime()) / 86400000);
-  const futureDays = prediction.daysUntilNextPeriod;
-  const dayInCycle = ((prediction.estimatedCycleLength - futureDays) + diff) % prediction.estimatedCycleLength;
-  if (dayInCycle < 0) return null;
-
-  const p = prediction.estimatedPeriodLength;
-  const ov = prediction.estimatedCycleLength - 14;
-
-  if (dayInCycle < p) return 'period';
-  if (dayInCycle < ov - 2) return 'follicular';
-  if (dayInCycle <= ov + 2) return 'ovulation';
-  return 'luteal';
+  const { estimatedCycleLength, estimatedPeriodLength, daysUntilNextPeriod } = prediction;
+  const diff = daysBetween(startOfDay(new Date()), startOfDay(date));
+  const todayCycleDay = estimatedCycleLength - daysUntilNextPeriod;
+  const rawDay = todayCycleDay + diff;
+  // Normalise to [1, cycleLength]
+  const dayInCycle =
+    ((rawDay - 1) % estimatedCycleLength + estimatedCycleLength) % estimatedCycleLength + 1;
+  if (dayInCycle < 1) return null;
+  return phaseForCycleDay(dayInCycle, estimatedCycleLength, estimatedPeriodLength);
 }
 
 interface DaySheet {
@@ -154,39 +151,9 @@ export default function CalendarPage() {
       </div>
 
       {/* Day detail bottom sheet */}
-      <AnimatePresence>
+      <BottomSheet open={!!sheet} onClose={() => setSheet(null)} maxHeight="70vh">
         {sheet && (
-          <>
-            <motion.div
-              key="backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-40"
-              style={{ background: 'rgba(0,0,0,0.45)' }}
-              onClick={() => setSheet(null)}
-            />
-            <motion.div
-              key="sheet"
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 320 }}
-              className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl"
-              style={{
-                background: 'var(--color-background)',
-                paddingBottom: 'max(2rem, env(safe-area-inset-bottom))',
-                maxHeight: '70vh',
-                overflowY: 'auto',
-              }}
-            >
-              {/* drag handle */}
-              <div className="flex justify-center pt-3 pb-1">
-                <div className="w-10 h-1 rounded-full" style={{ background: 'var(--color-border)' }} />
-              </div>
-
-              <div className="px-6 pt-3 pb-2">
+          <div className="px-6 pt-3 pb-2">
                 {/* Date header */}
                 <div className="flex items-start justify-between mb-4">
                   <div>
@@ -286,11 +253,9 @@ export default function CalendarPage() {
                     <p className="text-sm">Nothing logged for this day</p>
                   </div>
                 )}
-              </div>
-            </motion.div>
-          </>
+          </div>
         )}
-      </AnimatePresence>
+      </BottomSheet>
     </div>
   );
 }

@@ -94,14 +94,23 @@ export function predictCycle(
 
   // ── Determine current phase ────────────────────────────────────
   const daysFromLastStart = daysBetween(lastPeriodStart, todayNorm);
+  const lastCycleIsOpen = lastCycle !== null && lastCycle.periodEnd === null;
 
   let currentPhase: CyclePhase;
   let dayInPhase: number;
 
-  if (daysFromLastStart < 0) {
+  if (sorted.length === 0) {
+    // No cycle history — show a neutral "between periods" state rather than claiming day 1 of period
+    currentPhase = 'follicular';
+    dayInPhase = 1;
+  } else if (daysFromLastStart < 0) {
     // Before first recorded cycle starts (retroactive entry) — treat as luteal
     currentPhase = 'luteal';
     dayInPhase = 1;
+  } else if (lastCycleIsOpen) {
+    // Period is still active — stay in period phase regardless of estimated length
+    currentPhase = 'period';
+    dayInPhase = daysFromLastStart + 1;
   } else if (daysFromLastStart < avgPeriodLength) {
     currentPhase = 'period';
     dayInPhase = daysFromLastStart + 1;
@@ -127,7 +136,21 @@ export function predictCycle(
     estimatedPeriodLength: avgPeriodLength,
     confidence,
     daysUntilNextPeriod,
+    hasData: sorted.length > 0,
   };
+}
+
+// ── Canonical phase-from-cycle-day (1-indexed, day 1 = first day of period) ──
+export function phaseForCycleDay(
+  dayInCycle: number,
+  cycleLength: number,
+  periodLength: number,
+): CyclePhase {
+  const ovDay = cycleLength - LUTEAL_PHASE_DAYS;
+  if (dayInCycle <= periodLength) return 'period';
+  if (dayInCycle < ovDay - 2) return 'follicular';
+  if (dayInCycle <= ovDay + 2) return 'ovulation';
+  return 'luteal';
 }
 
 // ── Helper: build CycleRecord from decrypted payload strings ─────

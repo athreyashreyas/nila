@@ -4,24 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAppData } from '@/lib/data/context';
 import { Toast, useToast } from '@/components/ui/Toast';
-import { SYMPTOMS } from '@/types/app';
+import { SYMPTOMS, MOODS, FLOWS } from '@/types/app';
 import type { MoodLevel, FlowIntensity } from '@/types/app';
-
-const MOODS: { value: MoodLevel; emoji: string; label: string }[] = [
-  { value: 'great',      emoji: '😊', label: 'Great' },
-  { value: 'good',       emoji: '🙂', label: 'Good' },
-  { value: 'okay',       emoji: '😐', label: 'Okay' },
-  { value: 'low',        emoji: '😔', label: 'Low' },
-  { value: 'low-energy', emoji: '😴', label: 'Tired' },
-];
-
-const FLOWS: { value: FlowIntensity; label: string }[] = [
-  { value: 'none',     label: 'None' },
-  { value: 'spotting', label: 'Spotting' },
-  { value: 'light',    label: 'Light' },
-  { value: 'medium',   label: 'Medium' },
-  { value: 'heavy',    label: 'Heavy' },
-];
 
 export default function JournalDatePage() {
   const { date } = useParams<{ date: string }>();
@@ -55,7 +39,7 @@ export default function JournalDatePage() {
     if (!mood) return;
     setSaving(true);
     try {
-      await upsertLog({ date, mood, energy: null, symptoms, flow, notes });
+      await upsertLog({ date, mood, energy: existing?.payload.energy ?? null, symptoms, flow, notes });
       showToast(existing ? 'Entry updated ✓' : 'Entry saved ✓');
       setTimeout(() => router.back(), 700);
     } catch {
