@@ -306,6 +306,11 @@ export default function HomePage() {
     setSaving(true);
     try {
       await deleteCycle(openCycle.id);
+      // Clear any flow already saved against today so the calendar dot
+      // for today doesn't keep showing a "logged" entry for a removed period.
+      if (todayLog && todayLog.payload.flow !== 'none') {
+        await upsertLog({ ...todayLog.payload, flow: 'none' });
+      }
       setFlow('none');
       showToast('Period log removed ✓');
     } catch {
@@ -610,17 +615,15 @@ export default function HomePage() {
             >
               End period
             </button>
-            {/* Undo — only if started today */}
-            {periodStatus === 'active-today' && (
-              <button
-                onClick={undoPeriod}
-                disabled={saving}
-                className="flex-1 text-xs py-2 rounded-[var(--radius-sm)] disabled:opacity-50"
-                style={{ color: 'var(--color-foreground-muted)', background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
-              >
-                Logged by mistake — undo
-              </button>
-            )}
+            {/* Undo — removes this period log entirely (mistaken entry) */}
+            <button
+              onClick={undoPeriod}
+              disabled={saving}
+              className="flex-1 text-xs py-2 rounded-[var(--radius-sm)] disabled:opacity-50"
+              style={{ color: 'var(--color-foreground-muted)', background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+            >
+              Logged by mistake — undo
+            </button>
           </div>
         </div>
       ) : (
