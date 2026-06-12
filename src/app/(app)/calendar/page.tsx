@@ -121,7 +121,6 @@ export default function CalendarPage() {
           const iso = toISODate(date);
           const isToday = iso === todayISO;
           const hasPeriod = periodDates.has(iso);
-          const hasLog = logMap.has(iso);
           const phase = getPhaseForDate(date, prediction);
           const phaseMeta = phase ? PHASE_META[phase] : null;
 
@@ -146,7 +145,6 @@ export default function CalendarPage() {
               {day}
               <div className="flex gap-0.5 mt-0.5 h-1.5">
                 {hasPeriod && <div className="w-1 h-1 rounded-full" style={{ background: PHASE_META.period.color }} />}
-                {hasLog && !hasPeriod && <div className="w-1 h-1 rounded-full" style={{ background: 'var(--color-accent)' }} />}
               </div>
             </button>
           );
