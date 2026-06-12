@@ -57,7 +57,7 @@ function LoginForm() {
       if (msg.toLowerCase().includes('invalid login') || msg.toLowerCase().includes('invalid credentials')) {
         setError('no-account');
       } else if (err instanceof DOMException) {
-        setError('Incorrect password — could not decrypt your account.');
+        setError('That password doesn\'t look right. Please try again.');
       } else {
         setError(msg || 'Something went wrong.');
       }
@@ -75,7 +75,7 @@ function LoginForm() {
       {confirmed && (
         <div className="mb-6 px-4 py-3 rounded-xl text-sm text-center"
           style={{ background: 'var(--color-surface)', border: '1px solid var(--color-accent)', color: 'var(--color-accent)' }}>
-          Email confirmed — sign in to access your data.
+          Email confirmed. Sign in to access your data.
         </div>
       )}
       {confirmError && (

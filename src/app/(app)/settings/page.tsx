@@ -9,6 +9,8 @@ import { derivePasswordKey, wrapMasterKey, generateSalt } from '@/lib/encryption
 import { useAppData } from '@/lib/data/context';
 import { clearKey as clearIDBKey } from '@/lib/encryption/keyStore';
 import { registerPushSubscription, unregisterPushSubscription, isPushSupported } from '@/lib/push/register';
+import { BottomSheet } from '@/components/ui/BottomSheet';
+import { APP_VERSION, CHANGELOG } from '@/lib/version';
 
 function supabase() {
   return createBrowserClient(
@@ -33,6 +35,7 @@ export default function SettingsPage() {
   const [pwSuccess, setPwSuccess] = useState(false);
   const [tapCount, setTapCount] = useState(0);
   const [showDevReset, setShowDevReset] = useState(false);
+  const [showChangelog, setShowChangelog] = useState(false);
   const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
@@ -231,7 +234,7 @@ export default function SettingsPage() {
               <div className="text-left">
                 <div className="text-sm font-medium">Period reminders</div>
                 <div className="text-xs mt-0.5 opacity-50">
-                  {pushEnabled ? 'On — tap to disable' : 'Off — tap to enable (requires home screen)'}
+                  {pushEnabled ? 'On, tap to disable' : 'Off, tap to enable (requires home screen)'}
                 </div>
               </div>
               <div
@@ -251,7 +254,14 @@ export default function SettingsPage() {
           <p className="text-[11px] font-semibold tracking-widest uppercase mb-2 px-1 mt-2" style={{ color: 'var(--color-foreground-muted)' }}>Privacy</p>
           <div className="rounded-[var(--radius)] p-4 text-xs leading-relaxed"
             style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-foreground-muted)' }}>
-            Your health data is encrypted end-to-end. Nila's servers store only encrypted bytes — no period dates, symptoms, or notes are ever readable by anyone but you.
+            Your health data is encrypted end-to-end. Nila's servers store only encrypted bytes, so no period dates, symptoms, or notes are ever readable by anyone but you.
+          </div>
+        </div>
+
+        <div>
+          <p className="text-[11px] font-semibold tracking-widest uppercase mb-2 px-1 mt-2" style={{ color: 'var(--color-foreground-muted)' }}>About</p>
+          <div className="flex flex-col gap-2">
+            <Row label="What's new" sub={`Version ${APP_VERSION}`} onClick={() => setShowChangelog(true)} />
           </div>
         </div>
 
@@ -264,8 +274,37 @@ export default function SettingsPage() {
           className="w-full text-center text-[10px] py-2 mt-2 select-none"
           style={{ opacity: 0.3, color: 'var(--color-foreground)' }}
         >
-          Nila · private by design
+          Nila v{APP_VERSION} · private by design
         </button>
+
+        <BottomSheet open={showChangelog} onClose={() => setShowChangelog(false)} maxHeight="70vh">
+          <div className="px-6 pt-3 pb-2">
+            <h2 className="font-display text-xl font-bold mb-1">What's new</h2>
+            <p className="text-xs mb-4" style={{ color: 'var(--color-foreground-muted)' }}>
+              You're running version {APP_VERSION}.
+            </p>
+            <div className="flex flex-col gap-5">
+              {CHANGELOG.map((entry) => (
+                <div key={entry.version}>
+                  <div className="flex items-baseline justify-between mb-2">
+                    <span className="text-sm font-semibold">Version {entry.version}</span>
+                    <span className="text-xs opacity-50">
+                      {new Date(entry.date + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </span>
+                  </div>
+                  <ul className="flex flex-col gap-1.5">
+                    {entry.highlights.map((h, i) => (
+                      <li key={i} className="text-xs leading-relaxed flex gap-2" style={{ color: 'var(--color-foreground-muted)' }}>
+                        <span style={{ color: 'var(--color-accent)' }}>•</span>
+                        <span>{h}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </BottomSheet>
 
         {showDevReset && (
           <div className="rounded-[var(--radius)] p-4 flex flex-col gap-3"

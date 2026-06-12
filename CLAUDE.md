@@ -46,7 +46,19 @@ supabase/migrations/              — All schema DDL + RLS
 design/mockups/                   — HTML design mockups (committed, disposable)
 docs/PLAN.md                      — Full implementation plan
 docs/ARCHITECTURE.md              — E2EE architecture reference
+src/lib/version.ts                — APP_VERSION + CHANGELOG, shown in Settings → What's new
 ```
+
+## Versioning
+Every push that ships a user-facing change must bump `APP_VERSION` in `src/lib/version.ts`
+(semver: patch for fixes, minor for new features, major for breaking/major redesigns) and
+prepend a new `CHANGELOG` entry (today's date, 1 line per change). This is the only changelog
+the user sees, surfaced in Settings under "What's new".
+
+## Writing Style
+Never use em dashes (—) in any generated text: UI copy, toasts, tips, commit messages, docs,
+or chat responses. Use a period, comma, colon, or "so" instead. User-facing copy in particular
+should read as calm, warm, and human, never like AI-generated boilerplate.
 
 ## Database Schema (What Supabase Stores)
 - `profiles`: id, key_salt, wrapped_key, recovery_wrapped_key, pbkdf2_iterations, reminder prefs

@@ -104,7 +104,7 @@ export default function RecoverPage() {
       router.push('/home');
     } catch (err) {
       if (err instanceof DOMException) {
-        setError('Incorrect recovery phrase — could not decrypt your account.');
+        setError('That recovery phrase doesn\'t look right. Please check it and try again.');
       } else {
         setError(err instanceof Error ? err.message : 'Something went wrong.');
       }

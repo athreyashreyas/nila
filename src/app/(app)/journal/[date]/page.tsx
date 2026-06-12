@@ -43,7 +43,7 @@ export default function JournalDatePage() {
       showToast(existing ? 'Entry updated ✓' : 'Entry saved ✓');
       setTimeout(() => router.back(), 700);
     } catch {
-      showToast('Save failed — try again');
+      showToast('Save failed, try again');
     } finally {
       setSaving(false);
     }

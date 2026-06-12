@@ -36,19 +36,19 @@ const PHASE_EMOJI: Record<CyclePhase, string> = {
 const PHASE_LINES: Record<CyclePhase, string[]> = {
   period: [
     'Your body is doing something extraordinary.',
-    'Rest is not weakness — it\'s your superpower right now.',
+    'Rest is not weakness. It\'s your superpower right now.',
     'Be softer with yourself than you think you need to be.',
     'You are allowed to take it slow today.',
     'Give yourself the grace you\'d give someone you love.',
     'This too is part of the cycle. You are whole.',
-    'Warmth and rest — that\'s the assignment today.',
+    'Warmth and rest. That\'s the assignment today.',
     'Not every day needs to be productive. Today, just be.',
     'Your body is asking for gentleness. Listen.',
     'Strength looks like rest today.',
   ],
   follicular: [
     'Something new is quietly taking shape.',
-    'New energy is building — lean into the clarity.',
+    'New energy is building. Lean into the clarity.',
     'The fog is lifting. Notice how sharp things feel.',
     'Fresh starts live here. What\'s been waiting for you?',
     'This is the season of beginnings.',
@@ -59,13 +59,13 @@ const PHASE_LINES: Record<CyclePhase, string[]> = {
     'Something is unfolding. Stay curious.',
   ],
   ovulation: [
-    'At your most radiant — let the world feel it.',
+    'At your most radiant. Let the world feel it.',
     'Peak energy. Peak you. Make the most of it.',
     'You\'re magnetic right now. Use it wisely.',
     'Everything is a little easier and brighter today.',
     'You\'re glowing, and there\'s science behind that.',
     'The world feels more yours right now. It is.',
-    'High stakes, big conversations — all easier right now.',
+    'High stakes, big conversations: both feel easier right now.',
     'This warmth and clarity won\'t last. Savour it.',
     'Bold choices. Big energy. This is your moment.',
     'People feel your warmth today. Share it.',
@@ -75,7 +75,7 @@ const PHASE_LINES: Record<CyclePhase, string[]> = {
     'Your intuition is sharpest now. Trust it.',
     'The world can wait. This moment is yours.',
     'Slowing down isn\'t falling behind.',
-    'Softer, slower, deeper — that\'s the energy today.',
+    'Softer, slower, deeper. That\'s the energy today.',
     'You\'ve earned every moment of rest this phase brings.',
     'Honour the slower rhythm. It\'s not a weakness.',
     'Turn inward. The answers are already there.',
@@ -85,9 +85,9 @@ const PHASE_LINES: Record<CyclePhase, string[]> = {
 };
 
 const PHASE_FOCUS: Record<CyclePhase, string> = {
-  period:     'Warmth, rest, and gentleness. Your body is doing real work — give it space.',
+  period:     'Warmth, rest, and gentleness. Your body is doing real work, so give it space.',
   follicular: 'Clarity is returning. A great time to start things, plan, and reconnect with what you want.',
-  ovulation:  'Peak social energy. High-stakes conversations, creative bursts, bold decisions — all easier now.',
+  ovulation:  'Peak social energy. High-stakes conversations, creative bursts, and bold decisions all feel easier now.',
   luteal:     'Intuition is sharper now. Reflect, create quietly, and honour the slower rhythm.',
 };
 
@@ -289,7 +289,7 @@ export default function HomePage() {
     await addCycle({ periodStart: startDate, periodEnd: endDate, flowIntensity: 'medium', notes: '' });
     if (!endDate) {
       setFlow('medium');
-      showToast('Period started — tracking begins 🩸');
+      showToast('Period started. We\'re tracking with you 🩸');
     } else {
       showToast('Period logged ✓');
     }
@@ -298,7 +298,7 @@ export default function HomePage() {
   async function endPeriod(endDate: string) {
     if (!openCycle) return;
     await updateCycle(openCycle.id, { ...openCycle.payload, periodEnd: endDate });
-    showToast('Period ended — cycle logged ✓');
+    showToast('Period ended. Cycle logged ✓');
   }
 
   async function undoPeriod() {
@@ -320,7 +320,7 @@ export default function HomePage() {
       setFlow('none');
       showToast('Period log removed ✓');
     } catch {
-      showToast('Couldn\'t remove — try again');
+      showToast('Couldn\'t remove that, try again');
     } finally {
       setSaving(false);
     }
@@ -340,7 +340,7 @@ export default function HomePage() {
       });
       showToast(todayLog ? 'Check-in updated ✓' : 'Check-in saved ✓');
     } catch {
-      showToast('Something went wrong — try again');
+      showToast('Something went wrong, try again');
     } finally {
       setSaving(false);
     }
@@ -398,11 +398,11 @@ export default function HomePage() {
 
   const logPeriodLabel = (() => {
     if (periodStatus === 'approaching') {
-      return `🩸 Period due soon — log it`;
+      return `🩸 Period due soon, log it`;
     }
     if (periodStatus === 'late') {
       const days = Math.abs(prediction.daysUntilNextPeriod);
-      return `🩸 Period overdue by ${days} day${days === 1 ? '' : 's'} — log it`;
+      return `🩸 Period overdue by ${days} day${days === 1 ? '' : 's'}, log it`;
     }
     return `🩸 Log period`;
   })();
@@ -472,7 +472,7 @@ export default function HomePage() {
               </div>
             </div>
             <p className="text-[10px] font-semibold tracking-widest uppercase mb-2" style={{ color: 'var(--color-foreground-muted)' }}>
-              Hormone activity — drag to explore
+              Hormone activity, drag to explore
             </p>
             <HormoneGraph
               dayInCycle={cycleDay}
@@ -628,7 +628,7 @@ export default function HomePage() {
               className="flex-1 text-xs py-2 rounded-[var(--radius-sm)] disabled:opacity-50"
               style={{ color: 'var(--color-foreground-muted)', background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
             >
-              Logged by mistake — undo
+              Logged by mistake, undo
             </button>
           </div>
         </div>

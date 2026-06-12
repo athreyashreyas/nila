@@ -134,7 +134,7 @@ export default function SignupPage() {
     <motion.div {...fade} className="w-full max-w-sm">
       <h1 className="text-xl font-medium mb-1">Create your account</h1>
       <p className="text-sm mb-8" style={{ color: 'var(--color-foreground-muted)' }}>
-        Your health data is encrypted end-to-end — only you can read it.
+        Your health data is encrypted end-to-end, so only you can read it.
       </p>
 
       <form onSubmit={handleSignup} className="flex flex-col gap-4">
@@ -153,7 +153,7 @@ export default function SignupPage() {
             className="w-full px-4 py-3 rounded-xl text-sm outline-none"
             style={inputStyle} />
           <p className="text-xs" style={{ color: 'var(--color-foreground-muted)' }}>
-            Minimum 8 characters. This encrypts your data — do not forget it.
+            Minimum 8 characters. This encrypts your data, so please don't forget it.
           </p>
         </div>
 

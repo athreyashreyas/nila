@@ -48,15 +48,15 @@ export function SmartLogSheet({ open, onClose, prediction, onConfirm }: Props) {
   const smartHint = (): string | null => {
     const predictedStr = prediction.nextPeriodDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
     if (prediction.daysUntilNextPeriod < -3) {
-      return `Period estimated around ${predictedStr} — adjust if needed`;
+      return `Period estimated around ${predictedStr}, adjust if needed`;
     }
     if (prediction.daysUntilNextPeriod <= 0) {
-      // Predicted date is today or in the past — pre-filled for them
-      return `Period predicted around ${predictedStr} — adjust if the date is wrong`;
+      // Predicted date is today or in the past, pre-filled for them
+      return `Period predicted around ${predictedStr}, adjust if the date is wrong`;
     }
     if (prediction.daysUntilNextPeriod <= 3) {
-      // Predicted date is upcoming — pre-filling today, not the future date
-      return `Period expected around ${predictedStr} — logging today, change if needed`;
+      // Predicted date is upcoming, pre-filling today, not the future date
+      return `Period expected around ${predictedStr}, logging today, change if needed`;
     }
     return null;
   };

@@ -155,7 +155,7 @@ export default function OnboardingPage() {
               <button onClick={() => { setCycleLength(28); setStep(3); }}
                 className="w-full py-3 text-sm transition-all"
                 style={{ color: 'var(--color-foreground-muted)' }}>
-                I don't know — use default
+                I'm not sure, use the default
               </button>
             </motion.div>
           )}
@@ -182,7 +182,7 @@ export default function OnboardingPage() {
               <button onClick={() => { setPeriodLength(5); setStep(4); }}
                 className="w-full py-3 text-sm transition-all"
                 style={{ color: 'var(--color-foreground-muted)' }}>
-                I don't know — use default
+                I'm not sure, use the default
               </button>
             </motion.div>
           )}
@@ -194,7 +194,7 @@ export default function OnboardingPage() {
                   When did your last period start?
                 </h2>
                 <p className="text-sm" style={{ color: 'var(--color-foreground-muted)' }}>
-                  Your best guess is fine — this helps predict your next period right away.
+                  Your best guess is fine. It helps us predict your next period right away.
                 </p>
               </div>
               <input
