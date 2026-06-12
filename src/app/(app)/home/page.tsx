@@ -230,7 +230,7 @@ function HormoneGraph({ dayInCycle, cycleLength, estimatedPeriodLength }: {
 export default function HomePage() {
   const TODAY = toISODate(new Date());
   const { theme, setTheme } = useTheme();
-  const { cycles, logs, prediction, upsertLog, addCycle, updateCycle, deleteCycle } = useAppData();
+  const { cycles, logs, prediction, upsertLog, deleteLog, addCycle, updateCycle, deleteCycle } = useAppData();
   const { toastMsg, showToast } = useToast();
 
   const openCycle = cycles.find(c => !c.payload.periodEnd) ?? null;
@@ -309,7 +309,13 @@ export default function HomePage() {
       // Clear any flow already saved against today so the calendar dot
       // for today doesn't keep showing a "logged" entry for a removed period.
       if (todayLog && todayLog.payload.flow !== 'none') {
-        await upsertLog({ ...todayLog.payload, flow: 'none' });
+        const { mood: m, energy: e, symptoms: s, notes: n } = todayLog.payload;
+        const isOtherwiseEmpty = !m && !e && s.length === 0 && !n;
+        if (isOtherwiseEmpty) {
+          await deleteLog(todayLog.id);
+        } else {
+          await upsertLog({ ...todayLog.payload, flow: 'none' });
+        }
       }
       setFlow('none');
       showToast('Period log removed ✓');
