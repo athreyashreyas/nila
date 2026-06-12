@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BottomSheet } from '@/components/ui/BottomSheet';
+import { EditPeriodSheet } from '@/components/ui/EditPeriodSheet';
 import { useAppData } from '@/lib/data/context';
 import { PHASE_META } from '@/types/app';
 import { getDaysInMonth, getFirstDayOfMonth, toISODate, addDays, fromISODate, startOfDay, daysBetween } from '@/lib/utils/dates';
@@ -38,17 +39,19 @@ interface DaySheet {
   phase: CyclePhase | null;
   hasPeriod: boolean;
   hasLog: boolean;
+  cycleId: string | null;
 }
 
 export default function CalendarPage() {
   const router = useRouter();
-  const { cycles, logs, prediction } = useAppData();
+  const { cycles, logs, prediction, updateCycle, deleteCycle } = useAppData();
 
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
   const [tappedDate, setTappedDate] = useState<string | null>(null);
   const [sheet, setSheet] = useState<DaySheet | null>(null);
+  const [editingCycleId, setEditingCycleId] = useState<string | null>(null);
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
@@ -82,11 +85,16 @@ export default function CalendarPage() {
     const phase = getPhaseForDate(date, prediction);
     const hasPeriod = periodDates.has(iso);
     const hasLog = logMap.has(iso);
-    setSheet({ iso, date, phase, hasPeriod, hasLog });
+    const cycle = cycles.find((c) => {
+      const end = c.payload.periodEnd ?? todayISO;
+      return iso >= c.payload.periodStart && iso <= end;
+    });
+    setSheet({ iso, date, phase, hasPeriod, hasLog, cycleId: cycle?.id ?? null });
   }
 
   const sheetLog = sheet ? logMap.get(sheet.iso) : null;
   const sheetMeta = sheet?.phase ? PHASE_META[sheet.phase] : null;
+  const editingCycle = editingCycleId ? cycles.find((c) => c.id === editingCycleId) ?? null : null;
 
   return (
     <div className="px-5 pt-4 pb-28">
@@ -268,9 +276,33 @@ export default function CalendarPage() {
                     {sheet.hasLog ? 'Edit entry' : 'Add entry'}
                   </button>
                 )}
+
+                {/* Edit this period's dates */}
+                {sheet.hasPeriod && sheet.cycleId && (
+                  <button
+                    onClick={() => { setEditingCycleId(sheet.cycleId); setSheet(null); }}
+                    className="w-full mt-2 py-3 rounded-[var(--radius)] text-sm font-semibold"
+                    style={{ background: 'var(--color-surface)', color: PHASE_META.period.color, border: `1px solid ${PHASE_META.period.color}40` }}
+                  >
+                    Edit period dates
+                  </button>
+                )}
           </div>
         )}
       </BottomSheet>
+
+      {/* Edit period sheet */}
+      {editingCycle && (
+        <EditPeriodSheet
+          open={!!editingCycle}
+          onClose={() => setEditingCycleId(null)}
+          cycle={editingCycle}
+          cycles={cycles}
+          isLatest={cycles[0]?.id === editingCycle.id}
+          onConfirm={updateCycle}
+          onDelete={deleteCycle}
+        />
+      )}
     </div>
   );
 }
