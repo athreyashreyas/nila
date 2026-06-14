@@ -1,6 +1,6 @@
 // Bumped with every push that ships user-facing changes.
 // Add a new entry to CHANGELOG (most recent first) alongside the bump.
-export const APP_VERSION = '1.1.0';
+export const APP_VERSION = '1.2.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -9,6 +9,15 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '1.2.0',
+    date: '2026-06-14',
+    highlights: [
+      'New dark theme: Lavender Dusk, a calmer, softer evening palette',
+      'Fixed calendar showing "Period" for a day after its period was edited or removed',
+      'Updated the app icon to match the new dark theme',
+    ],
+  },
   {
     version: '1.1.0',
     date: '2026-06-12',

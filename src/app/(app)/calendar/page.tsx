@@ -19,7 +19,12 @@ const MOOD_LABEL: Record<MoodLevel, string> = {
   great: 'Great', good: 'Good', okay: 'Okay', low: 'Low', 'low-energy': 'Tired',
 };
 
-function getPhaseForDate(date: Date, prediction: PredictionResult): CyclePhase | null {
+function getPhaseForDate(
+  date: Date,
+  prediction: PredictionResult,
+  periodDates: Set<string>,
+  todayISO: string,
+): CyclePhase | null {
   // No cycle history yet — don't paint a speculative cycle across the whole calendar
   if (!prediction.hasData) return null;
   const { estimatedCycleLength, estimatedPeriodLength, daysUntilNextPeriod } = prediction;
@@ -30,7 +35,15 @@ function getPhaseForDate(date: Date, prediction: PredictionResult): CyclePhase |
   const dayInCycle =
     ((rawDay - 1) % estimatedCycleLength + estimatedCycleLength) % estimatedCycleLength + 1;
   if (dayInCycle < 1) return null;
-  return phaseForCycleDay(dayInCycle, estimatedCycleLength, estimatedPeriodLength);
+  const phase = phaseForCycleDay(dayInCycle, estimatedCycleLength, estimatedPeriodLength);
+  // For past/present days, a logged period that already ended takes priority over
+  // the estimated period length, so a finished period doesn't keep showing as "Period"
+  // on days the user has since unmarked.
+  const iso = toISODate(date);
+  if (phase === 'period' && !periodDates.has(iso) && iso <= todayISO) {
+    return 'follicular';
+  }
+  return phase;
 }
 
 interface DaySheet {
@@ -82,7 +95,7 @@ export default function CalendarPage() {
   const monthName = new Date(year, month).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 
   function openSheet(iso: string, date: Date) {
-    const phase = getPhaseForDate(date, prediction);
+    const phase = getPhaseForDate(date, prediction, periodDates, todayISO);
     const hasPeriod = periodDates.has(iso);
     const hasLog = logMap.has(iso);
     const cycle = cycles.find((c) => {
@@ -121,7 +134,7 @@ export default function CalendarPage() {
           const iso = toISODate(date);
           const isToday = iso === todayISO;
           const hasPeriod = periodDates.has(iso);
-          const phase = getPhaseForDate(date, prediction);
+          const phase = getPhaseForDate(date, prediction, periodDates, todayISO);
           const phaseMeta = phase ? PHASE_META[phase] : null;
 
           return (

@@ -2,7 +2,7 @@
 
 /* ─── Nila Design Tokens ──────────────────────────────────────
    Light = Jardin de Versailles (blush roses, warm ivory, gold)
-   Dark  = Twilight Garden (deep plum sky, rose-petal glow)
+   Dark  = Lavender Dusk (soft violet evening, orchid glow)
    Radius: 20px · Weight: 500
    ─────────────────────────────────────────────────────────── */
 
@@ -36,15 +36,21 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Dark — Twilight Garden (system preference) */
-    --background:       #1e0d2c;
-    --surface:          rgba(80, 28, 95, 0.48);
-    --surface-solid:    #2e1040;
-    --foreground:       #fae8ef;
-    --foreground-muted: rgba(250, 232, 239, 0.58);
-    --border:           rgba(240, 130, 175, 0.14);
-    --accent:           #f06292;
-    --accent-soft:      rgba(240, 98, 146, 0.20);
+    /* Dark — Lavender Dusk (system preference) */
+    --background:       #2b2538;
+    --surface:          rgba(176, 150, 220, 0.16);
+    --surface-solid:    #3c3450;
+    --foreground:       #f5f0fa;
+    --foreground-muted: rgba(245, 240, 250, 0.58);
+    --border:           rgba(206, 180, 240, 0.16);
+    --accent:           #d9a8f0;
+    --accent-soft:      rgba(217, 168, 240, 0.20);
+
+    /* Softer phase colors for the lavender backdrop */
+    --phase-period:     #f0a0c0;
+    --phase-follicular: #f0c47e;
+    --phase-ovulation:  #f490d8;
+    --phase-luteal:     #b89cf0;
   }
 }
 
@@ -58,17 +64,25 @@
   --border:            rgba(183, 28, 90, 0.10);
   --accent:            #b7285a;
   --accent-soft:       rgba(183, 40, 90, 0.12);
+  --phase-period:      #d81b60;
+  --phase-follicular:  #d97706;
+  --phase-ovulation:   #db2777;
+  --phase-luteal:      #7c3aed;
 }
 
 [data-theme="dark"] {
-  --background:       #1e0d2c;
-  --surface:          rgba(80, 28, 95, 0.48);
-  --surface-solid:    #2e1040;
-  --foreground:       #fae8ef;
-  --foreground-muted: rgba(250, 232, 239, 0.58);
-  --border:           rgba(240, 130, 175, 0.14);
-  --accent:           #f06292;
-  --accent-soft:      rgba(240, 98, 146, 0.20);
+  --background:       #2b2538;
+  --surface:          rgba(176, 150, 220, 0.16);
+  --surface-solid:    #3c3450;
+  --foreground:       #f5f0fa;
+  --foreground-muted: rgba(245, 240, 250, 0.58);
+  --border:           rgba(206, 180, 240, 0.16);
+  --accent:           #d9a8f0;
+  --accent-soft:      rgba(217, 168, 240, 0.20);
+  --phase-period:     #f0a0c0;
+  --phase-follicular: #f0c47e;
+  --phase-ovulation:  #f490d8;
+  --phase-luteal:     #b89cf0;
 }
 
 @theme inline {
