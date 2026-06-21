@@ -63,14 +63,13 @@ export default function RootLayout({
       <head>
         {/* Anti-FOUC: apply stored theme before React hydrates */}
         <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('nila-theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');else if(t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}` }} />
-        {/* Favicon — SVG, swapped by ThemeProvider when theme changes */}
-        <link rel="icon" href="/icons/icon-dark.svg" data-theme-icon="svg" />
-        {/* Apple touch icons — PNG, ThemeProvider swaps to match current theme.
-            iOS caches at "Add to Home Screen" time so theme at that moment is used. */}
-        <link rel="apple-touch-icon" href="/icons/apple-touch-icon-dark.png" data-theme-icon="png" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-touch-icon-dark.png" data-theme-icon="png" />
-        <link rel="apple-touch-icon" sizes="167x167" href="/icons/apple-touch-icon-dark.png" data-theme-icon="png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-dark.png" data-theme-icon="png" />
+        {/* Favicon and home screen icon — one mark, the Nila dancer */}
+        <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-167.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
         {/* iOS splash screens — portrait */}
         <link
           rel="apple-touch-startup-image"
