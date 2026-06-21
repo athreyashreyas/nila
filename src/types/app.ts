@@ -101,7 +101,7 @@ export const PHASE_META: Record<CyclePhase, { label: string; color: string; desc
   period: {
     label: 'Period',
     color: '#f43f5e',
-    description: 'Your body is working hard. Rest isn\'t laziness — it\'s exactly right.',
+    description: 'Your body is working hard right now, so be gentle with yourself. Resting isn\'t laziness, it\'s exactly what you need.',
   },
   follicular: {
     label: 'Follicular',
@@ -111,7 +111,7 @@ export const PHASE_META: Record<CyclePhase, { label: string; color: string; desc
   ovulation: {
     label: 'Ovulation',
     color: '#f97316',
-    description: 'You\'re at your peak. This warmth and clarity won\'t last — enjoy it.',
+    description: 'You\'re glowing at your peak. Soak up all this warmth and clarity while it\'s here.',
   },
   luteal: {
     label: 'Luteal',
