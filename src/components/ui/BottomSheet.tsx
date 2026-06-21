@@ -34,6 +34,7 @@ export function BottomSheet({ open, onClose, maxHeight = '80vh', children }: Pro
             className="fixed bottom-0 left-0 right-0 z-50 rounded-t-3xl"
             style={{
               background: 'var(--color-background)',
+              boxShadow: 'var(--shadow-sheet)',
               paddingBottom: 'max(2rem, env(safe-area-inset-bottom))',
               maxHeight,
               overflowY: 'auto',

@@ -1,21 +1,21 @@
 import type { Metadata, Viewport } from 'next';
-import { Nunito, Playfair_Display } from 'next/font/google';
+import { Plus_Jakarta_Sans, DM_Serif_Display } from 'next/font/google';
 import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration';
 import { EncryptionProvider } from '@/lib/encryption/context';
 import { ThemeProvider } from '@/lib/theme/context';
 import './globals.css';
 
-const nunito = Nunito({
+const jakarta = Plus_Jakarta_Sans({
   variable: '--font-sans',
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
   display: 'swap',
 });
 
-const playfair = Playfair_Display({
+const dmSerif = DM_Serif_Display({
   variable: '--font-display',
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+  weight: ['400'],
   style: ['normal', 'italic'],
   display: 'swap',
 });
@@ -48,8 +48,8 @@ export const viewport: Viewport = {
   userScalable: false,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: dark)', color: '#2b2538' },
-    { media: '(prefers-color-scheme: light)', color: '#fff4f7' },
+    { media: '(prefers-color-scheme: dark)', color: '#1a1a18' },
+    { media: '(prefers-color-scheme: light)', color: '#faf9f6' },
   ],
 };
 
@@ -59,7 +59,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${nunito.variable} ${playfair.variable} h-full`}>
+    <html lang="en" className={`${jakarta.variable} ${dmSerif.variable} h-full`}>
       <head>
         {/* Anti-FOUC: apply stored theme before React hydrates */}
         <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('nila-theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');else if(t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}` }} />

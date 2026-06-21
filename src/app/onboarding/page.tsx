@@ -113,15 +113,15 @@ export default function OnboardingPage() {
                 className="w-full px-4 py-3 rounded-2xl text-sm outline-none"
                 style={{
                   background: 'var(--color-surface)',
-                  border: '1px solid var(--color-border)',
+                  boxShadow: 'inset 0 0 0 1px var(--color-border)',
                   color: 'var(--color-foreground)',
                 }}
               />
               <button
                 onClick={() => setStep(2)}
                 disabled={!name.trim()}
-                className="w-full py-3.5 rounded-2xl text-sm font-semibold transition-all active:scale-95 disabled:opacity-40"
-                style={{ background: 'var(--color-accent)', color: '#fff' }}
+                className="w-full py-3.5 rounded-full text-sm font-semibold transition-all active:scale-95 disabled:opacity-40"
+                style={{ background: 'var(--color-accent)', color: 'var(--color-on-accent)' }}
               >
                 Continue
               </button>
@@ -146,7 +146,7 @@ export default function OnboardingPage() {
                   <button key={opt.label}
                     onClick={() => { setCycleLength(opt.value); setStep(3); }}
                     className="py-3.5 rounded-2xl text-sm font-medium transition-all active:scale-95"
-                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-foreground)' }}
+                    style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)', color: 'var(--color-foreground)' }}
                   >
                     {opt.label}
                   </button>
@@ -173,7 +173,7 @@ export default function OnboardingPage() {
                   <button key={opt.label}
                     onClick={() => { setPeriodLength(opt.value); setStep(4); }}
                     className="py-3.5 rounded-2xl text-sm font-medium transition-all active:scale-95"
-                    style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-foreground)' }}
+                    style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)', color: 'var(--color-foreground)' }}
                   >
                     {opt.label}
                   </button>
@@ -205,14 +205,14 @@ export default function OnboardingPage() {
                 className="w-full px-4 py-3 rounded-2xl text-sm outline-none"
                 style={{
                   background: 'var(--color-surface)',
-                  border: '1px solid var(--color-border)',
+                  boxShadow: 'inset 0 0 0 1px var(--color-border)',
                   color: 'var(--color-foreground)',
                 }}
               />
               <button
                 onClick={() => finish(lastPeriodDate || null)}
-                className="w-full py-3.5 rounded-2xl text-sm font-semibold transition-all active:scale-95"
-                style={{ background: 'var(--color-accent)', color: '#fff' }}
+                className="w-full py-3.5 rounded-full text-sm font-semibold transition-all active:scale-95"
+                style={{ background: 'var(--color-accent)', color: 'var(--color-on-accent)' }}
               >
                 {lastPeriodDate ? "Let's go" : 'Skip for now'}
               </button>

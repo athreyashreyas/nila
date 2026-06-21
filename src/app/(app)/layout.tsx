@@ -312,12 +312,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               onChange={(e) => setPassword(e.target.value)}
               autoFocus
               className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-foreground)' }}
+              style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)', color: 'var(--color-foreground)' }}
             />
             {error && <p className="text-sm text-red-400">{error}</p>}
             <button type="submit" disabled={loading || !password}
-              className="w-full py-3 rounded-xl text-white text-sm font-medium disabled:opacity-60"
-              style={{ background: 'var(--color-accent)' }}>
+              className="w-full py-3 rounded-full text-sm font-medium disabled:opacity-60"
+              style={{ background: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>
               {loading ? 'Unlocking…' : 'Unlock'}
             </button>
           </form>

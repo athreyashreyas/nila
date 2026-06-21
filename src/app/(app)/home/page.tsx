@@ -92,21 +92,90 @@ const PHASE_FOCUS: Record<CyclePhase, string> = {
 };
 
 // ─── Hormone graph ─────────────────────────────────────────────
+// Curves render as true smooth splines (monotone cubic Hermite) through
+// hand-placed control points, rather than a many-point straight-line
+// polyline — so peaks and dips read as soft arcs, not jagged kinks.
 
 const E2_CTRL = [[0,.12],[.18,.18],[.36,.55],[.46,.96],[.50,.58],[.57,.42],[.64,.58],[.75,.50],[.89,.26],[1,.12]] as [number,number][];
 const P4_CTRL = [[0,.06],[.46,.06],[.50,.12],[.57,.32],[.64,.88],[.71,.95],[.79,.68],[.89,.22],[1,.06]] as [number,number][];
 const LH_CTRL = [[0,.06],[.43,.07],[.46,.45],[.50,1.0],[.54,.22],[.58,.07],[1,.06]] as [number,number][];
 
-function lerp2(t: number, ctrl: [number,number][]): number {
-  const c = Math.max(0, Math.min(1, t));
-  for (let i = 1; i < ctrl.length; i++) {
-    if (c <= ctrl[i][0]) {
-      const [x0,y0] = ctrl[i-1], [x1,y1] = ctrl[i];
-      return y0 + ((c - x0) / (x1 - x0)) * (y1 - y0);
+const E2_COLOR = '#c98f3e';
+const P4_COLOR = '#4a4e94';
+const LH_COLOR = '#2e8a8a';
+
+// Fritsch–Carlson monotone cubic Hermite tangents: the spline passes
+// smoothly through every control point with no overshoot past a peak or dip.
+function monotoneTangents(ctrl: [number, number][]): number[] {
+  const n = ctrl.length;
+  const d: number[] = [];
+  for (let i = 0; i < n - 1; i++) {
+    const [x0, y0] = ctrl[i], [x1, y1] = ctrl[i + 1];
+    d.push((y1 - y0) / (x1 - x0));
+  }
+  const m: number[] = [d[0]];
+  for (let i = 1; i < n - 1; i++) {
+    m.push(d[i - 1] * d[i] <= 0 ? 0 : (d[i - 1] + d[i]) / 2);
+  }
+  m.push(d[n - 2]);
+  for (let i = 0; i < n - 1; i++) {
+    if (d[i] === 0) { m[i] = 0; m[i + 1] = 0; continue; }
+    const a = m[i] / d[i], b = m[i + 1] / d[i];
+    if (a < 0) m[i] = 0;
+    if (b < 0) m[i + 1] = 0;
+    const s = a * a + b * b;
+    if (s > 9) {
+      const tau = 3 / Math.sqrt(s);
+      m[i] = tau * a * d[i];
+      m[i + 1] = tau * b * d[i];
     }
   }
-  return ctrl[ctrl.length-1][1];
+  return m;
 }
+
+function segmentIndex(ctrl: [number, number][], t: number): number {
+  let i = 1;
+  while (i < ctrl.length - 1 && t > ctrl[i][0]) i++;
+  return i;
+}
+
+function evalSpline(t: number, ctrl: [number, number][], tangents: number[]): number {
+  const c = Math.max(0, Math.min(1, t));
+  const i = segmentIndex(ctrl, c);
+  const [x0, y0] = ctrl[i - 1], [x1, y1] = ctrl[i];
+  const h = x1 - x0;
+  const s = (c - x0) / h;
+  const s2 = s * s, s3 = s2 * s;
+  const h00 = 2 * s3 - 3 * s2 + 1;
+  const h10 = s3 - 2 * s2 + s;
+  const h01 = -2 * s3 + 3 * s2;
+  const h11 = s3 - s2;
+  return h00 * y0 + h10 * h * tangents[i - 1] + h01 * y1 + h11 * h * tangents[i];
+}
+
+// Each segment between control points becomes one true cubic Bezier (the
+// Hermite-to-Bezier conversion), so the path is analytically smooth rather
+// than a dense sampled approximation.
+function splinePath(
+  ctrl: [number, number][],
+  tangents: number[],
+  toX: (t: number) => number,
+  toY: (v: number) => number,
+): string {
+  let path = `M ${toX(ctrl[0][0]).toFixed(1)},${toY(ctrl[0][1]).toFixed(1)}`;
+  for (let i = 1; i < ctrl.length; i++) {
+    const [x0, y0] = ctrl[i - 1], [x1, y1] = ctrl[i];
+    const h = x1 - x0;
+    const c1x = x0 + h / 3, c1y = y0 + (tangents[i - 1] * h) / 3;
+    const c2x = x1 - h / 3, c2y = y1 - (tangents[i] * h) / 3;
+    path += ` C ${toX(c1x).toFixed(1)},${toY(c1y).toFixed(1)} ${toX(c2x).toFixed(1)},${toY(c2y).toFixed(1)} ${toX(x1).toFixed(1)},${toY(y1).toFixed(1)}`;
+  }
+  return path;
+}
+
+const E2_TAN = monotoneTangents(E2_CTRL);
+const P4_TAN = monotoneTangents(P4_CTRL);
+const LH_TAN = monotoneTangents(LH_CTRL);
 
 function hormoneLabel(v: number): string {
   if (v < 0.18) return 'Very low';
@@ -130,14 +199,7 @@ function HormoneGraph({ dayInCycle, cycleLength, estimatedPeriodLength }: {
   const N = cycleLength;
   const xP = (d: number) => PX + ((d - 1) / Math.max(N - 1, 1)) * iW;
   const yP = (v: number) => PY + (1 - v) * iH;
-
-  function pathFor(ctrl: [number,number][]) {
-    const SAMPLES = 180;
-    return 'M ' + Array.from({ length: SAMPLES + 1 }, (_, i) => {
-      const t = i / SAMPLES;
-      return `${(PX + t * iW).toFixed(1)},${yP(lerp2(t, ctrl)).toFixed(1)}`;
-    }).join(' L ');
-  }
+  const toX = (t: number) => PX + t * iW;
 
   function getDay(clientX: number): number {
     const rect = svgRef.current?.getBoundingClientRect();
@@ -157,8 +219,8 @@ function HormoneGraph({ dayInCycle, cycleLength, estimatedPeriodLength }: {
   const fEnd = xP(Math.max(1, ovD - 2));
   const oEnd = xP(Math.min(N, ovD + 2));
 
-  const e2Val = lerp2(displayT, E2_CTRL);
-  const p4Val = lerp2(displayT, P4_CTRL);
+  const e2Val = evalSpline(displayT, E2_CTRL, E2_TAN);
+  const p4Val = evalSpline(displayT, P4_CTRL, P4_TAN);
 
   return (
     <div>
@@ -176,14 +238,14 @@ function HormoneGraph({ dayInCycle, cycleLength, estimatedPeriodLength }: {
         onPointerCancel={() => { isDown.current = false; setScrubDay(null); }}
       >
         {/* Phase bands */}
-        <rect x={PX} y={PY} width={Math.max(0, pEnd - PX)} height={iH} fill="#f43f5e" fillOpacity={0.09} rx={2} />
-        <rect x={pEnd} y={PY} width={Math.max(0, fEnd - pEnd)} height={iH} fill="#f59e0b" fillOpacity={0.08} rx={2} />
-        <rect x={fEnd} y={PY} width={Math.max(0, oEnd - fEnd)} height={iH} fill="#f97316" fillOpacity={0.10} rx={2} />
-        <rect x={oEnd} y={PY} width={Math.max(0, PX + iW - oEnd)} height={iH} fill="#a78bfa" fillOpacity={0.09} rx={2} />
-        {/* Curves */}
-        <path d={pathFor(E2_CTRL)} fill="none" stroke="#f06292" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
-        <path d={pathFor(P4_CTRL)} fill="none" stroke="#c084fc" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
-        <path d={pathFor(LH_CTRL)} fill="none" stroke="#fbbf24" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
+        <rect x={PX} y={PY} width={Math.max(0, pEnd - PX)} height={iH} fill="var(--color-phase-period)" fillOpacity={0.09} rx={3} />
+        <rect x={pEnd} y={PY} width={Math.max(0, fEnd - pEnd)} height={iH} fill="var(--color-phase-follicular)" fillOpacity={0.08} rx={3} />
+        <rect x={fEnd} y={PY} width={Math.max(0, oEnd - fEnd)} height={iH} fill="var(--color-phase-ovulation)" fillOpacity={0.10} rx={3} />
+        <rect x={oEnd} y={PY} width={Math.max(0, PX + iW - oEnd)} height={iH} fill="var(--color-phase-luteal)" fillOpacity={0.09} rx={3} />
+        {/* Curves — smooth splines, not sampled polylines */}
+        <path d={splinePath(E2_CTRL, E2_TAN, toX, yP)} fill="none" stroke={E2_COLOR} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+        <path d={splinePath(P4_CTRL, P4_TAN, toX, yP)} fill="none" stroke={P4_COLOR} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+        <path d={splinePath(LH_CTRL, LH_TAN, toX, yP)} fill="none" stroke={LH_COLOR} strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
         {/* Active day line */}
         <line
           x1={cx} y1={PY - 2} x2={cx} y2={H - PY + 2}
@@ -193,8 +255,8 @@ function HormoneGraph({ dayInCycle, cycleLength, estimatedPeriodLength }: {
           strokeOpacity={scrubDay ? 0.7 : 0.3}
         />
         {/* Dots on E2 and P4 */}
-        <circle cx={cx} cy={yP(e2Val)} r={scrubDay ? 4.5 : 3.5} fill="#f06292" />
-        <circle cx={cx} cy={yP(p4Val)} r={scrubDay ? 4.5 : 3.5} fill="#c084fc" />
+        <circle cx={cx} cy={yP(e2Val)} r={scrubDay ? 4.5 : 3.5} fill={E2_COLOR} />
+        <circle cx={cx} cy={yP(p4Val)} r={scrubDay ? 4.5 : 3.5} fill={P4_COLOR} />
       </svg>
 
       {/* Info row: static legend or scrub overlay */}
@@ -207,13 +269,13 @@ function HormoneGraph({ dayInCycle, cycleLength, estimatedPeriodLength }: {
             </span>
           </div>
           <div className="flex gap-3">
-            <span className="text-[10px]" style={{ color: '#f06292' }}>E {hormoneLabel(e2Val)}</span>
-            <span className="text-[10px]" style={{ color: '#c084fc' }}>P4 {hormoneLabel(p4Val)}</span>
+            <span className="text-[10px]" style={{ color: E2_COLOR }}>E {hormoneLabel(e2Val)}</span>
+            <span className="text-[10px]" style={{ color: P4_COLOR }}>P4 {hormoneLabel(p4Val)}</span>
           </div>
         </div>
       ) : (
         <div className="flex items-center gap-4 mt-1.5 px-1">
-          {[{ color: '#f06292', label: 'Oestrogen' }, { color: '#c084fc', label: 'Progesterone' }, { color: '#fbbf24', label: 'LH surge' }].map(({ color, label }) => (
+          {[{ color: E2_COLOR, label: 'Oestrogen' }, { color: P4_COLOR, label: 'Progesterone' }, { color: LH_COLOR, label: 'LH surge' }].map(({ color, label }) => (
             <div key={label} className="flex items-center gap-1.5">
               <div className="w-4 h-0.5 rounded-full" style={{ background: color }} />
               <span className="text-[10px]" style={{ color: 'var(--color-foreground-muted)' }}>{label}</span>
@@ -455,7 +517,7 @@ export default function HomePage() {
 
       {/* Phase card + hormone graph */}
       <div className="rounded-[var(--radius)] p-5"
-        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+        style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
         {prediction.hasData ? (
           <>
             <div className="flex gap-4 items-center mb-4">
@@ -495,7 +557,7 @@ export default function HomePage() {
       {prediction.hasData && (
         <>
           <div className="rounded-[var(--radius-sm)] px-4 py-3"
-            style={{ background: `${meta.color}12`, border: `1px solid ${meta.color}30` }}>
+            style={{ background: `${meta.color}12`, boxShadow: `inset 0 0 0 1px ${meta.color}30` }}>
             <p className="text-xs font-semibold mb-1" style={{ color: meta.color }}>Today's focus</p>
             <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground)' }}>
               {PHASE_FOCUS[prediction.currentPhase]}
@@ -503,7 +565,7 @@ export default function HomePage() {
           </div>
 
           <div className="rounded-[var(--radius-sm)] px-4 py-3 flex gap-3 items-start"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+            style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
             <span className="text-base mt-0.5 flex-shrink-0">💡</span>
             <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground)' }}>
               {dailyInsight}
@@ -528,9 +590,9 @@ export default function HomePage() {
               className="flex-1 flex flex-col items-center gap-1 py-2.5 rounded-[var(--radius-sm)] text-xl"
               style={{
                 background: 'var(--color-surface)',
-                border: `2px solid ${mood === value ? 'var(--color-accent)' : 'transparent'}`,
+                boxShadow: mood === value ? 'inset 0 0 0 2px var(--color-accent)' : 'none',
                 opacity: mood && mood !== value ? 0.45 : 1,
-                transition: 'transform 0.08s ease, border-color 0.1s, opacity 0.1s',
+                transition: 'transform 0.08s ease, box-shadow 0.1s, opacity 0.1s',
               }}
             >
               {emoji}
@@ -556,8 +618,8 @@ export default function HomePage() {
               className="flex-1 flex flex-col items-end gap-0.5 px-2 py-2.5 rounded-[var(--radius-sm)]"
               style={{
                 background: 'var(--color-surface)',
-                border: `1.5px solid ${energy === lvl ? 'var(--color-accent)' : 'transparent'}`,
-                transition: 'transform 0.08s ease, border-color 0.1s',
+                boxShadow: energy === lvl ? 'inset 0 0 0 1.5px var(--color-accent)' : 'none',
+                transition: 'transform 0.08s ease, box-shadow 0.1s',
               }}
             >
               {[1,2,3,4,5].map(bar => (
@@ -601,10 +663,10 @@ export default function HomePage() {
                 className="flex-1 py-2 rounded-[var(--radius-sm)] text-xs font-medium"
                 style={{
                   background: 'var(--color-surface)',
-                  border: `1.5px solid ${flow === value ? 'var(--color-accent)' : 'transparent'}`,
+                  boxShadow: flow === value ? 'inset 0 0 0 1.5px var(--color-accent)' : 'none',
                   opacity: flow !== value ? 0.55 : 1,
                   color: flow === value ? 'var(--color-accent)' : undefined,
-                  transition: 'transform 0.08s ease, border-color 0.1s, opacity 0.1s',
+                  transition: 'transform 0.08s ease, box-shadow 0.1s, opacity 0.1s',
                 }}
               >
                 {label}
@@ -616,8 +678,8 @@ export default function HomePage() {
             <button
               onClick={() => setEndSheetOpen(true)}
               disabled={saving}
-              className="flex-1 text-xs py-2 rounded-[var(--radius-sm)] font-medium disabled:opacity-50"
-              style={{ color: PHASE_META.period.color, background: `${PHASE_META.period.color}12`, border: `1px solid ${PHASE_META.period.color}30` }}
+              className="flex-1 text-xs py-2 rounded-full font-medium disabled:opacity-50"
+              style={{ color: PHASE_META.period.color, background: `${PHASE_META.period.color}12`, boxShadow: `inset 0 0 0 1px ${PHASE_META.period.color}30` }}
             >
               End period
             </button>
@@ -625,8 +687,8 @@ export default function HomePage() {
             <button
               onClick={undoPeriod}
               disabled={saving}
-              className="flex-1 text-xs py-2 rounded-[var(--radius-sm)] disabled:opacity-50"
-              style={{ color: 'var(--color-foreground-muted)', background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+              className="flex-1 text-xs py-2 rounded-full disabled:opacity-50"
+              style={{ color: 'var(--color-foreground-muted)', background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
             >
               Logged by mistake, undo
             </button>
@@ -639,10 +701,10 @@ export default function HomePage() {
             onPointerUp={(e) => e.currentTarget.style.transform = ''}
             onPointerLeave={(e) => e.currentTarget.style.transform = ''}
             onClick={() => setLogSheetOpen(true)}
-            className="w-full py-3.5 rounded-[var(--radius)] text-sm font-semibold flex items-center justify-center gap-2"
+            className="w-full py-3.5 rounded-full text-sm font-semibold flex items-center justify-center gap-2"
             style={{
               background: periodStatus === 'late' ? `${PHASE_META.period.color}15` : 'var(--color-surface)',
-              border: `1.5px solid ${periodStatus === 'late' ? PHASE_META.period.color : 'var(--color-border)'}`,
+              boxShadow: `inset 0 0 0 1.5px ${periodStatus === 'late' ? PHASE_META.period.color : 'var(--color-border)'}`,
               color: periodStatus === 'late' ? PHASE_META.period.color : undefined,
               transition: 'transform 0.08s ease',
             }}
@@ -668,10 +730,10 @@ export default function HomePage() {
               className="px-3 py-1.5 rounded-full text-xs font-medium"
               style={{
                 background: symptoms.includes(s) ? 'var(--color-accent-soft)' : 'var(--color-surface)',
-                border: `1.5px solid ${symptoms.includes(s) ? 'var(--color-accent)' : 'transparent'}`,
+                boxShadow: symptoms.includes(s) ? 'inset 0 0 0 1.5px var(--color-accent)' : 'none',
                 color: symptoms.includes(s) ? 'var(--color-accent)' : undefined,
                 opacity: !symptoms.includes(s) ? 0.6 : 1,
-                transition: 'transform 0.08s ease, border-color 0.1s, opacity 0.1s',
+                transition: 'transform 0.08s ease, box-shadow 0.1s, opacity 0.1s',
               }}
             >
               {s}
@@ -688,8 +750,8 @@ export default function HomePage() {
           onPointerLeave={(e) => e.currentTarget.style.transform = ''}
           onClick={save}
           disabled={saving}
-          className="w-full py-3.5 rounded-[var(--radius)] text-sm font-semibold disabled:opacity-60"
-          style={{ background: 'var(--color-accent)', color: '#fff', transition: 'transform 0.08s ease' }}
+          className="w-full py-3.5 rounded-full text-sm font-semibold disabled:opacity-60"
+          style={{ background: 'var(--color-accent)', color: 'var(--color-on-accent)', transition: 'transform 0.08s ease' }}
         >
           {saving ? 'Saving…' : todayLog ? 'Update check-in' : 'Save check-in'}
         </button>

@@ -57,7 +57,7 @@ export function PhaseRing({ prediction, className = '' }: Props) {
 
       {/* Center label */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-        <span className="text-2xl font-bold leading-none" style={{ color: meta.color }}>{dayInPhase}</span>
+        <span className="font-display text-2xl leading-none" style={{ color: meta.color }}>{dayInPhase}</span>
         <span className="text-[9px] font-semibold tracking-widest uppercase mt-0.5" style={{ color: 'var(--color-foreground-muted)' }}>day</span>
       </div>
     </div>

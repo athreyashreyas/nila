@@ -65,7 +65,7 @@ export default function InsightsPage() {
 
   return (
     <div className="px-5 pt-4 pb-28">
-      <h1 className="text-2xl font-bold pt-2 mb-5">Insights</h1>
+      <h1 className="font-display text-2xl font-bold pt-2 mb-5">Insights</h1>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-5">
@@ -75,7 +75,7 @@ export default function InsightsPage() {
           { label: 'Next in', value: prediction.daysUntilNextPeriod > 0 ? `${prediction.daysUntilNextPeriod}d` : 'overdue', sub: `±${prediction.nextPeriodConfidenceRange}d` },
         ].map(({ label, value, sub }) => (
           <div key={label} className="rounded-[var(--radius)] p-3 text-center"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+            style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
             <div className="text-xl font-bold" style={{ color: 'var(--color-accent)' }}>{value}</div>
             <div className="text-[10px] font-semibold mt-0.5">{label}</div>
             <div className="text-[9px] mt-0.5 opacity-50">{sub}</div>
@@ -85,7 +85,7 @@ export default function InsightsPage() {
 
       {/* Recommendations */}
       <div className="rounded-[var(--radius)] p-4 mb-5"
-        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+        style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-start gap-2 flex-1">
             <h2 className="text-xs font-semibold tracking-widest uppercase" style={{ color: 'var(--color-foreground-muted)' }}>
@@ -101,9 +101,9 @@ export default function InsightsPage() {
             onClick={toggleVeg}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold flex-shrink-0 ml-2"
             style={{
-              background: isVeg ? 'rgba(34,197,94,0.15)' : 'var(--color-border)',
-              color: isVeg ? '#16a34a' : 'var(--color-foreground-muted)',
-              border: `1px solid ${isVeg ? 'rgba(34,197,94,0.4)' : 'transparent'}`,
+              background: isVeg ? 'var(--color-accent-soft)' : 'var(--color-surface)',
+              color: isVeg ? 'var(--color-accent)' : 'var(--color-foreground-muted)',
+              boxShadow: isVeg ? 'inset 0 0 0 1px var(--color-accent)' : 'none',
               transition: 'all 0.15s ease',
             }}
           >
@@ -136,7 +136,7 @@ export default function InsightsPage() {
                   )}
                   {food.veg && (
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                      style={{ background: 'rgba(34,197,94,0.12)', color: '#16a34a' }}>
+                      style={{ background: 'var(--color-accent-soft)', color: 'var(--color-accent)' }}>
                       🌿
                     </span>
                   )}
@@ -148,7 +148,7 @@ export default function InsightsPage() {
         </div>
 
         <div className="rounded-[var(--radius-sm)] p-3 mb-3"
-          style={{ background: `${meta.color}12`, border: `1px solid ${meta.color}30` }}>
+          style={{ background: `${meta.color}12`, boxShadow: `inset 0 0 0 1px ${meta.color}30` }}>
           <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground)' }}>{recs.lifestyle}</p>
         </div>
 
@@ -159,7 +159,7 @@ export default function InsightsPage() {
           <div className="flex flex-wrap gap-1.5">
             {recs.avoid.map(item => (
               <span key={item} className="text-xs px-2.5 py-1 rounded-full"
-                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', opacity: 0.7 }}>
+                style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)', opacity: 0.7 }}>
                 {item}
               </span>
             ))}
@@ -169,7 +169,7 @@ export default function InsightsPage() {
 
       {/* Cycle chart */}
       <div className="rounded-[var(--radius)] p-4 mb-5"
-        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+        style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
         <h2 className="text-xs font-semibold mb-3 tracking-widest uppercase" style={{ color: 'var(--color-foreground-muted)' }}>
           Cycle lengths
         </h2>
@@ -196,7 +196,7 @@ export default function InsightsPage() {
 
       {/* Phase breakdown */}
       <div className="rounded-[var(--radius)] p-4"
-        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+        style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
         <h2 className="text-xs font-semibold mb-3 tracking-widest uppercase" style={{ color: 'var(--color-foreground-muted)' }}>
           Current cycle
         </h2>

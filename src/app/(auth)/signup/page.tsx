@@ -20,11 +20,11 @@ const fade = {
 
 const inputStyle = {
   background: 'var(--color-surface)',
-  border: '1px solid var(--color-border)',
+  boxShadow: 'inset 0 0 0 1px var(--color-border)',
   color: 'var(--color-foreground)',
 };
 
-const btnStyle = { background: 'var(--color-accent)' };
+const btnStyle = { background: 'var(--color-accent)', color: 'var(--color-on-accent)' };
 
 export default function SignupPage() {
   const router = useRouter();
@@ -105,7 +105,7 @@ export default function SignupPage() {
         </p>
 
         <div className="grid grid-cols-3 gap-2 mb-6 p-4 rounded-2xl"
-          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+          style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
           {words.map((word, i) => (
             <div key={i} className="flex items-center gap-1.5">
               <span className="text-xs w-4 text-right shrink-0" style={{ color: 'var(--color-foreground-muted)' }}>{i + 1}</span>
@@ -122,7 +122,7 @@ export default function SignupPage() {
 
         <motion.button whileTap={{ scale: 0.97 }} transition={{ duration: 0.1 }}
           onClick={() => router.replace('/onboarding')} disabled={!confirmed}
-          className="w-full py-3 rounded-xl text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full py-3 rounded-full text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed"
           style={btnStyle}>
           Continue
         </motion.button>
@@ -161,7 +161,7 @@ export default function SignupPage() {
 
         <motion.button type="submit" whileTap={{ scale: 0.97 }} transition={{ duration: 0.1 }}
           disabled={loading}
-          className="w-full py-3 rounded-xl text-white text-sm font-medium disabled:opacity-60"
+          className="w-full py-3 rounded-full text-sm font-medium disabled:opacity-60"
           style={btnStyle}>
           {loading ? 'Setting up encryption…' : 'Create account'}
         </motion.button>

@@ -109,7 +109,7 @@ export function EditPeriodSheet({ open, onClose, cycle, cycles, isLatest, onConf
             Started
           </p>
           <div className="rounded-[var(--radius-sm)] px-4 py-3"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+            style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
             <input
               type="date"
               value={startDate}
@@ -143,7 +143,7 @@ export function EditPeriodSheet({ open, onClose, cycle, cycles, isLatest, onConf
                     className="flex-1 py-3 rounded-[var(--radius-sm)] text-sm font-semibold"
                     style={{
                       background: active ? 'var(--color-accent-soft)' : 'var(--color-surface)',
-                      border: `1.5px solid ${active ? 'var(--color-accent)' : 'transparent'}`,
+                      boxShadow: active ? 'inset 0 0 0 1.5px var(--color-accent)' : 'none',
                       color: active ? 'var(--color-accent)' : 'var(--color-foreground-muted)',
                       transition: 'all 0.1s ease',
                     }}
@@ -170,7 +170,7 @@ export function EditPeriodSheet({ open, onClose, cycle, cycles, isLatest, onConf
               Ended
             </p>
             <div className="rounded-[var(--radius-sm)] px-4 py-3"
-              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+              style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
               <input
                 type="date"
                 value={endDate}
@@ -195,8 +195,8 @@ export function EditPeriodSheet({ open, onClose, cycle, cycles, isLatest, onConf
           onPointerDown={(e) => !confirmDisabled && (e.currentTarget.style.transform = 'scale(0.97)')}
           onPointerUp={(e) => (e.currentTarget.style.transform = '')}
           onPointerLeave={(e) => (e.currentTarget.style.transform = '')}
-          className="w-full py-3.5 rounded-[var(--radius)] text-sm font-semibold disabled:opacity-50"
-          style={{ background: 'var(--color-accent)', color: '#fff', transition: 'transform 0.08s ease' }}
+          className="w-full py-3.5 rounded-full text-sm font-semibold disabled:opacity-50"
+          style={{ background: 'var(--color-accent)', color: 'var(--color-on-accent)', transition: 'transform 0.08s ease' }}
         >
           {saving ? 'Saving…' : 'Save changes'}
         </button>
@@ -216,7 +216,7 @@ export function EditPeriodSheet({ open, onClose, cycle, cycles, isLatest, onConf
               onClick={() => setConfirmingDelete(false)}
               disabled={saving}
               className="flex-1 py-2.5 rounded-[var(--radius-sm)] text-xs font-semibold"
-              style={{ background: 'var(--color-surface)', color: 'var(--color-foreground-muted)', border: '1px solid var(--color-border)' }}
+              style={{ background: 'var(--color-surface)', color: 'var(--color-foreground-muted)', boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
             >
               Cancel
             </button>

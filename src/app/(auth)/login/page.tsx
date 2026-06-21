@@ -11,7 +11,7 @@ import { useEncryption } from '@/lib/encryption/context';
 
 const inputStyle = {
   background: 'var(--color-surface)',
-  border: '1px solid var(--color-border)',
+  boxShadow: 'inset 0 0 0 1px var(--color-border)',
   color: 'var(--color-foreground)',
 };
 
@@ -74,13 +74,13 @@ function LoginForm() {
     >
       {confirmed && (
         <div className="mb-6 px-4 py-3 rounded-xl text-sm text-center"
-          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-accent)', color: 'var(--color-accent)' }}>
+          style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-accent)', color: 'var(--color-accent)' }}>
           Email confirmed. Sign in to access your data.
         </div>
       )}
       {confirmError && (
         <div className="mb-6 px-4 py-3 rounded-xl text-sm text-center text-red-400"
-          style={{ background: 'var(--color-surface)', border: '1px solid #f87171' }}>
+          style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px #f87171' }}>
           Confirmation link expired or invalid. Try signing up again.
         </div>
       )}
@@ -118,8 +118,8 @@ function LoginForm() {
 
         <motion.button type="submit" whileTap={{ scale: 0.97 }} transition={{ duration: 0.1 }}
           disabled={loading}
-          className="w-full py-3 rounded-xl text-white text-sm font-medium disabled:opacity-60"
-          style={{ background: 'var(--color-accent)' }}>
+          className="w-full py-3 rounded-full text-sm font-medium disabled:opacity-60"
+          style={{ background: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>
           {loading ? 'Unlocking…' : 'Sign in'}
         </motion.button>
       </form>

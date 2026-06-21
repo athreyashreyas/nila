@@ -70,7 +70,7 @@ export function EndPeriodSheet({ open, onClose, openCycle, logs, onConfirm }: Pr
         {/* Date picker */}
         <div>
           <div className="rounded-[var(--radius-sm)] px-4 py-3"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+            style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
             <input
               type="date"
               value={endDate}
@@ -93,8 +93,8 @@ export function EndPeriodSheet({ open, onClose, openCycle, logs, onConfirm }: Pr
           onPointerDown={(e) => !confirmDisabled && (e.currentTarget.style.transform = 'scale(0.97)')}
           onPointerUp={(e) => (e.currentTarget.style.transform = '')}
           onPointerLeave={(e) => (e.currentTarget.style.transform = '')}
-          className="w-full py-3.5 rounded-[var(--radius)] text-sm font-semibold disabled:opacity-50"
-          style={{ background: 'var(--color-accent)', color: '#fff', transition: 'transform 0.08s ease' }}
+          className="w-full py-3.5 rounded-full text-sm font-semibold disabled:opacity-50"
+          style={{ background: 'var(--color-accent)', color: 'var(--color-on-accent)', transition: 'transform 0.08s ease' }}
         >
           {saving ? 'Saving…' : 'End period'}
         </button>

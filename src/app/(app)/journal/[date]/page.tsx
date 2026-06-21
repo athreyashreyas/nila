@@ -88,7 +88,7 @@ export default function JournalDatePage() {
               className="flex-1 flex flex-col items-center gap-1 py-2.5 rounded-[var(--radius-sm)] text-xl transition-all"
               style={{
                 background: 'var(--color-surface)',
-                border: `2px solid ${mood === value ? 'var(--color-accent)' : 'transparent'}`,
+                boxShadow: mood === value ? 'inset 0 0 0 2px var(--color-accent)' : 'none',
                 opacity: mood && mood !== value ? 0.45 : 1,
               }}>
               {emoji}
@@ -106,7 +106,7 @@ export default function JournalDatePage() {
               className="flex-1 py-2 rounded-[var(--radius-sm)] text-xs font-medium transition-all"
               style={{
                 background: 'var(--color-surface)',
-                border: `1.5px solid ${flow === value ? 'var(--color-accent)' : 'transparent'}`,
+                boxShadow: flow === value ? 'inset 0 0 0 1.5px var(--color-accent)' : 'none',
                 opacity: flow !== value ? 0.55 : 1,
                 color: flow === value ? 'var(--color-accent)' : undefined,
               }}>
@@ -124,7 +124,7 @@ export default function JournalDatePage() {
               className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
               style={{
                 background: symptoms.includes(s) ? 'var(--color-accent-soft)' : 'var(--color-surface)',
-                border: `1.5px solid ${symptoms.includes(s) ? 'var(--color-accent)' : 'transparent'}`,
+                boxShadow: symptoms.includes(s) ? 'inset 0 0 0 1.5px var(--color-accent)' : 'none',
                 color: symptoms.includes(s) ? 'var(--color-accent)' : undefined,
                 opacity: !symptoms.includes(s) ? 0.6 : 1,
               }}>
@@ -144,15 +144,15 @@ export default function JournalDatePage() {
           className="w-full px-4 py-3 rounded-[var(--radius-sm)] text-sm resize-none outline-none"
           style={{
             background: 'var(--color-surface)',
-            border: '1.5px solid var(--color-border)',
+            boxShadow: 'inset 0 0 0 1.5px var(--color-border)',
             color: 'var(--color-foreground)',
           }}
         />
       </div>
 
       <button onClick={handleSave} disabled={!mood || saving}
-        className="w-full py-3.5 rounded-[var(--radius)] text-sm font-semibold disabled:opacity-40"
-        style={{ background: 'var(--color-accent)', color: '#fff' }}>
+        className="w-full py-3.5 rounded-full text-sm font-semibold disabled:opacity-40"
+        style={{ background: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>
         {saving ? 'Saving…' : existing ? 'Update entry' : 'Save entry'}
       </button>
     </div>

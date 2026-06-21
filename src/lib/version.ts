@@ -1,6 +1,6 @@
 // Bumped with every push that ships user-facing changes.
 // Add a new entry to CHANGELOG (most recent first) alongside the bump.
-export const APP_VERSION = '1.2.0';
+export const APP_VERSION = '2.0.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -9,6 +9,17 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '2.0.0',
+    date: '2026-06-22',
+    highlights: [
+      'Brand new look: Berry Wine, a warm rose theme with parchment surfaces and a serif display font',
+      'Redesigned buttons, cards, and inputs throughout the app with softer shadows and rings instead of borders',
+      'Smoother, more realistic hormone graph on the Today screen',
+      'Recoloured period, follicular, ovulation, and luteal phase colours for clearer contrast against the new theme',
+      'Updated app icon and splash screens to match Berry Wine',
+    ],
+  },
   {
     version: '1.2.0',
     date: '2026-06-14',

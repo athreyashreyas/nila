@@ -157,7 +157,7 @@ export default function SettingsPage() {
 
   const Row = ({ label, sub, onClick, danger = false }: { label: string; sub?: string; onClick: () => void; danger?: boolean }) => (
     <button onClick={onClick} className="flex items-center justify-between w-full px-4 py-3.5 rounded-[var(--radius)] transition-all"
-      style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+      style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
       <div className="text-left">
         <div className="text-sm font-medium" style={{ color: danger ? '#f87171' : undefined }}>{label}</div>
         {sub && <div className="text-xs mt-0.5 opacity-50">{sub}</div>}
@@ -168,7 +168,7 @@ export default function SettingsPage() {
 
   return (
     <div className="px-5 pt-4 pb-28">
-      <h1 className="text-2xl font-bold pt-2 mb-5">Settings</h1>
+      <h1 className="font-display text-2xl font-bold pt-2 mb-5">Settings</h1>
 
       <div className="flex flex-col gap-3">
         <div>
@@ -181,7 +181,7 @@ export default function SettingsPage() {
                 className="flex-1 py-3 rounded-[var(--radius-sm)] text-sm font-medium capitalize transition-all"
                 style={{
                   background: theme === t ? 'var(--color-accent-soft)' : 'var(--color-surface)',
-                  border: `1.5px solid ${theme === t ? 'var(--color-accent)' : 'transparent'}`,
+                  boxShadow: theme === t ? 'inset 0 0 0 1.5px var(--color-accent)' : 'none',
                   color: theme === t ? 'var(--color-accent)' : 'var(--color-foreground)',
                 }}
               >
@@ -200,16 +200,16 @@ export default function SettingsPage() {
 
         {showChangePassword && (
           <form onSubmit={handleChangePassword} className="flex flex-col gap-3 p-4 rounded-[var(--radius)]"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+            style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
             <input type="password" placeholder="New password (min 8 chars)" value={newPassword}
               onChange={e => setNewPassword(e.target.value)} autoComplete="new-password"
               className="w-full px-4 py-3 rounded-[var(--radius-sm)] text-sm outline-none"
-              style={{ background: 'var(--color-background)', border: '1px solid var(--color-border)', color: 'var(--color-foreground)' }} />
+              style={{ background: 'var(--color-background)', boxShadow: 'inset 0 0 0 1px var(--color-border)', color: 'var(--color-foreground)' }} />
             {pwError && <p className="text-xs text-red-400">{pwError}</p>}
             {pwSuccess && <p className="text-xs" style={{ color: 'var(--color-accent)' }}>Password updated.</p>}
             <button type="submit" disabled={pwLoading}
-              className="py-2.5 rounded-[var(--radius-sm)] text-sm font-semibold disabled:opacity-50"
-              style={{ background: 'var(--color-accent)', color: '#fff' }}>
+              className="py-2.5 rounded-full text-sm font-semibold disabled:opacity-50"
+              style={{ background: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>
               {pwLoading ? 'Updating…' : 'Update password'}
             </button>
           </form>
@@ -229,7 +229,7 @@ export default function SettingsPage() {
               onClick={handlePushToggle}
               disabled={pushLoading}
               className="flex items-center justify-between w-full px-4 py-3.5 rounded-[var(--radius)] transition-all"
-              style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+              style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}
             >
               <div className="text-left">
                 <div className="text-sm font-medium">Period reminders</div>
@@ -253,7 +253,7 @@ export default function SettingsPage() {
         <div>
           <p className="text-[11px] font-semibold tracking-widest uppercase mb-2 px-1 mt-2" style={{ color: 'var(--color-foreground-muted)' }}>Privacy</p>
           <div className="rounded-[var(--radius)] p-4 text-xs leading-relaxed"
-            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-foreground-muted)' }}>
+            style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)', color: 'var(--color-foreground-muted)' }}>
             Your health data is encrypted end-to-end. Nila's servers store only encrypted bytes, so no period dates, symptoms, or notes are ever readable by anyone but you.
           </div>
         </div>
@@ -308,7 +308,7 @@ export default function SettingsPage() {
 
         {showDevReset && (
           <div className="rounded-[var(--radius)] p-4 flex flex-col gap-3"
-            style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)' }}>
+            style={{ background: 'rgba(239,68,68,0.08)', boxShadow: 'inset 0 0 0 1px rgba(239,68,68,0.25)' }}>
             <p className="text-xs font-semibold" style={{ color: '#f87171' }}>Dev reset</p>
             <p className="text-xs" style={{ color: 'var(--color-foreground-muted)' }}>
               Clears all local storage, IndexedDB, and signs out. You'll need to delete the Supabase user separately.
@@ -317,7 +317,7 @@ export default function SettingsPage() {
               <button
                 onClick={() => setShowDevReset(false)}
                 className="flex-1 py-2.5 rounded-xl text-xs font-medium"
-                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+                style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)' }}
               >
                 Cancel
               </button>

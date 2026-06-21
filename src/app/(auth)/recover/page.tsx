@@ -24,7 +24,7 @@ const fade = {
 
 const inputStyle = {
   background: 'var(--color-surface)',
-  border: '1px solid var(--color-border)',
+  boxShadow: 'inset 0 0 0 1px var(--color-border)',
   color: 'var(--color-foreground)',
 };
 
@@ -134,8 +134,8 @@ export default function RecoverPage() {
 
           <motion.button type="submit" whileTap={{ scale: 0.97 }} transition={{ duration: 0.1 }}
             disabled={loading}
-            className="w-full py-3 rounded-xl text-white text-sm font-medium disabled:opacity-60"
-            style={{ background: 'var(--color-accent)' }}>
+            className="w-full py-3 rounded-full text-sm font-medium disabled:opacity-60"
+            style={{ background: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>
             {loading ? 'Recovering…' : 'Set new password'}
           </motion.button>
         </form>
@@ -164,7 +164,7 @@ export default function RecoverPage() {
           <div className="grid grid-cols-3 gap-2">
             {words.map((word, i) => (
               <div key={i} className="flex items-center gap-1 rounded-xl px-2 py-2"
-                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
                 <span className="text-xs w-4 shrink-0 text-right" style={{ color: 'var(--color-foreground-muted)' }}>{i + 1}</span>
                 <input type="text" autoCapitalize="none" autoCorrect="off" spellCheck={false}
                   value={word} onChange={(e) => setWord(i, e.target.value)}
@@ -178,8 +178,8 @@ export default function RecoverPage() {
 
         <motion.button type="submit" whileTap={{ scale: 0.97 }} transition={{ duration: 0.1 }}
           disabled={loading}
-          className="w-full py-3 rounded-xl text-white text-sm font-medium disabled:opacity-60"
-          style={{ background: 'var(--color-accent)' }}>
+          className="w-full py-3 rounded-full text-sm font-medium disabled:opacity-60"
+          style={{ background: 'var(--color-accent)', color: 'var(--color-on-accent)' }}>
           {loading ? 'Verifying…' : 'Continue'}
         </motion.button>
       </form>

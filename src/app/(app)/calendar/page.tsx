@@ -112,7 +112,7 @@ export default function CalendarPage() {
   return (
     <div className="px-5 pt-4 pb-28">
       <div className="flex items-center justify-between mb-5 pt-2">
-        <h1 className="text-2xl font-bold">Calendar</h1>
+        <h1 className="font-display text-2xl font-bold">Calendar</h1>
         <div className="flex items-center gap-3">
           <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-full text-lg" style={{ color: 'var(--color-accent)' }}>‹</button>
           <span className="text-sm font-semibold min-w-[120px] text-center">{monthName}</span>
@@ -150,7 +150,7 @@ export default function CalendarPage() {
                 background: phaseMeta ? `${phaseMeta.color}28` : 'var(--color-surface)',
                 color: isToday ? 'var(--color-accent)' : 'var(--color-foreground)',
                 fontWeight: isToday ? 700 : 500,
-                border: isToday ? '1.5px solid var(--color-accent)' : '1px solid var(--color-border)',
+                boxShadow: isToday ? 'inset 0 0 0 1.5px var(--color-accent)' : 'none',
                 transform: tappedDate === iso ? 'scale(0.88)' : 'scale(1)',
                 transition: 'transform 0.08s ease',
               }}
@@ -199,7 +199,7 @@ export default function CalendarPage() {
                 {/* Phase context */}
                 {sheetMeta && (
                   <div className="rounded-2xl px-4 py-3 mb-4"
-                    style={{ background: `${sheetMeta.color}12`, border: `1px solid ${sheetMeta.color}30` }}>
+                    style={{ background: `${sheetMeta.color}12`, boxShadow: `inset 0 0 0 1px ${sheetMeta.color}30` }}>
                     <p className="text-sm leading-relaxed" style={{ color: 'var(--color-foreground)' }}>
                       {sheetMeta.description}
                     </p>
@@ -219,7 +219,7 @@ export default function CalendarPage() {
                   <div className="flex flex-col gap-3">
                     {sheetLog.mood && (
                       <div className="flex items-center gap-3 rounded-2xl px-4 py-3"
-                        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                        style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
                         <span className="text-2xl">{MOOD_EMOJI[sheetLog.mood]}</span>
                         <div>
                           <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-foreground-muted)' }}>Mood</div>
@@ -230,7 +230,7 @@ export default function CalendarPage() {
 
                     {sheetLog.energy && (
                       <div className="flex items-center gap-3 rounded-2xl px-4 py-3"
-                        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                        style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
                         <span className="text-2xl">⚡</span>
                         <div>
                           <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-foreground-muted)' }}>Energy</div>
@@ -246,7 +246,7 @@ export default function CalendarPage() {
 
                     {sheetLog.flow && sheetLog.flow !== 'none' && (
                       <div className="flex items-center gap-3 rounded-2xl px-4 py-3"
-                        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                        style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
                         <span className="text-2xl">🩸</span>
                         <div>
                           <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-foreground-muted)' }}>Flow</div>
@@ -257,12 +257,12 @@ export default function CalendarPage() {
 
                     {sheetLog.symptoms.length > 0 && (
                       <div className="rounded-2xl px-4 py-3"
-                        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
+                        style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
                         <div className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--color-foreground-muted)' }}>Symptoms</div>
                         <div className="flex flex-wrap gap-1.5">
                           {sheetLog.symptoms.map(s => (
                             <span key={s} className="text-xs px-2.5 py-1 rounded-full"
-                              style={{ background: 'var(--color-accent-soft)', color: 'var(--color-accent)', border: '1px solid var(--color-accent)' }}>
+                              style={{ background: 'var(--color-accent-soft)', color: 'var(--color-accent)', boxShadow: 'inset 0 0 0 1px var(--color-accent)' }}>
                               {s}
                             </span>
                           ))}
@@ -281,8 +281,8 @@ export default function CalendarPage() {
                 {sheet.iso <= todayISO && (
                   <button
                     onClick={() => router.push(`/journal/${sheet.iso}`)}
-                    className="w-full mt-4 py-3 rounded-[var(--radius)] text-sm font-semibold"
-                    style={{ background: 'var(--color-accent)', color: '#fff' }}
+                    className="w-full mt-4 py-3 rounded-full text-sm font-semibold"
+                    style={{ background: 'var(--color-accent)', color: 'var(--color-on-accent)' }}
                   >
                     {sheet.hasLog ? 'Edit entry' : 'Add entry'}
                   </button>
@@ -292,8 +292,8 @@ export default function CalendarPage() {
                 {sheet.hasPeriod && sheet.cycleId && (
                   <button
                     onClick={() => { setEditingCycleId(sheet.cycleId); setSheet(null); }}
-                    className="w-full mt-2 py-3 rounded-[var(--radius)] text-sm font-semibold"
-                    style={{ background: 'var(--color-surface)', color: PHASE_META.period.color, border: `1px solid ${PHASE_META.period.color}40` }}
+                    className="w-full mt-2 py-3 rounded-full text-sm font-semibold"
+                    style={{ background: 'var(--color-surface)', color: PHASE_META.period.color, boxShadow: `inset 0 0 0 1px ${PHASE_META.period.color}40` }}
                   >
                     Edit period dates
                   </button>

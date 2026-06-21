@@ -1,30 +1,36 @@
 @import "tailwindcss";
 
-/* ─── Nila Design Tokens ──────────────────────────────────────
-   Light = Jardin de Versailles (blush roses, warm ivory, gold)
-   Dark  = Lavender Dusk (soft violet evening, orchid glow)
-   Radius: 20px · Weight: 500
+/* ─── Nila Design Tokens — "Quiet Paper" ──────────────────────
+   A calm, paper-and-ink system: opaque parchment surfaces (not glass),
+   soft shadows instead of borders, rings instead of borders for state,
+   one primary accent (Berry Wine) carrying every "active" moment.
+   Light = Quiet Paper · Dark = Berry Dusk
+   Radius: 16px / 12px · Weight: 500
    ─────────────────────────────────────────────────────────── */
 
 :root {
-  /* Light — Jardin de Versailles */
-  --background:        #fff4f7;
-  --surface:           rgba(246, 208, 222, 0.46);
-  --surface-solid:     #f5d0dc;
-  --foreground:        #2c0a18;
-  --foreground-muted:  rgba(44, 10, 24, 0.55);
-  --border:            rgba(183, 28, 90, 0.10);
-  --accent:            #b7285a;
-  --accent-soft:       rgba(183, 40, 90, 0.12);
+  /* Light — Quiet Paper */
+  --background:        #faf9f6;
+  --surface:           #f0ede6;
+  --surface-solid:     #fdfcf9;
+  --foreground:        #1a1a18;
+  --foreground-muted:  #6b6960;
+  --border:            #e0dcd2;
+  --accent:            #8e3b5c;
+  --accent-soft:       rgba(142, 59, 92, 0.13);
+  --on-accent:         #fdfcf9;
+  --shadow-card:       0 1px 2px rgba(26, 26, 24, 0.05), 0 3px 10px rgba(26, 26, 24, 0.06);
+  --shadow-sheet:      0 -8px 30px rgba(26, 26, 24, 0.12);
 
-  /* Phase colors — floral sunset spectrum */
-  --phase-period:      #d81b60;
-  --phase-follicular:  #d97706;
-  --phase-ovulation:   #db2777;
-  --phase-luteal:      #7c3aed;
+  /* Phase colors — spaced around the wheel so they never read as "the same pink"
+     as the accent or as each other: brick red, marigold, teal, violet. */
+  --phase-period:      #b6432e;
+  --phase-follicular:  #c29a24;
+  --phase-ovulation:   #2e8a8a;
+  --phase-luteal:      #6a4aa0;
 
   /* Layout tokens */
-  --radius:            20px;
+  --radius:            16px;
   --radius-sm:         12px;
 
   /* Safe area insets (iOS notch / Dynamic Island) */
@@ -36,53 +42,62 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Dark — Lavender Dusk (system preference) */
-    --background:       #2b2538;
-    --surface:          rgba(176, 150, 220, 0.16);
-    --surface-solid:    #3c3450;
-    --foreground:       #f5f0fa;
-    --foreground-muted: rgba(245, 240, 250, 0.58);
-    --border:           rgba(206, 180, 240, 0.16);
-    --accent:           #d9a8f0;
-    --accent-soft:      rgba(217, 168, 240, 0.20);
+    /* Dark — Berry Dusk (system preference) */
+    --background:       #1a1a18;
+    --surface:          #242420;
+    --surface-solid:    #2a2a24;
+    --foreground:       #f5f3ec;
+    --foreground-muted: #9b9890;
+    --border:           rgba(255, 255, 255, 0.08);
+    --accent:           #e0789c;
+    --accent-soft:      rgba(224, 120, 156, 0.20);
+    --on-accent:        #1a1a18;
+    --shadow-card:      0 1px 2px rgba(0, 0, 0, 0.3), 0 3px 14px rgba(0, 0, 0, 0.4);
+    --shadow-sheet:     0 -8px 30px rgba(0, 0, 0, 0.45);
 
-    /* Softer phase colors for the lavender backdrop */
-    --phase-period:     #f0a0c0;
-    --phase-follicular: #f0c47e;
-    --phase-ovulation:  #f490d8;
-    --phase-luteal:     #b89cf0;
+    /* Lightened so the same four hues still read clearly against ink */
+    --phase-period:     #e2836a;
+    --phase-follicular: #dfc066;
+    --phase-ovulation:  #5fc2c2;
+    --phase-luteal:     #9b82c9;
   }
 }
 
 /* Explicit theme overrides — always win over system preference */
 [data-theme="light"] {
-  --background:        #fff4f7;
-  --surface:           rgba(246, 208, 222, 0.46);
-  --surface-solid:     #f5d0dc;
-  --foreground:        #2c0a18;
-  --foreground-muted:  rgba(44, 10, 24, 0.55);
-  --border:            rgba(183, 28, 90, 0.10);
-  --accent:            #b7285a;
-  --accent-soft:       rgba(183, 40, 90, 0.12);
-  --phase-period:      #d81b60;
-  --phase-follicular:  #d97706;
-  --phase-ovulation:   #db2777;
-  --phase-luteal:      #7c3aed;
+  --background:        #faf9f6;
+  --surface:           #f0ede6;
+  --surface-solid:     #fdfcf9;
+  --foreground:        #1a1a18;
+  --foreground-muted:  #6b6960;
+  --border:            #e0dcd2;
+  --accent:            #8e3b5c;
+  --accent-soft:       rgba(142, 59, 92, 0.13);
+  --on-accent:         #fdfcf9;
+  --shadow-card:       0 1px 2px rgba(26, 26, 24, 0.05), 0 3px 10px rgba(26, 26, 24, 0.06);
+  --shadow-sheet:      0 -8px 30px rgba(26, 26, 24, 0.12);
+  --phase-period:      #b6432e;
+  --phase-follicular:  #c29a24;
+  --phase-ovulation:   #2e8a8a;
+  --phase-luteal:      #6a4aa0;
 }
 
 [data-theme="dark"] {
-  --background:       #2b2538;
-  --surface:          rgba(176, 150, 220, 0.16);
-  --surface-solid:    #3c3450;
-  --foreground:       #f5f0fa;
-  --foreground-muted: rgba(245, 240, 250, 0.58);
-  --border:           rgba(206, 180, 240, 0.16);
-  --accent:           #d9a8f0;
-  --accent-soft:      rgba(217, 168, 240, 0.20);
-  --phase-period:     #f0a0c0;
-  --phase-follicular: #f0c47e;
-  --phase-ovulation:  #f490d8;
-  --phase-luteal:     #b89cf0;
+  --background:       #1a1a18;
+  --surface:          #242420;
+  --surface-solid:    #2a2a24;
+  --foreground:       #f5f3ec;
+  --foreground-muted: #9b9890;
+  --border:           rgba(255, 255, 255, 0.08);
+  --accent:           #e0789c;
+  --accent-soft:      rgba(224, 120, 156, 0.20);
+  --on-accent:        #1a1a18;
+  --shadow-card:      0 1px 2px rgba(0, 0, 0, 0.3), 0 3px 14px rgba(0, 0, 0, 0.4);
+  --shadow-sheet:     0 -8px 30px rgba(0, 0, 0, 0.45);
+  --phase-period:     #e2836a;
+  --phase-follicular: #dfc066;
+  --phase-ovulation:  #5fc2c2;
+  --phase-luteal:     #9b82c9;
 }
 
 @theme inline {
@@ -94,6 +109,7 @@
   --color-border:           var(--border);
   --color-accent:           var(--accent);
   --color-accent-soft:      var(--accent-soft);
+  --color-on-accent:        var(--on-accent);
   --color-phase-period:     var(--phase-period);
   --color-phase-follicular: var(--phase-follicular);
   --color-phase-ovulation:  var(--phase-ovulation);
@@ -113,7 +129,7 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans, 'Nunito', system-ui, -apple-system, sans-serif);
+  font-family: var(--font-sans, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
   font-weight: 500;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
@@ -121,7 +137,7 @@ body {
 }
 
 .font-display {
-  font-family: var(--font-display, 'Playfair Display', Georgia, serif);
+  font-family: var(--font-display, 'DM Serif Display', Georgia, serif);
 }
 
 * {

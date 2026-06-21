@@ -16,7 +16,7 @@ export default function JournalPage() {
   return (
     <div className="px-5 pt-4 pb-28">
       <div className="flex items-center justify-between pt-2 mb-5">
-        <h1 className="text-2xl font-bold">Journal</h1>
+        <h1 className="font-display text-2xl font-bold">Journal</h1>
         <button
           onClick={() => router.push(`/journal/${todayISO}`)}
           className="px-4 py-2 rounded-full text-xs font-semibold"
@@ -41,7 +41,7 @@ export default function JournalPage() {
                 key={log.id}
                 onClick={() => router.push(`/journal/${log.payload.date}`)}
                 className="flex items-center gap-4 px-4 py-3.5 rounded-[var(--radius)] text-left w-full transition-all"
-                style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+                style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}
               >
                 <div className="text-2xl">{log.payload.mood ? MOOD_EMOJI[log.payload.mood] : '·'}</div>
                 <div className="flex-1 min-w-0">
