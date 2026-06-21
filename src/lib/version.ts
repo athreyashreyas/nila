@@ -1,6 +1,6 @@
 // Bumped with every push that ships user-facing changes.
 // Add a new entry to CHANGELOG (most recent first) alongside the bump.
-export const APP_VERSION = '2.0.1';
+export const APP_VERSION = '2.0.2';
 
 export interface ChangelogEntry {
   version: string;
@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '2.0.2',
+    date: '2026-06-22',
+    highlights: [
+      'The Save check-in button now appears as soon as you set a mood, energy, flow, or symptom, and you can save a check-in without picking a mood',
+    ],
+  },
   {
     version: '2.0.1',
     date: '2026-06-22',

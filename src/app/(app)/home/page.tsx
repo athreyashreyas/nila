@@ -389,12 +389,13 @@ export default function HomePage() {
   }
 
   async function save() {
-    if (!mood) return;
+    // Nothing entered yet — nothing to save.
+    if (!mood && energy === 0 && flow === 'none' && symptoms.length === 0) return;
     setSaving(true);
     try {
       await upsertLog({
         date: TODAY,
-        mood,
+        mood: mood ?? null,
         energy: (energy as 1|2|3|4|5|null) || null,
         symptoms,
         flow: openCycle ? flow : 'none',
@@ -742,8 +743,8 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Save */}
-      {mood && (
+      {/* Save — visible as soon as there's anything worth saving */}
+      {(mood || energy > 0 || flow !== 'none' || symptoms.length > 0) && (
         <button
           onPointerDown={(e) => e.currentTarget.style.transform = 'scale(0.97)'}
           onPointerUp={(e) => e.currentTarget.style.transform = ''}
