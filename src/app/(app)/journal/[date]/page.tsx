@@ -6,6 +6,7 @@ import { useAppData } from '@/lib/data/context';
 import { Toast, useToast } from '@/components/ui/Toast';
 import { SYMPTOMS, MOODS, FLOWS } from '@/types/app';
 import type { MoodLevel, FlowIntensity } from '@/types/app';
+import { pick, TOAST } from '@/lib/copy/phrases';
 
 export default function JournalDatePage() {
   const { date } = useParams<{ date: string }>();
@@ -44,10 +45,10 @@ export default function JournalDatePage() {
     setSaving(true);
     try {
       await upsertLog({ date, mood, energy: existing?.payload.energy ?? null, symptoms, flow, notes });
-      showToast(existing ? 'Entry updated ✓' : 'Entry saved ✓');
+      showToast(pick(existing ? TOAST.entryUpdated : TOAST.entrySaved));
       setTimeout(() => router.back(), 700);
     } catch {
-      showToast('Save failed, try again');
+      showToast(pick(TOAST.saveError));
     } finally {
       setSaving(false);
     }

@@ -20,6 +20,20 @@ const QUOTES = [
   'Your story is safe here.',
   'Tuning into your inner cycles…',
   'Good things take just a moment.',
+  'You are exactly where you need to be.',
+  'Softness is its own kind of strength.',
+  'Your body is wise. Listen gently.',
+  'Every phase has its own quiet gift.',
+  'Here for you, every day of the month.',
+  'You deserve tenderness, especially from yourself.',
+  'Breathe. This moment is yours.',
+  'Honouring your rhythm, one day at a time.',
+  'You are whole in every season.',
+  'Small check-ins, deep self-knowledge.',
+  'Be as kind to yourself as you are to others.',
+  'A little gentleness goes a long way today.',
+  'Trust yourself. You know your body.',
+  'Your cycle is a story only you can tell.',
 ];
 
 function LoadingScreen() {

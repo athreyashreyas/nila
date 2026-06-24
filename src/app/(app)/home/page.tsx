@@ -12,6 +12,7 @@ import type { MoodLevel, FlowIntensity, CyclePhase } from '@/types/app';
 import { toISODate, fromISODate, daysBetween, startOfDay } from '@/lib/utils/dates';
 import { phaseForCycleDay } from '@/lib/algorithm/prediction';
 import { getDailyInsight } from '@/lib/insights/engine';
+import { pick, pickDaily, TOAST } from '@/lib/copy/phrases';
 
 // ─── Module-level store ──────────────────────────────────────
 // Survives SPA tab-switching (module stays loaded); resets on full page reload.
@@ -45,6 +46,14 @@ const PHASE_LINES: Record<CyclePhase, string[]> = {
     'Not every day needs to be productive. Today, just be.',
     'Your body is asking for gentleness. Listen.',
     'Strength looks like rest today.',
+    'Slow mornings are a love language. Try one on yourself.',
+    'You have nothing to prove today. Just be here.',
+    'Wrap yourself in warmth and let the day be soft.',
+    'Your only job today is to be kind to you.',
+    'Lean into rest. It\'s where your strength refills.',
+    'However today feels, you\'re handling it beautifully.',
+    'A hot water bottle and a quiet hour count as self-care.',
+    'Let the to-do list wait. You come first today.',
   ],
   follicular: [
     'Something new is quietly taking shape.',
@@ -57,6 +66,14 @@ const PHASE_LINES: Record<CyclePhase, string[]> = {
     'A wonderful time to start what you\'ve been putting off.',
     'Your mind is clear, your body is ready.',
     'Something is unfolding. Stay curious.',
+    'Your spark is back. Follow what lights you up.',
+    'Possibility is in the air. Say yes to something.',
+    'Momentum is on your side right now.',
+    'A fresh page. Write something you\'re excited about.',
+    'Your energy is rising. Ride the wave.',
+    'Curiosity suits you. Chase a new idea today.',
+    'Plant a seed today. This is the soil for it.',
+    'You\'re building toward something good. Keep going.',
   ],
   ovulation: [
     'At your most radiant. Let the world feel it.',
@@ -69,6 +86,14 @@ const PHASE_LINES: Record<CyclePhase, string[]> = {
     'This warmth and clarity won\'t last. Savour it.',
     'Bold choices. Big energy. This is your moment.',
     'People feel your warmth today. Share it.',
+    'You\'re luminous today. Let yourself be seen.',
+    'Confidence comes easy now. Use it generously.',
+    'Say the brave thing. Today can hold it.',
+    'Your warmth is contagious. Spread a little.',
+    'This is your spotlight moment. Step into it.',
+    'Connection feels effortless right now. Reach out.',
+    'Whatever you\'ve been waiting to ask, ask it today.',
+    'You\'re in full bloom. Enjoy every bit of it.',
   ],
   luteal: [
     'Quiet strength carries you through.',
@@ -81,14 +106,43 @@ const PHASE_LINES: Record<CyclePhase, string[]> = {
     'Turn inward. The answers are already there.',
     'Your body knows what it needs. Listen closely.',
     'Creativity and reflection thrive here. Let them.',
+    'Cosy is the assignment. Lean all the way in.',
+    'Your inner world is rich right now. Visit it.',
+    'Permission to do less, and feel good about it.',
+    'Tend to yourself the way you tend to others.',
+    'Quieter days have their own quiet magic.',
+    'Let your pace be gentle. You\'ve earned it.',
+    'Comfort is not indulgence right now. It\'s wisdom.',
+    'Wrap the day in something soft and let it be enough.',
   ],
 };
 
-const PHASE_FOCUS: Record<CyclePhase, string> = {
-  period:     'Warmth, rest, and gentleness. Your body is doing real work, so give it space.',
-  follicular: 'Clarity is returning. A great time to start things, plan, and reconnect with what you want.',
-  ovulation:  'Peak social energy. High-stakes conversations, creative bursts, and bold decisions all feel easier now.',
-  luteal:     'Intuition is sharper now. Reflect, create quietly, and honour the slower rhythm.',
+// One per phase rotates daily so the "Today's focus" card stays fresh across a cycle.
+const PHASE_FOCUS: Record<CyclePhase, string[]> = {
+  period: [
+    'Warmth, rest, and gentleness. Your body is doing real work, so give it space.',
+    'Permission to slow down. Today asks for softness, not output.',
+    'Comfort first. Heat, rest, and nourishing food are exactly right.',
+    'Be tender with yourself. Whatever you manage today is enough.',
+  ],
+  follicular: [
+    'Clarity is returning. A great time to start things, plan, and reconnect with what you want.',
+    'Fresh energy is here. Channel it into something you\'ve been meaning to begin.',
+    'Your mind is sharp now. Tackle the things that need real thought.',
+    'Momentum is building. Say yes to a new idea or plan.',
+  ],
+  ovulation: [
+    'Peak social energy. High-stakes conversations, creative bursts, and bold decisions all feel easier now.',
+    'You\'re at your most magnetic. Connect, create, and put yourself out there.',
+    'Confidence runs high. A wonderful day for the brave thing.',
+    'Your spark is at its brightest. Share it generously.',
+  ],
+  luteal: [
+    'Intuition is sharper now. Reflect, create quietly, and honour the slower rhythm.',
+    'Turn inward. This is a phase for depth, not speed.',
+    'Tend and nest. Gentle routines feel especially good now.',
+    'Honour the wind-down. Rest and reflection are productive too.',
+  ],
 };
 
 // ─── Hormone graph ─────────────────────────────────────────────
@@ -351,16 +405,16 @@ export default function HomePage() {
     await addCycle({ periodStart: startDate, periodEnd: endDate, flowIntensity: 'medium', notes: '' });
     if (!endDate) {
       setFlow('medium');
-      showToast('Period started. We\'re tracking with you 🩸');
+      showToast(pick(TOAST.periodStarted));
     } else {
-      showToast('Period logged ✓');
+      showToast(pick(TOAST.periodLogged));
     }
   }
 
   async function endPeriod(endDate: string) {
     if (!openCycle) return;
     await updateCycle(openCycle.id, { ...openCycle.payload, periodEnd: endDate });
-    showToast('Period ended. Cycle logged ✓');
+    showToast(pick(TOAST.periodEnded));
   }
 
   async function undoPeriod() {
@@ -380,9 +434,9 @@ export default function HomePage() {
         }
       }
       setFlow('none');
-      showToast('Period log removed ✓');
+      showToast(pick(TOAST.periodRemoved));
     } catch {
-      showToast('Couldn\'t remove that, try again');
+      showToast(pick(TOAST.removeError));
     } finally {
       setSaving(false);
     }
@@ -401,9 +455,9 @@ export default function HomePage() {
         flow: openCycle ? flow : 'none',
         notes: todayLog?.payload.notes ?? '',
       });
-      showToast(todayLog ? 'Check-in updated ✓' : 'Check-in saved ✓');
+      showToast(pick(todayLog ? TOAST.checkinUpdated : TOAST.checkinSaved));
     } catch {
-      showToast('Something went wrong, try again');
+      showToast(pick(TOAST.saveError));
     } finally {
       setSaving(false);
     }
@@ -565,7 +619,7 @@ export default function HomePage() {
             style={{ background: `${meta.color}12`, boxShadow: `inset 0 0 0 1px ${meta.color}30` }}>
             <p className="text-xs font-semibold mb-1" style={{ color: meta.color }}>Today's focus</p>
             <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground)' }}>
-              {PHASE_FOCUS[prediction.currentPhase]}
+              {pickDaily(PHASE_FOCUS[prediction.currentPhase])}
             </p>
           </div>
 
