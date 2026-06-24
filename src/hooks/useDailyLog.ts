@@ -39,9 +39,31 @@ export function useDailyLog() {
         }))
       );
 
-      // Sort client-side by date descending
-      decrypted.sort((a, b) => b.payload.date.localeCompare(a.payload.date));
-      setLogs(decrypted);
+      // Collapse duplicate entries for the same date. Because the date lives inside the
+      // encrypted blob we can't enforce a unique DB constraint, so two devices logging
+      // the same day before syncing can create duplicate rows. Keep the most recently
+      // created one, drop the rest from local state, and delete the stale rows so they
+      // don't linger. This self-heals on every fetch.
+      const byDate = new Map<string, DecryptedDailyLog>();
+      const duplicateIds: string[] = [];
+      for (const entry of decrypted) {
+        const existing = byDate.get(entry.payload.date);
+        if (!existing) {
+          byDate.set(entry.payload.date, entry);
+        } else {
+          const keep = entry.createdAt > existing.createdAt ? entry : existing;
+          const drop = entry.createdAt > existing.createdAt ? existing : entry;
+          byDate.set(entry.payload.date, keep);
+          duplicateIds.push(drop.id);
+        }
+      }
+
+      const deduped = [...byDate.values()].sort((a, b) => b.payload.date.localeCompare(a.payload.date));
+      setLogs(deduped);
+
+      if (duplicateIds.length > 0) {
+        void db.from('daily_logs').delete().in('id', duplicateIds);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load logs.');
     } finally {
