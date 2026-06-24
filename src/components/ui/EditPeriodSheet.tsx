@@ -33,8 +33,11 @@ export function EditPeriodSheet({ open, onClose, cycle, cycles, isLatest, onConf
       setSaving(false);
       setConfirmingDelete(false);
     }
+  // Key on cycle.id, not the cycle object: a background refetch (realtime / visibility)
+  // rebuilds the cycles array with new object identities, and depending on the object
+  // here would reset the form and wipe the user's in-progress edits.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, cycle]);
+  }, [open, cycle.id]);
 
   const effectiveEnd = ended ? endDate : today;
 

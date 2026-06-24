@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toISODate } from '@/lib/utils/dates';
 
 const CYCLE_OPTIONS = [
   { label: 'Under 25', value: 23 },
@@ -61,7 +62,9 @@ export default function OnboardingPage() {
     router.replace('/home');
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  // Local date, not UTC: toISOString() would shift to the previous day late at night
+  // in positive-UTC timezones, blocking the user from picking their actual today.
+  const today = toISODate(new Date());
   const TOTAL_STEPS = 4;
 
   return (

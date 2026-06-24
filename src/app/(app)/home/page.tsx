@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTheme } from '@/lib/theme/context';
 import { useAppData } from '@/lib/data/context';
 import { PhaseRing } from '@/components/ui/PhaseRing';
@@ -9,7 +9,7 @@ import { SmartLogSheet } from '@/components/ui/SmartLogSheet';
 import { EndPeriodSheet } from '@/components/ui/EndPeriodSheet';
 import { PHASE_META, SYMPTOMS, MOODS, FLOWS } from '@/types/app';
 import type { MoodLevel, FlowIntensity, CyclePhase } from '@/types/app';
-import { toISODate } from '@/lib/utils/dates';
+import { toISODate, fromISODate, daysBetween, startOfDay } from '@/lib/utils/dates';
 import { phaseForCycleDay } from '@/lib/algorithm/prediction';
 import { getDailyInsight } from '@/lib/insights/engine';
 
@@ -411,8 +411,11 @@ export default function HomePage() {
 
   // ─── Derived display values ──────────────────────────────────
 
+  // Whole calendar days since the period started (day 1 = start day), stable across
+  // the whole day. The previous Math.round on a fractional-day diff flipped to the
+  // next day every afternoon.
   const periodDayCount = openCycle
-    ? Math.round((new Date().getTime() - new Date(openCycle.payload.periodStart + 'T00:00').getTime()) / 86400000) + 1
+    ? daysBetween(fromISODate(openCycle.payload.periodStart), startOfDay(new Date())) + 1
     : 0;
 
   const meta = PHASE_META[prediction.currentPhase];
@@ -428,12 +431,13 @@ export default function HomePage() {
   const timePrefix = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
   const phaseEmoji = PHASE_EMOJI[prediction.currentPhase];
 
-  const greetLineRef = useRef<string | null>(null);
-  if (!greetLineRef.current) {
+  // Pick a line for the current phase, stable within a phase but re-picked when the
+  // phase changes. The previous useRef locked it to whatever phase was current on the
+  // very first render (usually the pre-data-load default), so it could mismatch.
+  const greetLine = useMemo(() => {
     const pool = PHASE_LINES[prediction.currentPhase];
-    greetLineRef.current = pool[Math.floor(Math.random() * pool.length)];
-  }
-  const greetLine = greetLineRef.current;
+    return pool[Math.floor(Math.random() * pool.length)];
+  }, [prediction.currentPhase]);
 
   const greetingName = userName
     ? `${timePrefix}, ${userName} ${phaseEmoji}`

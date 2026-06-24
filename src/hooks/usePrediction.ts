@@ -35,5 +35,10 @@ export function usePrediction(
     } catch {}
 
     return predictCycle(allRecords, today, defaultCycleLen, defaultPeriodLen);
-  }, [cycles, today]);
+  // Depend on the day (string), not the Date object. `today` defaults to a fresh
+  // `new Date()` every render, so depending on it recomputed the prediction (and
+  // cascaded re-renders through AppDataProvider) on every single render. The day
+  // string is stable within a day and still rolls over at midnight.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cycles, toISODate(today)]);
 }

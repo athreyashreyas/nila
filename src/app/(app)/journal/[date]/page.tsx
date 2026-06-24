@@ -22,6 +22,9 @@ export default function JournalDatePage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  // Key on the log id, not the object: a background refetch (realtime / visibility)
+  // rebuilds the logs array with new identities, and depending on the object here
+  // would reset the form mid-edit and wipe what the user is typing.
   useEffect(() => {
     if (existing) {
       setMood(existing.payload.mood);
@@ -29,7 +32,8 @@ export default function JournalDatePage() {
       setSymptoms(existing.payload.symptoms);
       setNotes(existing.payload.notes);
     }
-  }, [existing]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existing?.id]);
 
   function toggleSymptom(s: string) {
     setSymptoms(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
