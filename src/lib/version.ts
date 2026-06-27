@@ -1,6 +1,6 @@
 // Bumped with every push that ships user-facing changes.
 // Add a new entry to CHANGELOG (most recent first) alongside the bump.
-export const APP_VERSION = '2.1.7';
+export const APP_VERSION = '2.1.8';
 
 export interface ChangelogEntry {
   version: string;
@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '2.1.8',
+    date: '2026-06-27',
+    highlights: [
+      'Reverted a navigation bar change that made it float over the keyboard; the bar now sits correctly at the bottom and the keyboard simply covers it while you type',
+    ],
+  },
   {
     version: '2.1.7',
     date: '2026-06-27',

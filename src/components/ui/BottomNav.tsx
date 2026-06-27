@@ -1,37 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-
-// iOS lifts position:fixed elements above the on-screen keyboard, which would
-// leave the nav floating over the page while typing (e.g. journal notes). So we
-// hide the nav whenever a text field is focused and bring it back on blur.
-function isTextField(el: EventTarget | null): boolean {
-  if (!(el instanceof HTMLElement)) return false;
-  const tag = el.tagName;
-  return tag === 'TEXTAREA' || tag === 'INPUT' || el.isContentEditable;
-}
-
-function useKeyboardOpen(): boolean {
-  const [open, setOpen] = useState(false);
-  useEffect(() => {
-    const onFocusIn = (e: FocusEvent) => {
-      if (isTextField(e.target)) setOpen(true);
-    };
-    const onFocusOut = () => {
-      // Defer so moving between two fields doesn't flicker the nav.
-      setTimeout(() => setOpen(isTextField(document.activeElement)), 0);
-    };
-    document.addEventListener('focusin', onFocusIn);
-    document.addEventListener('focusout', onFocusOut);
-    return () => {
-      document.removeEventListener('focusin', onFocusIn);
-      document.removeEventListener('focusout', onFocusOut);
-    };
-  }, []);
-  return open;
-}
 
 function HomeIcon() {
   return (
@@ -82,22 +52,16 @@ const TABS = [
 
 export function BottomNav() {
   const pathname = usePathname();
-  const keyboardOpen = useKeyboardOpen();
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-30 flex items-start justify-around border-t"
+      className="flex items-start justify-around border-t"
       style={{
         background: 'var(--color-background)',
         borderColor: 'var(--color-border)',
         paddingTop: '8px',
         paddingBottom: 'max(20px, env(safe-area-inset-bottom))',
         borderTopWidth: '1.5px',
-        // Slide fully out of view while typing so iOS can't float it over the page.
-        transform: keyboardOpen ? 'translateY(110%)' : 'translateY(0)',
-        opacity: keyboardOpen ? 0 : 1,
-        pointerEvents: keyboardOpen ? 'none' : 'auto',
-        transition: 'transform 0.2s ease, opacity 0.2s ease',
       }}
     >
       {TABS.map(({ href, label, Icon }) => {
