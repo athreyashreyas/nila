@@ -55,7 +55,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="flex items-start justify-around border-t"
+      className="fixed bottom-0 left-0 right-0 z-30 flex items-start justify-around border-t"
       style={{
         background: 'var(--color-background)',
         borderColor: 'var(--color-border)',

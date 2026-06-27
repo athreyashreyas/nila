@@ -1,6 +1,6 @@
 // Bumped with every push that ships user-facing changes.
 // Add a new entry to CHANGELOG (most recent first) alongside the bump.
-export const APP_VERSION = '2.1.5';
+export const APP_VERSION = '2.1.6';
 
 export interface ChangelogEntry {
   version: string;
@@ -9,6 +9,13 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '2.1.6',
+    date: '2026-06-27',
+    highlights: [
+      'Fixed the bottom navigation bar occasionally lifting up and showing a gap beneath it; it now stays pinned to the bottom on every screen',
+    ],
+  },
   {
     version: '2.1.5',
     date: '2026-06-27',

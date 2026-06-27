@@ -132,7 +132,7 @@ function PullToRefreshMain({ children }: { children: React.ReactNode }) {
   const indicatorH = refreshing ? 52 : pull;
 
   return (
-    <main ref={mainRef} className="flex-1 min-h-0 overflow-y-auto overscroll-none">
+    <main ref={mainRef} className="h-full overflow-y-auto overscroll-none">
       {/* Pull indicator */}
       <div
         style={{
@@ -332,13 +332,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <AppDataProvider>
       <DataGate>
         <ThemeSync />
-        <div className="flex flex-col h-dvh overflow-hidden"
+        {/* The scroll area fills the viewport; the nav is fixed to the bottom (below)
+            rather than being the last flex child, so dynamic-viewport (dvh) jitter on
+            iOS can never leave a gap beneath it. */}
+        <div className="h-dvh overflow-hidden"
           style={{ paddingTop: 'env(safe-area-inset-top)' }}>
           <PullToRefreshMain>
             {children}
           </PullToRefreshMain>
-          <BottomNav />
         </div>
+        <BottomNav />
       </DataGate>
     </AppDataProvider>
   );
