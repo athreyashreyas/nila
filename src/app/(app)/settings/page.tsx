@@ -2,22 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
 import { useEncryption } from '@/lib/encryption/context';
 import { useTheme, type ThemeMode } from '@/lib/theme/context';
 import { derivePasswordKey, wrapMasterKey, generateSalt } from '@/lib/encryption/core';
 import { useAppData } from '@/lib/data/context';
+import { getSupabaseClient } from '@/lib/supabase/client';
 import { clearKey as clearIDBKey } from '@/lib/encryption/keyStore';
 import { registerPushSubscription, unregisterPushSubscription, isPushSupported } from '@/lib/push/register';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { APP_VERSION, CHANGELOG } from '@/lib/version';
-
-function supabase() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
-}
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -49,7 +42,7 @@ export default function SettingsPage() {
   async function handlePushToggle() {
     setPushLoading(true);
     try {
-      const db = supabase();
+      const db = getSupabaseClient();
       const { data: { user } } = await db.auth.getUser();
       if (!user) return;
 
@@ -76,7 +69,7 @@ export default function SettingsPage() {
   async function handleSignOut() {
     clearKey();
     await clearIDBKey();
-    await supabase().auth.signOut();
+    await getSupabaseClient().auth.signOut();
     router.push('/login');
   }
 
@@ -98,7 +91,7 @@ export default function SettingsPage() {
         Promise.all(dbs.map(db => db.name && indexedDB.deleteDatabase(db.name)))
       ).catch(() => indexedDB.deleteDatabase('nila-ks'));
       clearKey();
-      await supabase().auth.signOut();
+      await getSupabaseClient().auth.signOut();
       router.replace('/login');
     } finally {
       setResetting(false);
@@ -113,7 +106,7 @@ export default function SettingsPage() {
     setPwLoading(true);
     setPwError('');
     try {
-      const db = supabase();
+      const db = getSupabaseClient();
       const { data: { user } } = await db.auth.getUser();
       if (!user) throw new Error('Not signed in.');
 

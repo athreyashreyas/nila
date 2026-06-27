@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
+import { getSupabaseClient } from '@/lib/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEncryption } from '@/lib/encryption/context';
 import { derivePasswordKey, unwrapMasterKey } from '@/lib/encryption/core';
@@ -174,10 +174,7 @@ function ThemeSync() {
   // On mount: read Supabase preference and apply (cross-device sync)
   useEffect(() => {
     async function load() {
-      const db = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const db = getSupabaseClient();
       const { data: { user } } = await db.auth.getUser();
       if (!user) return;
       const { data } = await db.from('profiles').select('preferences').eq('id', user.id).single();
@@ -194,10 +191,7 @@ function ThemeSync() {
   useEffect(() => {
     if (isFirstRender.current) { isFirstRender.current = false; return; }
     async function save() {
-      const db = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const db = getSupabaseClient();
       const { data: { user } } = await db.auth.getUser();
       if (!user) return;
       const { data } = await db.from('profiles').select('preferences').eq('id', user.id).single();
@@ -235,10 +229,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         mountKey(key);
         try {
           if (!localStorage.getItem('nila-onboarded')) {
-            const db = createBrowserClient(
-              process.env.NEXT_PUBLIC_SUPABASE_URL!,
-              process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-            );
+            const db = getSupabaseClient();
             const { count } = await db.from('cycles').select('*', { count: 'exact', head: true });
             if (count && count > 0) {
               localStorage.setItem('nila-onboarded', 'true');
@@ -264,10 +255,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     setLoading(true);
     setError('');
     try {
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = getSupabaseClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setError('Session expired. Please sign in again.'); return; }
 

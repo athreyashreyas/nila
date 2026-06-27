@@ -1,23 +1,11 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
 import { encryptJSON, decryptJSON } from '@/lib/encryption/core';
 import { useEncryption } from '@/lib/encryption/context';
+import { getSupabaseClient } from '@/lib/supabase/client';
 import { logCache, type EncryptedRow } from '@/lib/data/decryptCache';
 import type { DailyLogPayload, DecryptedDailyLog } from '@/types/app';
-
-// One browser client per tab, not a fresh one per call.
-let _client: ReturnType<typeof createBrowserClient> | null = null;
-function supabase() {
-  if (!_client) {
-    _client = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-  }
-  return _client;
-}
 
 export function useDailyLog() {
   const { getMasterKey } = useEncryption();
@@ -31,7 +19,7 @@ export function useDailyLog() {
     setLoading(true);
     setError(null);
     try {
-      const db = supabase();
+      const db = getSupabaseClient();
       const { data, error: dbError } = await db
         .from('daily_logs')
         .select('id, enc_data, enc_data_iv, created_at');
@@ -100,7 +88,7 @@ export function useDailyLog() {
     if (!masterKey) throw new Error('Encryption key not loaded.');
 
     const { enc_data, enc_data_iv } = await encryptJSON(payload, masterKey);
-    const db = supabase();
+    const db = getSupabaseClient();
 
     // Delete any existing log for this date, then insert fresh
     // (date is inside the encrypted blob so we can't use a unique DB constraint)
@@ -117,7 +105,7 @@ export function useDailyLog() {
   }, [getMasterKey, logs, fetchAll]);
 
   const deleteLog = useCallback(async (id: string) => {
-    const db = supabase();
+    const db = getSupabaseClient();
     const { error: dbError } = await db.from('daily_logs').delete().eq('id', id);
     if (dbError) throw dbError;
     setLogs((prev) => prev.filter((l) => l.id !== id));

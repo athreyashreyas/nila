@@ -77,6 +77,11 @@ export const MOODS: { value: MoodLevel; emoji: string; label: string }[] = [
   { value: 'low-energy', emoji: '😴', label: 'Tired' },
 ];
 
+// Derived lookups so screens never redefine their own mood emoji/label maps
+// (which would silently drift from MOODS above).
+export const MOOD_EMOJI = Object.fromEntries(MOODS.map((m) => [m.value, m.emoji])) as Record<MoodLevel, string>;
+export const MOOD_LABEL = Object.fromEntries(MOODS.map((m) => [m.value, m.label])) as Record<MoodLevel, string>;
+
 export const FLOWS: { value: FlowIntensity; label: string }[] = [
   { value: 'none',     label: 'None' },
   { value: 'spotting', label: 'Spotting' },

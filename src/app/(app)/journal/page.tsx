@@ -3,10 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useAppData } from '@/lib/data/context';
 import { toISODate } from '@/lib/utils/dates';
-
-const MOOD_EMOJI: Record<string, string> = {
-  great: '😊', good: '🙂', okay: '😐', low: '😔', 'low-energy': '😴',
-};
+import { MOOD_EMOJI } from '@/types/app';
 
 export default function JournalPage() {
   const router = useRouter();

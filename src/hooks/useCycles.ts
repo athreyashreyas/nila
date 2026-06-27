@@ -1,23 +1,11 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { createBrowserClient } from '@supabase/ssr';
 import { encryptJSON, decryptJSON } from '@/lib/encryption/core';
 import { useEncryption } from '@/lib/encryption/context';
+import { getSupabaseClient } from '@/lib/supabase/client';
 import { cycleCache, type EncryptedRow } from '@/lib/data/decryptCache';
 import type { CyclePayload, DecryptedCycle } from '@/types/app';
-
-// One browser client per tab, not a fresh one per call.
-let _client: ReturnType<typeof createBrowserClient> | null = null;
-function supabase() {
-  if (!_client) {
-    _client = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-  }
-  return _client;
-}
 
 export function useCycles() {
   const { getMasterKey } = useEncryption();
@@ -31,7 +19,7 @@ export function useCycles() {
     setLoading(true);
     setError(null);
     try {
-      const db = supabase();
+      const db = getSupabaseClient();
       const { data, error: dbError } = await db
         .from('cycles')
         .select('id, enc_data, enc_data_iv, created_at')
@@ -40,9 +28,10 @@ export function useCycles() {
 
       // Reuse already-decrypted rows whose ciphertext hasn't changed; only decrypt
       // new or edited rows. Prune cache entries for rows that no longer exist.
+      const rows = (data ?? []) as EncryptedRow[];
       const seen = new Set<string>();
       const decrypted = await Promise.all(
-        (data ?? []).map(async (row: EncryptedRow) => {
+        rows.map(async (row) => {
           seen.add(row.id);
           const cached = cycleCache.get(row.id);
           if (cached && cached.iv === row.enc_data_iv) return cached.entry;
@@ -71,7 +60,7 @@ export function useCycles() {
     const masterKey = getMasterKey();
     if (!masterKey) throw new Error('Encryption key not loaded.');
     const { enc_data, enc_data_iv } = await encryptJSON(payload, masterKey);
-    const db = supabase();
+    const db = getSupabaseClient();
     const { data: { user } } = await db.auth.getUser();
     if (!user) throw new Error('Not authenticated.');
     const { error: dbError } = await db.from('cycles').insert({ user_id: user.id, enc_data, enc_data_iv });
@@ -83,7 +72,7 @@ export function useCycles() {
     const masterKey = getMasterKey();
     if (!masterKey) throw new Error('Encryption key not loaded.');
     const { enc_data, enc_data_iv } = await encryptJSON(payload, masterKey);
-    const db = supabase();
+    const db = getSupabaseClient();
     const { error: dbError } = await db
       .from('cycles')
       .update({ enc_data, enc_data_iv })
@@ -93,7 +82,7 @@ export function useCycles() {
   }, [getMasterKey, fetchAll]);
 
   const deleteCycle = useCallback(async (id: string) => {
-    const db = supabase();
+    const db = getSupabaseClient();
     const { error: dbError } = await db.from('cycles').delete().eq('id', id);
     if (dbError) throw dbError;
     setCycles((prev) => prev.filter((c) => c.id !== id));

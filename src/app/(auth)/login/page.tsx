@@ -4,7 +4,7 @@ import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { createBrowserClient } from '@supabase/ssr';
+import { getSupabaseClient } from '@/lib/supabase/client';
 import { derivePasswordKey, unwrapMasterKey } from '@/lib/encryption/core';
 import { saveKey } from '@/lib/encryption/keyStore';
 import { useEncryption } from '@/lib/encryption/context';
@@ -31,10 +31,7 @@ function LoginForm() {
     setLoading(true);
     setError('');
     try {
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = getSupabaseClient();
 
       const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
       if (authError) throw authError;

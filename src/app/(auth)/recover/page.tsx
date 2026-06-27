@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { createBrowserClient } from '@supabase/ssr';
+import { getSupabaseClient } from '@/lib/supabase/client';
 import {
   deriveRecoveryKey,
   unwrapMasterKey,
@@ -52,10 +52,7 @@ export default function RecoverPage() {
     setLoading(true);
     setError('');
     try {
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = getSupabaseClient();
       const { error: otpError } = await supabase.auth.signInWithOtp({ email });
       if (otpError) throw otpError;
       setStep('newpassword');
@@ -73,10 +70,7 @@ export default function RecoverPage() {
     setError('');
     try {
       const phrase = words.join(' ').trim();
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = getSupabaseClient();
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated. Please use the magic link sent to your email first.');

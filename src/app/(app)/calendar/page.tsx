@@ -5,19 +5,12 @@ import { useRouter } from 'next/navigation';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { EditPeriodSheet } from '@/components/ui/EditPeriodSheet';
 import { useAppData } from '@/lib/data/context';
-import { PHASE_META } from '@/types/app';
+import { PHASE_META, MOOD_EMOJI, MOOD_LABEL } from '@/types/app';
 import { getDaysInMonth, getFirstDayOfMonth, toISODate, addDays, fromISODate, startOfDay, daysBetween } from '@/lib/utils/dates';
 import { phaseForCycleDay } from '@/lib/algorithm/prediction';
-import type { CyclePhase, PredictionResult, MoodLevel } from '@/types/app';
+import type { CyclePhase, PredictionResult } from '@/types/app';
 
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-
-const MOOD_EMOJI: Record<MoodLevel, string> = {
-  great: '😊', good: '🙂', okay: '😐', low: '😔', 'low-energy': '😴',
-};
-const MOOD_LABEL: Record<MoodLevel, string> = {
-  great: 'Great', good: 'Good', okay: 'Okay', low: 'Low', 'low-energy': 'Tired',
-};
 
 function getPhaseForDate(
   date: Date,
@@ -124,6 +117,9 @@ export default function CalendarPage() {
   const monthName = new Date(year, month).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 
   function openSheet(iso: string, date: Date) {
+    // Warm the journal route now, while the user reads the day sheet, so tapping
+    // "Add entry" navigates instantly.
+    if (iso <= todayISO) router.prefetch(`/journal/${iso}`);
     const phase = getPhaseForDate(date, prediction, periodDates, todayISO);
     const hasPeriod = periodDates.has(iso);
     const hasLog = logMap.has(iso);

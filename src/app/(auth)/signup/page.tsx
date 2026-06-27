@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { createBrowserClient } from '@supabase/ssr';
+import { getSupabaseClient } from '@/lib/supabase/client';
 import { setupEncryption } from '@/lib/encryption/setup';
 import { saveKey } from '@/lib/encryption/keyStore';
 import { useEncryption } from '@/lib/encryption/context';
@@ -43,10 +43,7 @@ export default function SignupPage() {
     setLoading(true);
     setError('');
     try {
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
+      const supabase = getSupabaseClient();
 
       const { profileKeyData, recoveryPhrase: phrase, masterKey } = await setupEncryption(password);
       const { data, error: authError } = await supabase.auth.signUp({ email, password });

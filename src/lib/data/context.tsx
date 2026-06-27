@@ -90,14 +90,15 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     let channel: ReturnType<typeof db.channel> | null = null;
     let cancelled = false;
 
-    db.auth.getUser().then(({ data: { user } }) => {
+    (async () => {
+      const { data: { user } } = await db.auth.getUser();
       if (!user || cancelled) return;
       channel = db
         .channel('app-data-changes')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'cycles', filter: `user_id=eq.${user.id}` }, debouncedRefresh)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_logs', filter: `user_id=eq.${user.id}` }, debouncedRefresh)
         .subscribe();
-    });
+    })();
 
     return () => {
       cancelled = true;
