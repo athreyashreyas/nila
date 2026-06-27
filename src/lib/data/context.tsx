@@ -6,6 +6,7 @@ import { useCycles } from '@/hooks/useCycles';
 import { useDailyLog } from '@/hooks/useDailyLog';
 import { usePrediction } from '@/hooks/usePrediction';
 import { getSupabaseClient } from '@/lib/supabase/client';
+import { restoreSnapshot, saveSnapshotFromCaches } from '@/lib/data/snapshot';
 import type { DecryptedCycle, DecryptedDailyLog, PredictionResult, CyclePayload, DailyLogPayload } from '@/types/app';
 
 interface AppData {
@@ -33,28 +34,47 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const initialized = useRef(false);
   const [isReady, setIsReady] = useState(false);
 
+  const { fetchAll: fetchCycles, hydrate: hydrateCycles } = cyclesHook;
+  const { fetchAll: fetchLogs, hydrate: hydrateLogs } = logsHook;
+
+  // Fetch both tables from the server, then persist the (decrypt-cached) result to
+  // the local snapshot so the next cold load is instant.
+  const syncAll = useCallback(async () => {
+    await Promise.all([fetchCycles(), fetchLogs()]);
+    void saveSnapshotFromCaches();
+  }, [fetchCycles, fetchLogs]);
+
   useEffect(() => {
     if (isUnlocked && !initialized.current) {
       initialized.current = true;
-      Promise.all([cyclesHook.fetchAll(), logsHook.fetchAll()])
-        .finally(() => setIsReady(true));
+      (async () => {
+        // Instant cold-load: paint from the local snapshot first, then reconcile
+        // from the server in the background (decrypt-free for unchanged rows).
+        const snap = await restoreSnapshot();
+        if (snap) {
+          hydrateCycles(snap.cycles);
+          hydrateLogs(snap.logs);
+          setIsReady(true);
+        }
+        await syncAll().finally(() => setIsReady(true));
+      })();
     }
-  }, [isUnlocked, cyclesHook.fetchAll, logsHook.fetchAll]);
+  }, [isUnlocked, syncAll, hydrateCycles, hydrateLogs]);
 
   const refresh = useCallback(async () => {
-    await Promise.all([cyclesHook.fetchAll(), logsHook.fetchAll()]);
-  }, [cyclesHook.fetchAll, logsHook.fetchAll]);
+    await syncAll();
+  }, [syncAll]);
 
   // Re-sync whenever the tab/app comes back into view (covers iPhone ↔ iPad state drift)
   useEffect(() => {
     const onVisible = () => {
       if (document.visibilityState === 'visible' && initialized.current) {
-        void Promise.all([cyclesHook.fetchAll(), logsHook.fetchAll()]);
+        void syncAll();
       }
     };
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
-  }, [cyclesHook.fetchAll, logsHook.fetchAll]);
+  }, [syncAll]);
 
   // Push sync: a Realtime change on another device refetches immediately instead of
   // waiting for this device to background/foreground or pull-to-refresh.
@@ -64,9 +84,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     let debounceId: ReturnType<typeof setTimeout> | null = null;
     const debouncedRefresh = () => {
       if (debounceId) clearTimeout(debounceId);
-      debounceId = setTimeout(() => {
-        void Promise.all([cyclesHook.fetchAll(), logsHook.fetchAll()]);
-      }, 400);
+      debounceId = setTimeout(() => { void syncAll(); }, 400);
     };
 
     let channel: ReturnType<typeof db.channel> | null = null;
@@ -86,7 +104,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       if (debounceId) clearTimeout(debounceId);
       if (channel) db.removeChannel(channel);
     };
-  }, [isUnlocked, cyclesHook.fetchAll, logsHook.fetchAll]);
+  }, [isUnlocked, syncAll]);
 
   const value = useMemo<AppData>(() => ({
     cycles: cyclesHook.cycles,

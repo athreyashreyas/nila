@@ -8,6 +8,8 @@ import {
   useCallback,
   type ReactNode,
 } from 'react';
+import { clearDecryptCaches } from '@/lib/data/decryptCache';
+import { clearSnapshot } from '@/lib/data/snapshot';
 
 interface EncryptionContextValue {
   getMasterKey: () => CryptoKey | null;
@@ -34,6 +36,8 @@ export function EncryptionProvider({ children }: { children: ReactNode }) {
   const clearKey = useCallback(() => {
     masterKeyRef.current = null;
     setIsUnlocked(false);
+    clearDecryptCaches();   // drop in-memory plaintext when locking / signing out
+    void clearSnapshot();   // and the on-device snapshot, so no cross-account bleed
   }, []);
 
   return (

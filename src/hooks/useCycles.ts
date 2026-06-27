@@ -4,13 +4,19 @@ import { useState, useCallback } from 'react';
 import { createBrowserClient } from '@supabase/ssr';
 import { encryptJSON, decryptJSON } from '@/lib/encryption/core';
 import { useEncryption } from '@/lib/encryption/context';
+import { cycleCache, type EncryptedRow } from '@/lib/data/decryptCache';
 import type { CyclePayload, DecryptedCycle } from '@/types/app';
 
+// One browser client per tab, not a fresh one per call.
+let _client: ReturnType<typeof createBrowserClient> | null = null;
 function supabase() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  if (!_client) {
+    _client = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+  }
+  return _client;
 }
 
 export function useCycles() {
@@ -32,13 +38,24 @@ export function useCycles() {
         .order('created_at', { ascending: false });
       if (dbError) throw dbError;
 
+      // Reuse already-decrypted rows whose ciphertext hasn't changed; only decrypt
+      // new or edited rows. Prune cache entries for rows that no longer exist.
+      const seen = new Set<string>();
       const decrypted = await Promise.all(
-        (data ?? []).map(async (row) => ({
-          id: row.id,
-          payload: await decryptJSON<CyclePayload>(row.enc_data, row.enc_data_iv, masterKey),
-          createdAt: row.created_at,
-        }))
+        (data ?? []).map(async (row: EncryptedRow) => {
+          seen.add(row.id);
+          const cached = cycleCache.get(row.id);
+          if (cached && cached.iv === row.enc_data_iv) return cached.entry;
+          const entry: DecryptedCycle = {
+            id: row.id,
+            payload: await decryptJSON<CyclePayload>(row.enc_data, row.enc_data_iv, masterKey),
+            createdAt: row.created_at,
+          };
+          cycleCache.set(row.id, { iv: row.enc_data_iv, entry });
+          return entry;
+        })
       );
+      for (const id of cycleCache.keys()) if (!seen.has(id)) cycleCache.delete(id);
 
       // Sort client-side by periodStart descending (the only date we know after decryption)
       decrypted.sort((a, b) => b.payload.periodStart.localeCompare(a.payload.periodStart));
@@ -82,5 +99,8 @@ export function useCycles() {
     setCycles((prev) => prev.filter((c) => c.id !== id));
   }, []);
 
-  return { cycles, loading, error, fetchAll, addCycle, updateCycle, deleteCycle };
+  // Seed state from a local snapshot for instant cold-load (before fetchAll).
+  const hydrate = useCallback((entries: DecryptedCycle[]) => setCycles(entries), []);
+
+  return { cycles, loading, error, fetchAll, hydrate, addCycle, updateCycle, deleteCycle };
 }

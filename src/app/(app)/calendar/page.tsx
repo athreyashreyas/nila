@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { EditPeriodSheet } from '@/components/ui/EditPeriodSheet';
@@ -70,18 +70,47 @@ export default function CalendarPage() {
   const firstDay = getFirstDayOfMonth(year, month);
   const todayISO = toISODate(now);
 
-  const periodDates = new Set(
-    cycles.flatMap((c) => {
-      const start = fromISODate(c.payload.periodStart);
-      const end = c.payload.periodEnd ? fromISODate(c.payload.periodEnd) : start;
-      const days: string[] = [];
-      let d = start;
-      while (d <= end) { days.push(toISODate(d)); d = addDays(d, 1); }
-      return days;
-    })
+  // Expanding every cycle into its individual period days is the most expensive
+  // bit here, so memoise it (and the log lookup) instead of rebuilding on every
+  // render. Without this, every tap (which flips `tappedDate`) rebuilt both.
+  const periodDates = useMemo(
+    () => new Set(
+      cycles.flatMap((c) => {
+        const start = fromISODate(c.payload.periodStart);
+        const end = c.payload.periodEnd ? fromISODate(c.payload.periodEnd) : start;
+        const days: string[] = [];
+        let d = start;
+        while (d <= end) { days.push(toISODate(d)); d = addDays(d, 1); }
+        return days;
+      })
+    ),
+    [cycles],
   );
 
-  const logMap = new Map(logs.map(l => [l.payload.date, l.payload]));
+  const logMap = useMemo(
+    () => new Map(logs.map(l => [l.payload.date, l.payload])),
+    [logs],
+  );
+
+  // Precompute the visible month's cells once per month/data change, so a tap only
+  // re-renders the pressed cell's transform rather than recomputing 42 phases.
+  const monthCells = useMemo(
+    () => Array.from({ length: daysInMonth }, (_, i) => {
+      const day = i + 1;
+      const date = new Date(year, month, day);
+      const iso = toISODate(date);
+      const phase = getPhaseForDate(date, prediction, periodDates, todayISO);
+      return {
+        day,
+        iso,
+        date,
+        isToday: iso === todayISO,
+        hasPeriod: periodDates.has(iso),
+        phaseMeta: phase ? PHASE_META[phase] : null,
+      };
+    }),
+    [year, month, daysInMonth, periodDates, prediction, todayISO],
+  );
 
   function prevMonth() {
     if (month === 0) { setYear(y => y - 1); setMonth(11); }
@@ -128,15 +157,7 @@ export default function CalendarPage() {
 
       <div className="grid grid-cols-7 gap-1">
         {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
-        {Array.from({ length: daysInMonth }).map((_, i) => {
-          const day = i + 1;
-          const date = new Date(year, month, day);
-          const iso = toISODate(date);
-          const isToday = iso === todayISO;
-          const hasPeriod = periodDates.has(iso);
-          const phase = getPhaseForDate(date, prediction, periodDates, todayISO);
-          const phaseMeta = phase ? PHASE_META[phase] : null;
-
+        {monthCells.map(({ day, iso, date, isToday, hasPeriod, phaseMeta }) => {
           return (
             <button
               key={day}
