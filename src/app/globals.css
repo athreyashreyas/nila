@@ -124,6 +124,12 @@ html {
   overscroll-behavior: none;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* iOS reports 100dvh as roughly the screen height MINUS the top safe-area inset
+     in standalone PWAs, which leaves the app shell a notch short and floats the
+     bottom nav up off the bottom edge. Add the inset back for the true full-screen
+     height at rest, while dvh's keyboard-aware shrinking still applies on top. Cap
+     with 100lvh (the real screen height) so rounding can never overshoot the edge. */
+  height: min(calc(100dvh + env(safe-area-inset-top)), 100lvh);
 }
 
 body {
@@ -133,7 +139,8 @@ body {
   font-weight: 500;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
-  height: 100dvh;
+  overscroll-behavior: none;
+  height: 100%;
 }
 
 .font-display {

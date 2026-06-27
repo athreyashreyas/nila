@@ -59,7 +59,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${jakarta.variable} ${dmSerif.variable} h-full`}>
+    <html lang="en" className={`${jakarta.variable} ${dmSerif.variable}`}>
       <head>
         {/* Anti-FOUC: apply stored theme before React hydrates */}
         <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('nila-theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');else if(t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}` }} />
@@ -103,7 +103,7 @@ export default function RootLayout({
           media="(device-width: 1024px) and (device-height: 1366px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)"
         />
       </head>
-      <body className="min-h-full flex flex-col antialiased bg-[--color-background] text-[--color-foreground]">
+      <body className="antialiased bg-[--color-background] text-[--color-foreground]">
         <ServiceWorkerRegistration />
         <ThemeProvider>
           <EncryptionProvider>

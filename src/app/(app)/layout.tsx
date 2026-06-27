@@ -332,10 +332,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <AppDataProvider>
       <DataGate>
         <ThemeSync />
-        {/* Nav stays in normal flow at the bottom of the 100dvh column. This is the
-            keyboard-safe layout: the iOS keyboard overlays it instead of lifting it,
-            which is what a position:fixed nav does. */}
-        <div className="flex flex-col h-dvh overflow-hidden"
+        {/* Shell fills the html element's height (see globals.css), which is the true
+            full-screen height and shrinks with the keyboard. The nav is a normal flex
+            child at the bottom (not position:fixed), so the keyboard overlays it. */}
+        <div className="flex flex-col h-full overflow-hidden"
           style={{ paddingTop: 'env(safe-area-inset-top)' }}>
           <PullToRefreshMain>
             {children}
