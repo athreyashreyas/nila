@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { BottomSheet } from '@/components/ui/BottomSheet';
+import { SheetHeader } from '@/components/ui/SheetHeader';
 import { toISODate } from '@/lib/utils/dates';
 import type { DecryptedCycle, DecryptedDailyLog } from '@/types/app';
 
@@ -50,22 +51,7 @@ export function EndPeriodSheet({ open, onClose, openCycle, logs, onConfirm }: Pr
   return (
     <BottomSheet open={open} onClose={onClose} maxHeight="60vh">
       <div className="px-6 pt-4 pb-2 flex flex-col gap-5">
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="font-display text-xl font-bold">End period</h2>
-            <p className="text-xs mt-1" style={{ color: 'var(--color-foreground-muted)' }}>
-              When did your period end?
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-lg"
-            style={{ background: 'var(--color-surface)', color: 'var(--color-foreground-muted)' }}
-          >
-            ✕
-          </button>
-        </div>
+        <SheetHeader title="End period" subtitle="When did your period end?" onClose={onClose} />
 
         {/* Date picker */}
         <div>

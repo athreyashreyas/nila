@@ -1,25 +1,13 @@
 import type { CyclePhase, PredictionResult, DecryptedDailyLog } from '@/types/app';
 import { PHASE_META } from '@/types/app';
-import { phaseForCycleDay } from '@/lib/algorithm/prediction';
-import { fromISODate, daysBetween, startOfDay } from '@/lib/utils/dates';
+import { phaseForCycleDay, cycleDayForDate } from '@/lib/algorithm/prediction';
+import { fromISODate } from '@/lib/utils/dates';
 import { SYMPTOM_TIPS, PHASE_INSIGHT_TIPS } from '@/lib/insights/data';
 
-// Derive the cycle phase for a historical log date using the current prediction as anchor.
-// Uses the same approach as the calendar phase colouring: walk back from today's known cycle day.
-function logPhase(
-  logDate: string,
-  prediction: PredictionResult,
-  today: Date,
-): CyclePhase | null {
-  const { estimatedCycleLength, estimatedPeriodLength, daysUntilNextPeriod } = prediction;
-  const diff = daysBetween(startOfDay(today), startOfDay(fromISODate(logDate)));
-  // Cycle day today (1-indexed). daysUntilNextPeriod < 0 means overdue.
-  const todayCycleDay = estimatedCycleLength - daysUntilNextPeriod;
-  const rawDay = todayCycleDay + diff;
-  // Normalise to [1, cycleLength]
-  const dayInCycle =
-    ((rawDay - 1) % estimatedCycleLength + estimatedCycleLength) % estimatedCycleLength + 1;
-  return phaseForCycleDay(dayInCycle, estimatedCycleLength, estimatedPeriodLength);
+// Cycle phase for a historical log date, anchored on the current prediction.
+function logPhase(logDate: string, prediction: PredictionResult, today: Date): CyclePhase {
+  const dayInCycle = cycleDayForDate(fromISODate(logDate), prediction, today);
+  return phaseForCycleDay(dayInCycle, prediction.estimatedCycleLength, prediction.estimatedPeriodLength);
 }
 
 export function getDailyInsight(

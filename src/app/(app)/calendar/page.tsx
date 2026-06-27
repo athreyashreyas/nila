@@ -1,13 +1,13 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { EditPeriodSheet } from '@/components/ui/EditPeriodSheet';
 import { useAppData } from '@/lib/data/context';
 import { PHASE_META, MOOD_EMOJI, MOOD_LABEL } from '@/types/app';
-import { getDaysInMonth, getFirstDayOfMonth, toISODate, addDays, fromISODate, startOfDay, daysBetween } from '@/lib/utils/dates';
-import { phaseForCycleDay } from '@/lib/algorithm/prediction';
+import { getDaysInMonth, getFirstDayOfMonth, toISODate, addDays, fromISODate } from '@/lib/utils/dates';
+import { phaseForCycleDay, cycleDayForDate } from '@/lib/algorithm/prediction';
 import type { CyclePhase, PredictionResult } from '@/types/app';
 
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
@@ -20,15 +20,8 @@ function getPhaseForDate(
 ): CyclePhase | null {
   // No cycle history yet — don't paint a speculative cycle across the whole calendar
   if (!prediction.hasData) return null;
-  const { estimatedCycleLength, estimatedPeriodLength, daysUntilNextPeriod } = prediction;
-  const diff = daysBetween(startOfDay(new Date()), startOfDay(date));
-  const todayCycleDay = estimatedCycleLength - daysUntilNextPeriod;
-  const rawDay = todayCycleDay + diff;
-  // Normalise to [1, cycleLength]
-  const dayInCycle =
-    ((rawDay - 1) % estimatedCycleLength + estimatedCycleLength) % estimatedCycleLength + 1;
-  if (dayInCycle < 1) return null;
-  const phase = phaseForCycleDay(dayInCycle, estimatedCycleLength, estimatedPeriodLength);
+  const dayInCycle = cycleDayForDate(date, prediction);
+  const phase = phaseForCycleDay(dayInCycle, prediction.estimatedCycleLength, prediction.estimatedPeriodLength);
   // For past/present days, a logged period that already ended takes priority over
   // the estimated period length, so a finished period doesn't keep showing as "Period"
   // on days the user has since unmarked.
@@ -58,6 +51,13 @@ export default function CalendarPage() {
   const [tappedDate, setTappedDate] = useState<string | null>(null);
   const [sheet, setSheet] = useState<DaySheet | null>(null);
   const [editingCycleId, setEditingCycleId] = useState<string | null>(null);
+  const [navPending, startNav] = useTransition();
+
+  // Mark the navigation as a transition so the button can show a pending state
+  // immediately (instead of looking frozen until the journal route renders).
+  function openEntry(iso: string) {
+    startNav(() => router.push(`/journal/${iso}`));
+  }
 
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
@@ -297,20 +297,27 @@ export default function CalendarPage() {
                 {/* Add / edit journal entry — only for today or past dates */}
                 {sheet.iso <= todayISO && (
                   <button
-                    onClick={() => router.push(`/journal/${sheet.iso}`)}
-                    className="w-full mt-4 py-3 rounded-full text-sm font-semibold"
-                    style={{ background: 'var(--color-accent)', color: 'var(--color-on-accent)' }}
+                    onPointerDown={(e) => (e.currentTarget.style.transform = 'scale(0.97)')}
+                    onPointerUp={(e) => (e.currentTarget.style.transform = '')}
+                    onPointerLeave={(e) => (e.currentTarget.style.transform = '')}
+                    onClick={() => openEntry(sheet.iso)}
+                    disabled={navPending}
+                    className="w-full mt-4 py-3 rounded-full text-sm font-semibold disabled:opacity-80"
+                    style={{ background: 'var(--color-accent)', color: 'var(--color-on-accent)', transition: 'transform 0.08s ease' }}
                   >
-                    {sheet.hasLog ? 'Edit entry' : 'Add entry'}
+                    {navPending ? 'Opening…' : sheet.hasLog ? 'Edit entry' : 'Add entry'}
                   </button>
                 )}
 
                 {/* Edit this period's dates */}
                 {sheet.hasPeriod && sheet.cycleId && (
                   <button
+                    onPointerDown={(e) => (e.currentTarget.style.transform = 'scale(0.97)')}
+                    onPointerUp={(e) => (e.currentTarget.style.transform = '')}
+                    onPointerLeave={(e) => (e.currentTarget.style.transform = '')}
                     onClick={() => { setEditingCycleId(sheet.cycleId); setSheet(null); }}
                     className="w-full mt-2 py-3 rounded-full text-sm font-semibold"
-                    style={{ background: 'var(--color-surface)', color: PHASE_META.period.color, boxShadow: `inset 0 0 0 1px ${PHASE_META.period.color}40` }}
+                    style={{ background: 'var(--color-surface)', color: PHASE_META.period.color, boxShadow: `inset 0 0 0 1px ${PHASE_META.period.color}40`, transition: 'transform 0.08s ease' }}
                   >
                     Edit period dates
                   </button>

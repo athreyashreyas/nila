@@ -70,12 +70,15 @@ export function BottomNav() {
           <Link
             key={href}
             href={href}
+            onPointerDown={(e) => (e.currentTarget.style.transform = 'scale(0.88)')}
+            onPointerUp={(e) => (e.currentTarget.style.transform = '')}
+            onPointerLeave={(e) => (e.currentTarget.style.transform = '')}
             className="flex flex-col items-center gap-1 px-5 py-1 rounded-2xl"
             style={{
               background: active ? 'var(--color-accent-soft)' : 'transparent',
               color: active ? 'var(--color-accent)' : 'var(--color-foreground)',
               opacity: active ? 1 : 0.42,
-              transition: 'opacity 0.12s ease, background 0.12s ease',
+              transition: 'opacity 0.12s ease, background 0.12s ease, transform 0.09s ease',
             }}
           >
             <Icon />

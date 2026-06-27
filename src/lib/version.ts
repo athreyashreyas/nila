@@ -1,6 +1,6 @@
 // Bumped with every push that ships user-facing changes.
 // Add a new entry to CHANGELOG (most recent first) alongside the bump.
-export const APP_VERSION = '2.1.4';
+export const APP_VERSION = '2.1.5';
 
 export interface ChangelogEntry {
   version: string;
@@ -9,6 +9,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '2.1.5',
+    date: '2026-06-27',
+    highlights: [
+      'Buttons and tabs now respond the instant you tap them, with a gentle press animation, so nothing feels frozen while a screen opens',
+      'Opening a journal entry shows an "Opening" cue right away instead of a pause',
+    ],
+  },
   {
     version: '2.1.4',
     date: '2026-06-27',

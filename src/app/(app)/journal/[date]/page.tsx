@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAppData } from '@/lib/data/context';
 import { Toast, useToast } from '@/components/ui/Toast';
-import { SYMPTOMS, MOODS, FLOWS } from '@/types/app';
 import type { MoodLevel, FlowIntensity } from '@/types/app';
+import { SectionLabel, MoodSelector, FlowSelector, SymptomPicker } from '@/components/ui/CheckinFields';
 import { pick, TOAST } from '@/lib/copy/phrases';
 
 export default function JournalDatePage() {
@@ -86,61 +86,22 @@ export default function JournalDatePage() {
       </div>
 
       <div>
-        <p className="text-[11px] font-semibold tracking-widest uppercase mb-3" style={{ color: 'var(--color-foreground-muted)' }}>Mood</p>
-        <div className="flex gap-2">
-          {MOODS.map(({ value, emoji, label }) => (
-            <button key={value} onClick={() => setMood(value)}
-              className="flex-1 flex flex-col items-center gap-1 py-2.5 rounded-[var(--radius-sm)] text-xl transition-all"
-              style={{
-                background: 'var(--color-surface)',
-                boxShadow: mood === value ? 'inset 0 0 0 2px var(--color-accent)' : 'none',
-                opacity: mood && mood !== value ? 0.45 : 1,
-              }}>
-              {emoji}
-              <span className="text-[9px] font-semibold" style={{ color: 'var(--color-foreground-muted)' }}>{label}</span>
-            </button>
-          ))}
-        </div>
+        <SectionLabel className="mb-3">Mood</SectionLabel>
+        <MoodSelector value={mood} onChange={setMood} />
       </div>
 
       <div>
-        <p className="text-[11px] font-semibold tracking-widest uppercase mb-3" style={{ color: 'var(--color-foreground-muted)' }}>Flow</p>
-        <div className="flex gap-1.5">
-          {FLOWS.map(({ value, label }) => (
-            <button key={value} onClick={() => setFlow(value)}
-              className="flex-1 py-2 rounded-[var(--radius-sm)] text-xs font-medium transition-all"
-              style={{
-                background: 'var(--color-surface)',
-                boxShadow: flow === value ? 'inset 0 0 0 1.5px var(--color-accent)' : 'none',
-                opacity: flow !== value ? 0.55 : 1,
-                color: flow === value ? 'var(--color-accent)' : undefined,
-              }}>
-              {label}
-            </button>
-          ))}
-        </div>
+        <SectionLabel className="mb-3">Flow</SectionLabel>
+        <FlowSelector value={flow} onChange={setFlow} />
       </div>
 
       <div>
-        <p className="text-[11px] font-semibold tracking-widest uppercase mb-3" style={{ color: 'var(--color-foreground-muted)' }}>Symptoms</p>
-        <div className="flex flex-wrap gap-2">
-          {SYMPTOMS.map((s) => (
-            <button key={s} onClick={() => toggleSymptom(s)}
-              className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-              style={{
-                background: symptoms.includes(s) ? 'var(--color-accent-soft)' : 'var(--color-surface)',
-                boxShadow: symptoms.includes(s) ? 'inset 0 0 0 1.5px var(--color-accent)' : 'none',
-                color: symptoms.includes(s) ? 'var(--color-accent)' : undefined,
-                opacity: !symptoms.includes(s) ? 0.6 : 1,
-              }}>
-              {s}
-            </button>
-          ))}
-        </div>
+        <SectionLabel className="mb-3">Symptoms</SectionLabel>
+        <SymptomPicker selected={symptoms} onToggle={toggleSymptom} />
       </div>
 
       <div>
-        <p className="text-[11px] font-semibold tracking-widest uppercase mb-3" style={{ color: 'var(--color-foreground-muted)' }}>Notes</p>
+        <SectionLabel className="mb-3">Notes</SectionLabel>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}

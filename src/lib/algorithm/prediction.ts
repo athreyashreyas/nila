@@ -140,6 +140,22 @@ export function predictCycle(
   };
 }
 
+// ── Cycle day (1-indexed) for an arbitrary date ──────────────────
+// Walks from today's known cycle day to the target date and normalises into
+// [1, cycleLength]. Shared by the calendar colouring and the insights engine so
+// the "which day of the cycle is this date" logic lives in exactly one place.
+export function cycleDayForDate(
+  date: Date,
+  prediction: PredictionResult,
+  today: Date = new Date(),
+): number {
+  const { estimatedCycleLength, daysUntilNextPeriod } = prediction;
+  const diff = daysBetween(startOfDay(today), startOfDay(date));
+  const todayCycleDay = estimatedCycleLength - daysUntilNextPeriod;
+  const rawDay = todayCycleDay + diff;
+  return ((rawDay - 1) % estimatedCycleLength + estimatedCycleLength) % estimatedCycleLength + 1;
+}
+
 // ── Canonical phase-from-cycle-day (1-indexed, day 1 = first day of period) ──
 export function phaseForCycleDay(
   dayInCycle: number,

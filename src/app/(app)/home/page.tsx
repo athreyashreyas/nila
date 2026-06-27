@@ -7,7 +7,8 @@ import { PhaseRing } from '@/components/ui/PhaseRing';
 import { Toast, useToast } from '@/components/ui/Toast';
 import { SmartLogSheet } from '@/components/ui/SmartLogSheet';
 import { EndPeriodSheet } from '@/components/ui/EndPeriodSheet';
-import { PHASE_META, SYMPTOMS, MOODS, FLOWS } from '@/types/app';
+import { SectionLabel, MoodSelector, FlowSelector, SymptomPicker } from '@/components/ui/CheckinFields';
+import { PHASE_META } from '@/types/app';
 import type { MoodLevel, FlowIntensity, CyclePhase } from '@/types/app';
 import { toISODate, fromISODate, daysBetween, startOfDay } from '@/lib/utils/dates';
 import { phaseForCycleDay } from '@/lib/algorithm/prediction';
@@ -635,30 +636,8 @@ export default function HomePage() {
 
       {/* Mood */}
       <div>
-        <p className="text-[11px] font-semibold tracking-widest uppercase mb-3"
-          style={{ color: 'var(--color-foreground-muted)' }}>
-          How are you feeling?
-        </p>
-        <div className="flex gap-2">
-          {MOODS.map(({ value, emoji, label }) => (
-            <button key={value}
-              onPointerDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
-              onPointerUp={(e) => e.currentTarget.style.transform = ''}
-              onPointerLeave={(e) => e.currentTarget.style.transform = ''}
-              onClick={() => setMood(value)}
-              className="flex-1 flex flex-col items-center gap-1 py-2.5 rounded-[var(--radius-sm)] text-xl"
-              style={{
-                background: 'var(--color-surface)',
-                boxShadow: mood === value ? 'inset 0 0 0 2px var(--color-accent)' : 'none',
-                opacity: mood && mood !== value ? 0.45 : 1,
-                transition: 'transform 0.08s ease, box-shadow 0.1s, opacity 0.1s',
-              }}
-            >
-              {emoji}
-              <span className="text-[9px] font-semibold" style={{ color: 'var(--color-foreground-muted)' }}>{label}</span>
-            </button>
-          ))}
-        </div>
+        <SectionLabel className="mb-3">How are you feeling?</SectionLabel>
+        <MoodSelector value={mood} onChange={setMood} />
       </div>
 
       {/* Energy */}
@@ -712,26 +691,7 @@ export default function HomePage() {
               Period day {periodDayCount}
             </span>
           </div>
-          <div className="flex gap-1.5">
-            {FLOWS.map(({ value, label }) => (
-              <button key={value}
-                onPointerDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
-                onPointerUp={(e) => e.currentTarget.style.transform = ''}
-                onPointerLeave={(e) => e.currentTarget.style.transform = ''}
-                onClick={() => setFlow(value)}
-                className="flex-1 py-2 rounded-[var(--radius-sm)] text-xs font-medium"
-                style={{
-                  background: 'var(--color-surface)',
-                  boxShadow: flow === value ? 'inset 0 0 0 1.5px var(--color-accent)' : 'none',
-                  opacity: flow !== value ? 0.55 : 1,
-                  color: flow === value ? 'var(--color-accent)' : undefined,
-                  transition: 'transform 0.08s ease, box-shadow 0.1s, opacity 0.1s',
-                }}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          <FlowSelector value={flow} onChange={setFlow} />
           <div className="flex gap-2 mt-3">
             {/* End period button — always visible when active */}
             <button
@@ -775,30 +735,8 @@ export default function HomePage() {
 
       {/* Symptoms */}
       <div>
-        <p className="text-[11px] font-semibold tracking-widest uppercase mb-3"
-          style={{ color: 'var(--color-foreground-muted)' }}>
-          Symptoms
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {SYMPTOMS.map((s) => (
-            <button key={s}
-              onPointerDown={(e) => e.currentTarget.style.transform = 'scale(0.93)'}
-              onPointerUp={(e) => e.currentTarget.style.transform = ''}
-              onPointerLeave={(e) => e.currentTarget.style.transform = ''}
-              onClick={() => toggleSymptom(s)}
-              className="px-3 py-1.5 rounded-full text-xs font-medium"
-              style={{
-                background: symptoms.includes(s) ? 'var(--color-accent-soft)' : 'var(--color-surface)',
-                boxShadow: symptoms.includes(s) ? 'inset 0 0 0 1.5px var(--color-accent)' : 'none',
-                color: symptoms.includes(s) ? 'var(--color-accent)' : undefined,
-                opacity: !symptoms.includes(s) ? 0.6 : 1,
-                transition: 'transform 0.08s ease, box-shadow 0.1s, opacity 0.1s',
-              }}
-            >
-              {s}
-            </button>
-          ))}
-        </div>
+        <SectionLabel className="mb-3">Symptoms</SectionLabel>
+        <SymptomPicker selected={symptoms} onToggle={toggleSymptom} />
       </div>
 
       {/* Save — visible as soon as there's anything worth saving */}

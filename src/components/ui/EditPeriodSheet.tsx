@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BottomSheet } from '@/components/ui/BottomSheet';
+import { SheetHeader } from '@/components/ui/SheetHeader';
 import { toISODate } from '@/lib/utils/dates';
 import type { CyclePayload, DecryptedCycle } from '@/types/app';
 
@@ -88,22 +89,7 @@ export function EditPeriodSheet({ open, onClose, cycle, cycles, isLatest, onConf
   return (
     <BottomSheet open={open} onClose={onClose}>
       <div className="px-6 pt-4 pb-2 flex flex-col gap-5">
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h2 className="font-display text-xl font-bold">Edit period</h2>
-            <p className="text-xs mt-1" style={{ color: 'var(--color-foreground-muted)' }}>
-              Adjust the start or end date for this period.
-            </p>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-lg"
-            style={{ background: 'var(--color-surface)', color: 'var(--color-foreground-muted)' }}
-          >
-            ✕
-          </button>
-        </div>
+        <SheetHeader title="Edit period" subtitle="Adjust the start or end date for this period." onClose={onClose} />
 
         {/* Start date */}
         <div>
