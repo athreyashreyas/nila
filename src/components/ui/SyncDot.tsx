@@ -73,10 +73,10 @@ export function SyncDot() {
         className="absolute z-30 flex h-8 w-8 items-center justify-center"
         style={{
           // Anchored to the top-right of the scroll area, not the viewport, so it
-          // sits just below the status bar (the safe-area inset lives on the shell,
-          // outside the scroller) and scrolls away with the page instead of hovering
-          // over content. Reachable again by scrolling back to the top.
-          top: 0,
+          // scrolls with the page instead of hovering over content. The 1.5rem top
+          // lines the dot up with each page's header title (all pages share the same
+          // pt-4 + pt-2 header offset), and it stays reachable by scrolling to top.
+          top: '1.5rem',
           right: 'calc(env(safe-area-inset-right) + 0.6rem)',
         }}
       >

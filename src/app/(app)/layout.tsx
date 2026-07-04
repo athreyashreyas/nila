@@ -72,99 +72,16 @@ function LoadingScreen() {
   );
 }
 
-// ─── Pull-to-refresh main container ──────────────────────────
+// ─── Scrolling main container ─────────────────────────────────
 
-function PullToRefreshMain({ children }: { children: React.ReactNode }) {
-  const { refresh } = useAppData();
-  const [pull, setPull] = useState(0);
-  const [refreshing, setRefreshing] = useState(false);
-  const mainRef = useRef<HTMLElement>(null);
-  const startY = useRef(0);
-  const pulling = useRef(false);
-  const pullVal = useRef(0);
-  const THRESHOLD = 72;
-
-  useEffect(() => {
-    const el = mainRef.current;
-    if (!el) return;
-    const node = el;
-
-    function onTouchStart(e: TouchEvent) {
-      if (node.scrollTop > 0) return;
-      startY.current = e.touches[0].clientY;
-    }
-
-    function onTouchMove(e: TouchEvent) {
-      if (node.scrollTop > 0) { pulling.current = false; return; }
-      const delta = e.touches[0].clientY - startY.current;
-      if (delta > 4) {
-        e.preventDefault();
-        pulling.current = true;
-        const v = Math.min(delta * 0.45, THRESHOLD);
-        pullVal.current = v;
-        setPull(v);
-      }
-    }
-
-    function onTouchEnd() {
-      if (!pulling.current) return;
-      pulling.current = false;
-      const v = pullVal.current;
-      pullVal.current = 0;
-      setPull(0);
-      if (v >= THRESHOLD * 0.88) {
-        setRefreshing(true);
-        refresh().finally(() => setTimeout(() => setRefreshing(false), 500));
-      }
-    }
-
-    node.addEventListener('touchstart', onTouchStart, { passive: true });
-    node.addEventListener('touchmove', onTouchMove, { passive: false });
-    node.addEventListener('touchend', onTouchEnd, { passive: true });
-    node.addEventListener('touchcancel', onTouchEnd, { passive: true });
-
-    return () => {
-      node.removeEventListener('touchstart', onTouchStart);
-      node.removeEventListener('touchmove', onTouchMove);
-      node.removeEventListener('touchend', onTouchEnd);
-      node.removeEventListener('touchcancel', onTouchEnd);
-    };
-  }, [refresh]);
-
-  const indicatorH = refreshing ? 52 : pull;
-
+// Plain scroller. Refresh is on demand now, via the sync dot, so there's no
+// pull-to-refresh gesture to get in the way of normal scrolling.
+function ScrollMain({ children }: { children: React.ReactNode }) {
   return (
-    <main ref={mainRef} className="scroll-ios relative flex-1 min-h-0 overflow-y-auto overscroll-none">
-      {/* Sync status dot: absolute to this scroll area's top-right, so it sits just
-          below the status bar and scrolls with the page rather than floating over it. */}
+    <main className="scroll-ios relative flex-1 min-h-0 overflow-y-auto overscroll-none">
+      {/* Sync status dot: absolute to this scroll area's top-right, aligned with the
+          page header and scrolling with the page rather than floating over it. */}
       <SyncDot />
-      {/* Pull indicator */}
-      <div
-        style={{
-          height: indicatorH,
-          overflow: 'hidden',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          transition: pull === 0 ? 'height 0.22s ease' : 'none',
-        }}
-      >
-        {(pull > 16 || refreshing) && (
-          <div
-            style={{
-              width: 22,
-              height: 22,
-              borderRadius: '50%',
-              border: '2.5px solid var(--color-accent)',
-              borderTopColor: 'transparent',
-              animation: refreshing ? 'nila-spin 0.65s linear infinite' : 'none',
-              transform: refreshing ? undefined : `rotate(${(pull / THRESHOLD) * 260}deg)`,
-              transition: refreshing ? 'none' : 'transform 0.05s linear',
-              opacity: Math.min(pull / 30, 1),
-            }}
-          />
-        )}
-      </div>
       {children}
     </main>
   );
@@ -342,9 +259,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             child at the bottom (not position:fixed), so the keyboard overlays it. */}
         <div className="flex flex-col h-full overflow-hidden"
           style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-          <PullToRefreshMain>
+          <ScrollMain>
             {children}
-          </PullToRefreshMain>
+          </ScrollMain>
           <BottomNav />
         </div>
       </DataGate>

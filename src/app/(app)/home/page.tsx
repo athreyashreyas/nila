@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useTheme } from '@/lib/theme/context';
 import { useAppData } from '@/lib/data/context';
 import { PhaseRing } from '@/components/ui/PhaseRing';
 import { Toast, useToast } from '@/components/ui/Toast';
@@ -346,7 +345,6 @@ function HormoneGraph({ dayInCycle, cycleLength, estimatedPeriodLength }: {
 
 export default function HomePage() {
   const TODAY = toISODate(new Date());
-  const { theme, setTheme } = useTheme();
   const { cycles, logs, prediction, upsertLog, deleteLog, addCycle, updateCycle, deleteCycle } = useAppData();
   const { toastMsg, showToast } = useToast();
 
@@ -552,27 +550,16 @@ export default function HomePage() {
         />
       )}
 
-      {/* Header */}
-      <div className="flex items-start justify-between pt-2">
-        <div className="flex-1 min-w-0">
-          <h1 className="font-display text-3xl font-bold tracking-tight leading-tight">
-            {greetingName}
-          </h1>
-          <p className="font-display text-sm italic mt-0.5 leading-snug" style={{ color: 'var(--color-foreground-muted)' }}>
-            {greetLine}
-          </p>
-          <p className="text-xs mt-1.5" style={{ color: 'var(--color-foreground-muted)', opacity: 0.7 }}>{dateStr}</p>
-        </div>
-        <button
-          onPointerDown={(e) => e.currentTarget.style.transform = 'scale(0.9)'}
-          onPointerUp={(e) => e.currentTarget.style.transform = ''}
-          onPointerLeave={(e) => e.currentTarget.style.transform = ''}
-          onClick={() => setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light')}
-          className="w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0 ml-3 mr-8 mt-0.5"
-          style={{ background: 'var(--color-accent-soft)', color: 'var(--color-accent)', transition: 'transform 0.08s ease' }}
-        >
-          {theme === 'dark' ? '🌙' : theme === 'light' ? '☀️' : '◐'}
-        </button>
+      {/* Header. pr-10 keeps the greeting clear of the sync dot in the top-right;
+          theme is changed in Settings now, so there's no toggle here. */}
+      <div className="pt-2 pr-10">
+        <h1 className="font-display text-3xl font-bold tracking-tight leading-tight">
+          {greetingName}
+        </h1>
+        <p className="font-display text-sm italic mt-0.5 leading-snug" style={{ color: 'var(--color-foreground-muted)' }}>
+          {greetLine}
+        </p>
+        <p className="text-xs mt-1.5" style={{ color: 'var(--color-foreground-muted)', opacity: 0.7 }}>{dateStr}</p>
       </div>
 
       {/* Phase card + hormone graph */}
