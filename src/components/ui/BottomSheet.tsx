@@ -1,6 +1,7 @@
 'use client';
 
-import { type ReactNode } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface Props {
@@ -11,7 +12,14 @@ interface Props {
 }
 
 export function BottomSheet({ open, onClose, maxHeight = '80vh', children }: Props) {
-  return (
+  // Render into document.body so the sheet is a child of the viewport, never of a
+  // page's scroll container. iOS positions position:fixed elements relative to the
+  // nearest scrolling ancestor, which would otherwise crop the sheet to the main
+  // scroller and drop it behind the bottom nav.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
+  const content = (
     <AnimatePresence>
       {open && (
         <>
@@ -49,4 +57,7 @@ export function BottomSheet({ open, onClose, maxHeight = '80vh', children }: Pro
       )}
     </AnimatePresence>
   );
+
+  if (!mounted) return null;
+  return createPortal(content, document.body);
 }

@@ -70,12 +70,13 @@ export function SyncDot() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`Sync status: ${state.label}. Open to sync.`}
-        className="fixed z-50 rounded-full p-1.5 backdrop-blur-sm"
+        className="fixed z-30 rounded-full p-2"
         style={{
-          top: 'calc(env(safe-area-inset-top) + 0.6rem)',
-          right: 'calc(env(safe-area-inset-right) + 0.6rem)',
-          background: 'color-mix(in srgb, var(--color-surface-solid) 80%, transparent)',
-          boxShadow: 'var(--shadow-card)',
+          // Sit up in the top safe-area strip (beside the Dynamic Island / notch),
+          // so the dot lives in the chrome rather than floating over page content.
+          // Falls back to a small inset on devices with no top inset (iPad, desktop).
+          top: 'max(0.5rem, calc(env(safe-area-inset-top) - 1.7rem))',
+          right: 'calc(env(safe-area-inset-right) + 0.7rem)',
         }}
       >
         <motion.span

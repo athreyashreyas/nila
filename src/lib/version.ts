@@ -1,6 +1,6 @@
 // Bumped with every push that ships user-facing changes.
 // Add a new entry to CHANGELOG (most recent first) alongside the bump.
-export const APP_VERSION = '2.2.0';
+export const APP_VERSION = '2.2.1';
 
 export interface ChangelogEntry {
   version: string;
@@ -13,6 +13,14 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '2.2.1',
+    date: '2026-07-04',
+    highlights: [
+      'Fixed the day and period pop-ups getting cropped and stuck behind the tab bar; they now open cleanly over the whole screen again',
+      'Tidied the sync dot into the top corner so it sits with the status bar instead of floating over your calendar',
+    ],
+  },
   {
     version: '2.2.0',
     date: '2026-07-04',

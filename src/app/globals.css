@@ -245,8 +245,12 @@ select,
 
 /* The single inner scroller. Momentum scrolling, and no horizontal
    rubber-banding so a stray sideways drag never wobbles the view. */
+/* Momentum scrolling is the default on iOS 16.4+, so we deliberately do NOT set
+   -webkit-overflow-scrolling: touch here. On iOS that property traps any
+   position:fixed descendant (our bottom sheets) inside this scroll container
+   instead of the viewport, which broke the day-detail sheet. We only want the
+   overscroll containment. */
 .scroll-ios {
-  -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: contain;
   overscroll-behavior-x: none;
 }
