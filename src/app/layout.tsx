@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans, DM_Serif_Display } from 'next/font/google';
+import { MotionConfig } from 'framer-motion';
 import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration';
 import { EncryptionProvider } from '@/lib/encryption/context';
 import { ThemeProvider } from '@/lib/theme/context';
@@ -61,8 +62,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${jakarta.variable} ${dmSerif.variable}`}>
       <head>
-        {/* Anti-FOUC: apply stored theme before React hydrates */}
-        <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('nila-theme');if(t==='dark')document.documentElement.setAttribute('data-theme','dark');else if(t==='light')document.documentElement.setAttribute('data-theme','light');}catch(e){}` }} />
+        {/* Anti-FOUC: apply the stored palette before React hydrates. Any id
+            other than 'system' is set verbatim as data-theme; the CSS handles
+            the rest. */}
+        <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('nila-theme');if(t&&t!=='system')document.documentElement.setAttribute('data-theme',t);}catch(e){}` }} />
         {/* Favicon and home screen icon — one mark, the Nila dancer */}
         <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
@@ -105,11 +108,15 @@ export default function RootLayout({
       </head>
       <body className="antialiased bg-[--color-background] text-[--color-foreground]">
         <ServiceWorkerRegistration />
-        <ThemeProvider>
-          <EncryptionProvider>
-            {children}
-          </EncryptionProvider>
-        </ThemeProvider>
+        {/* reducedMotion="user" makes every spring and tween instant when the
+            OS asks for reduced motion, without removing functional motion. */}
+        <MotionConfig reducedMotion="user">
+          <ThemeProvider>
+            <EncryptionProvider>
+              {children}
+            </EncryptionProvider>
+          </ThemeProvider>
+        </MotionConfig>
       </body>
     </html>
   );

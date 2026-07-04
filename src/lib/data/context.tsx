@@ -7,6 +7,8 @@ import { useDailyLog } from '@/hooks/useDailyLog';
 import { usePrediction } from '@/hooks/usePrediction';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { restoreSnapshot, saveSnapshotFromCaches } from '@/lib/data/snapshot';
+import { initOutbox, flushOutbox } from '@/lib/data/outbox';
+import { initSyncStatus } from '@/lib/sync/status';
 import type { DecryptedCycle, DecryptedDailyLog, PredictionResult, CyclePayload, DailyLogPayload } from '@/types/app';
 
 interface AppData {
@@ -47,6 +49,11 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isUnlocked && !initialized.current) {
       initialized.current = true;
+      // Bring up the sync status listeners and drain any writes that were queued
+      // offline in a previous session before we reconcile from the server.
+      initSyncStatus();
+      initOutbox();
+      void flushOutbox();
       (async () => {
         // Instant cold-load: paint from the local snapshot first, then reconcile
         // from the server in the background (decrypt-free for unchanged rows).

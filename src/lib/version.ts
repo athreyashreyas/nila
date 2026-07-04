@@ -1,14 +1,39 @@
 // Bumped with every push that ships user-facing changes.
 // Add a new entry to CHANGELOG (most recent first) alongside the bump.
-export const APP_VERSION = '2.1.6';
+export const APP_VERSION = '2.2.0';
 
 export interface ChangelogEntry {
   version: string;
   date: string; // ISO date
   highlights: string[];
+  // Optional, followable steps for finding and using what a release brought,
+  // written for how the app works today. Feature releases carry these; small
+  // fixes leave them off.
+  howTo?: string[];
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '2.2.0',
+    date: '2026-07-04',
+    highlights: [
+      'New looks: four more themes to make Nila yours, Rose Quartz, Lavender, Sage, and a soft Plum Night, alongside Berry and Berry Dusk',
+      'Everything you log now saves instantly and syncs in the background, so the app never waits on the network, even offline',
+      'A calm status dot in the corner shows whether you are synced, syncing, or offline, and you can tap it to sync on demand',
+      'Insights now opens with a warm, personal note on your rhythm that reads your own recent weeks and never repeats itself',
+      'Richer Insights: a check-in rhythm grid and your most-noted symptoms, drawn from your history',
+      'A gentler date picker that stays inside Nila instead of the system wheel',
+      'A new "How Nila works" guide in Settings, plus reminders to add Nila to your home screen so notifications can reach you',
+      'Reminders can now respect quiet hours, and you can name each device',
+      'Faster, calmer, and more reliable throughout, with offline support that actually works and full support for reduced-motion settings',
+    ],
+    howTo: [
+      'Open Settings, then Appearance, to try any of the six themes.',
+      'Tap the dot in the top corner any time to check sync or sync now.',
+      'Open Insights to read your note and your new rhythm and symptom charts.',
+      'In Settings, open "How Nila works" for a quick tour, and set quiet hours under Notifications.',
+    ],
+  },
   {
     version: '2.1.6',
     date: '2026-06-27',

@@ -100,6 +100,78 @@
   --phase-luteal:     #9b82c9;
 }
 
+/* ─── Curated palettes ────────────────────────────────────────
+   Each named theme is a full look, light or dark, chosen from Settings. Light
+   themes only override surface/ink/accent; the four phase hues cascade from
+   :root so they stay recognisable across every light theme. Dark themes set
+   color-scheme and the lifted phase hues themselves. Explicit themes always
+   beat system preference (higher specificity than :root). */
+
+/* Rose Quartz — deep rose on soft blush paper. */
+[data-theme="rose-quartz"] {
+  --background:        #fff6f7;
+  --surface:           #f7e7ea;
+  --surface-solid:     #fffbfc;
+  --foreground:        #2c1a1f;
+  --foreground-muted:  #8a6a72;
+  --border:            #eed7dc;
+  --accent:            #c0506f;
+  --accent-soft:       rgba(192, 80, 111, 0.13);
+  --on-accent:         #fffbfc;
+  --shadow-card:       0 1px 2px rgba(44, 26, 31, 0.05), 0 3px 10px rgba(44, 26, 31, 0.07);
+  --shadow-sheet:      0 -8px 30px rgba(44, 26, 31, 0.12);
+}
+
+/* Lavender — a calm wisteria purple on pale violet paper. */
+[data-theme="lavender"] {
+  --background:        #faf8ff;
+  --surface:           #efeafa;
+  --surface-solid:     #fdfcff;
+  --foreground:        #221c33;
+  --foreground-muted:  #6b6483;
+  --border:            #e4def4;
+  --accent:            #6f5cc4;
+  --accent-soft:       rgba(111, 92, 196, 0.14);
+  --on-accent:         #fdfcff;
+  --shadow-card:       0 1px 2px rgba(34, 28, 51, 0.05), 0 3px 10px rgba(34, 28, 51, 0.07);
+  --shadow-sheet:      0 -8px 30px rgba(34, 28, 51, 0.12);
+}
+
+/* Sage — restful moss green on warm paper. */
+[data-theme="sage"] {
+  --background:        #f6f8ee;
+  --surface:           #e9edd9;
+  --surface-solid:     #fbfcf4;
+  --foreground:        #23281a;
+  --foreground-muted:  #66705a;
+  --border:            #dce2c9;
+  --accent:            #5e7a35;
+  --accent-soft:       rgba(94, 122, 53, 0.15);
+  --on-accent:         #fbfcf4;
+  --shadow-card:       0 1px 2px rgba(35, 40, 26, 0.05), 0 3px 10px rgba(35, 40, 26, 0.07);
+  --shadow-sheet:      0 -8px 30px rgba(35, 40, 26, 0.12);
+}
+
+/* Plum Night — soft plum lights on a deep night ground. */
+[data-theme="plum-night"] {
+  color-scheme: dark;
+  --background:       #1b1826;
+  --surface:          #262233;
+  --surface-solid:    #2c2740;
+  --foreground:       #f0ecf7;
+  --foreground-muted: #a49bbd;
+  --border:           rgba(255, 255, 255, 0.08);
+  --accent:           #b79ce8;
+  --accent-soft:      rgba(183, 156, 232, 0.20);
+  --on-accent:        #1b1826;
+  --shadow-card:      0 1px 2px rgba(0, 0, 0, 0.3), 0 3px 14px rgba(0, 0, 0, 0.4);
+  --shadow-sheet:     0 -8px 30px rgba(0, 0, 0, 0.45);
+  --phase-period:     #e2836a;
+  --phase-follicular: #dfc066;
+  --phase-ovulation:  #5fc2c2;
+  --phase-luteal:     #9b82c9;
+}
+
 @theme inline {
   --color-background:       var(--background);
   --color-surface:          var(--surface);
@@ -149,6 +221,59 @@ body {
 
 * {
   -webkit-tap-highlight-color: transparent;
+}
+
+/* ─── Native app feel ──────────────────────────────────────────
+   Text should not select or pop the iOS long-press callout/magnifier when
+   tapping or dragging, the way a web page would. The few places real text
+   entry happens opt back in below. This is what makes the PWA read as an app
+   rather than a page in Safari. */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+input,
+textarea,
+select,
+[contenteditable='true'],
+.selectable {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+/* The single inner scroller. Momentum scrolling, and no horizontal
+   rubber-banding so a stray sideways drag never wobbles the view. */
+.scroll-ios {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
+}
+
+/* Hide the scrollbar on horizontal strips so no stray track flashes in during
+   momentum scroll. Scrolling still works. */
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ─── Accessibility ────────────────────────────────────────────
+   A visible keyboard focus ring on every interactive element. Pointer taps
+   don't trigger :focus-visible, so this only shows for keyboard / switch
+   control users, who currently get no feedback at all. */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--background), 0 0 0 4px var(--accent);
+  border-radius: 6px;
+}
+
+/* Honour reduced motion for the plain-CSS animations Framer's MotionConfig
+   cannot reach (spinners, pulses). Framer springs are handled app-wide by
+   MotionConfig reducedMotion="user". */
+@media (prefers-reduced-motion: reduce) {
+  .nila-pulse,
+  [class*='animate-'] {
+    animation: none !important;
+  }
 }
 
 /* ─── iOS PWA safe-area helpers ───────────────────────────── */

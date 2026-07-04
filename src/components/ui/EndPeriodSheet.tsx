@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { SheetHeader } from '@/components/ui/SheetHeader';
+import { DateField } from '@/components/ui/DateField';
 import { toISODate } from '@/lib/utils/dates';
 import type { DecryptedCycle, DecryptedDailyLog } from '@/types/app';
 
@@ -55,18 +56,12 @@ export function EndPeriodSheet({ open, onClose, openCycle, logs, onConfirm }: Pr
 
         {/* Date picker */}
         <div>
-          <div className="rounded-[var(--radius-sm)] px-4 py-3"
-            style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
-            <input
-              type="date"
-              value={endDate}
-              min={periodStart}
-              max={today}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="w-full bg-transparent text-base font-medium focus:outline-none"
-              style={{ color: 'var(--color-foreground)', colorScheme: 'auto' }}
-            />
-          </div>
+          <DateField
+            value={endDate}
+            min={periodStart}
+            max={today}
+            onChange={(val) => setEndDate(val)}
+          />
           <p className="text-xs mt-1.5 pl-1" style={{ color: 'var(--color-foreground-muted)' }}>
             Started {new Date(periodStart + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
           </p>

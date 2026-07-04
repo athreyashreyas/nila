@@ -1,16 +1,49 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useEncryption } from '@/lib/encryption/context';
-import { useTheme, type ThemeMode } from '@/lib/theme/context';
+import { useTheme } from '@/lib/theme/context';
+import { THEMES } from '@/lib/theme/themes';
 import { derivePasswordKey, wrapMasterKey, generateSalt } from '@/lib/encryption/core';
 import { useAppData } from '@/lib/data/context';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { clearKey as clearIDBKey } from '@/lib/encryption/keyStore';
 import { registerPushSubscription, unregisterPushSubscription, isPushSupported } from '@/lib/push/register';
 import { BottomSheet } from '@/components/ui/BottomSheet';
+import { InstallPrompt } from '@/components/ui/InstallPrompt';
+import { GUIDE } from '@/lib/guide';
 import { APP_VERSION, CHANGELOG } from '@/lib/version';
+
+// A friendly name for the current device, used when saving a push subscription
+// so a user can tell their devices apart.
+function deviceLabel(): string {
+  const ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  if (/iPad/.test(ua)) return 'iPad';
+  if (/iPhone/.test(ua)) return 'iPhone';
+  if (/Android/.test(ua)) return 'Android';
+  if (/Macintosh/.test(ua)) return 'Mac';
+  if (/Windows/.test(ua)) return 'Windows';
+  return 'This device';
+}
+
+// A calm in-app hour stepper (no OS time wheel). Whole hours, wrapping 0..23.
+function HourPicker({ label, value, onChange }: { label: string; value: number; onChange: (h: number) => void }) {
+  const fmt = (h: number) => `${String(h).padStart(2, '0')}:00`;
+  return (
+    <div className="flex-1">
+      <p className="text-[10px] font-semibold tracking-widest uppercase mb-1.5" style={{ color: 'var(--color-foreground-muted)' }}>{label}</p>
+      <div className="flex items-center justify-between rounded-[var(--radius-sm)] px-2 py-2"
+        style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
+        <button type="button" aria-label="Earlier" onClick={() => onChange((value + 23) % 24)}
+          className="w-7 h-7 rounded-full flex items-center justify-center" style={{ color: 'var(--color-foreground)' }}>‹</button>
+        <span className="text-sm font-semibold tabular-nums" style={{ color: 'var(--color-foreground)' }}>{fmt(value)}</span>
+        <button type="button" aria-label="Later" onClick={() => onChange((value + 1) % 24)}
+          className="w-7 h-7 rounded-full flex items-center justify-center" style={{ color: 'var(--color-foreground)' }}>›</button>
+      </div>
+    </div>
+  );
+}
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -29,7 +62,17 @@ export default function SettingsPage() {
   const [tapCount, setTapCount] = useState(0);
   const [showDevReset, setShowDevReset] = useState(false);
   const [showChangelog, setShowChangelog] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   const [resetting, setResetting] = useState(false);
+
+  // Notification preferences (quiet hours + evening round-up), stored in the
+  // profile so they follow the user across devices and are enforced by the push
+  // sender. Times are whole hours in the device's local time.
+  const [quietEnabled, setQuietEnabled] = useState(false);
+  const [quietStart, setQuietStart] = useState(22);
+  const [quietEnd, setQuietEnd] = useState(7);
+  const [roundup, setRoundup] = useState(false);
+  const notifLoaded = useRef(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
@@ -38,6 +81,52 @@ export default function SettingsPage() {
       );
     }
   }, []);
+
+  // Load notification prefs once.
+  useEffect(() => {
+    (async () => {
+      try {
+        const db = getSupabaseClient();
+        const { data: { user } } = await db.auth.getUser();
+        if (!user) return;
+        const { data } = await db.from('profiles').select('preferences').eq('id', user.id).single();
+        const n = (data?.preferences as Record<string, unknown> | null)?.notifications as
+          | { quietHours?: { enabled?: boolean; start?: number; end?: number }; roundup?: boolean }
+          | undefined;
+        if (n?.quietHours) {
+          setQuietEnabled(!!n.quietHours.enabled);
+          if (typeof n.quietHours.start === 'number') setQuietStart(n.quietHours.start);
+          if (typeof n.quietHours.end === 'number') setQuietEnd(n.quietHours.end);
+        }
+        if (typeof n?.roundup === 'boolean') setRoundup(n.roundup);
+      } catch {} finally {
+        notifLoaded.current = true;
+      }
+    })();
+  }, []);
+
+  // Persist prefs whenever they change (after the initial load), merged into the
+  // profile's preferences alongside timezone so the sender can honour local time.
+  useEffect(() => {
+    if (!notifLoaded.current) return;
+    (async () => {
+      try {
+        const db = getSupabaseClient();
+        const { data: { user } } = await db.auth.getUser();
+        if (!user) return;
+        const { data } = await db.from('profiles').select('preferences').eq('id', user.id).single();
+        const existing = (data?.preferences as object | null) ?? {};
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        await db.from('profiles').update({
+          preferences: {
+            ...existing,
+            timezone,
+            notifications: { quietHours: { enabled: quietEnabled, start: quietStart, end: quietEnd }, roundup },
+          },
+        }).eq('id', user.id);
+      } catch {}
+    })();
+  }, [quietEnabled, quietStart, quietEnd, roundup]);
 
   async function handlePushToggle() {
     setPushLoading(true);
@@ -56,7 +145,7 @@ export default function SettingsPage() {
           await db.from('push_subscriptions').upsert({
             user_id: user.id,
             subscription: sub.toJSON(),
-            device_name: navigator.userAgent.includes('iPhone') ? 'iPhone' : 'Device',
+            device_name: deviceLabel(),
           });
           setPushEnabled(true);
         }
@@ -166,21 +255,42 @@ export default function SettingsPage() {
       <div className="flex flex-col gap-3">
         <div>
           <p className="text-[11px] font-semibold tracking-widest uppercase mb-2 px-1" style={{ color: 'var(--color-foreground-muted)' }}>Appearance</p>
-          <div className="flex gap-2">
-            {(['light', 'dark', 'system'] as ThemeMode[]).map((t) => (
-              <button
-                key={t}
-                onClick={() => setTheme(t)}
-                className="flex-1 py-3 rounded-[var(--radius-sm)] text-sm font-medium capitalize transition-all"
-                style={{
-                  background: theme === t ? 'var(--color-accent-soft)' : 'var(--color-surface)',
-                  boxShadow: theme === t ? 'inset 0 0 0 1.5px var(--color-accent)' : 'none',
-                  color: theme === t ? 'var(--color-accent)' : 'var(--color-foreground)',
-                }}
-              >
-                {t === 'system' ? 'Auto' : t === 'light' ? '☀️ Light' : '🌙 Dark'}
-              </button>
-            ))}
+          <div className="grid grid-cols-3 gap-2">
+            {THEMES.map((t) => {
+              const active = theme === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setTheme(t.id)}
+                  className="flex flex-col items-center gap-2 py-3 rounded-[var(--radius-sm)] transition-all"
+                  style={{
+                    background: active ? 'var(--color-accent-soft)' : 'var(--color-surface)',
+                    boxShadow: active ? 'inset 0 0 0 1.5px var(--color-accent)' : 'none',
+                  }}
+                >
+                  {/* Two-tone swatch: the palette's paper with its accent as a dot. */}
+                  <span
+                    className="relative w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{
+                      background: t.swatch[0],
+                      boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.12)',
+                    }}
+                  >
+                    {t.id === 'system' ? (
+                      <span className="text-sm">🌗</span>
+                    ) : (
+                      <span className="w-4 h-4 rounded-full" style={{ background: t.swatch[1] }} />
+                    )}
+                  </span>
+                  <span
+                    className="text-[11px] font-medium leading-tight text-center"
+                    style={{ color: active ? 'var(--color-accent)' : 'var(--color-foreground)' }}
+                  >
+                    {t.name}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -215,6 +325,9 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* Only shows when Nila isn't installed to the home screen yet. */}
+        <InstallPrompt />
+
         {isPushSupported() && (
           <div>
             <p className="text-[11px] font-semibold tracking-widest uppercase mb-2 px-1 mt-2" style={{ color: 'var(--color-foreground-muted)' }}>Notifications</p>
@@ -240,6 +353,44 @@ export default function SettingsPage() {
                 />
               </div>
             </button>
+
+            {pushEnabled && (
+              <div className="mt-2 rounded-[var(--radius)] p-4 flex flex-col gap-3"
+                style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
+                {/* Quiet hours */}
+                <button onClick={() => setQuietEnabled(v => !v)} className="flex items-center justify-between w-full">
+                  <div className="text-left">
+                    <div className="text-sm font-medium">Quiet hours</div>
+                    <div className="text-xs mt-0.5 opacity-50">No reminders overnight</div>
+                  </div>
+                  <div className="w-11 h-6 rounded-full relative transition-colors flex-shrink-0"
+                    style={{ background: quietEnabled ? 'var(--color-accent)' : 'var(--color-border)' }}>
+                    <div className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all"
+                      style={{ left: quietEnabled ? '22px' : '2px' }} />
+                  </div>
+                </button>
+
+                {quietEnabled && (
+                  <div className="flex items-center gap-3">
+                    <HourPicker label="From" value={quietStart} onChange={setQuietStart} />
+                    <HourPicker label="To" value={quietEnd} onChange={setQuietEnd} />
+                  </div>
+                )}
+
+                {/* Evening round-up */}
+                <button onClick={() => setRoundup(v => !v)} className="flex items-center justify-between w-full pt-1">
+                  <div className="text-left">
+                    <div className="text-sm font-medium">Evening round-up</div>
+                    <div className="text-xs mt-0.5 opacity-50">A gentle nudge if you haven&apos;t checked in</div>
+                  </div>
+                  <div className="w-11 h-6 rounded-full relative transition-colors flex-shrink-0"
+                    style={{ background: roundup ? 'var(--color-accent)' : 'var(--color-border)' }}>
+                    <div className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all"
+                      style={{ left: roundup ? '22px' : '2px' }} />
+                  </div>
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -254,6 +405,7 @@ export default function SettingsPage() {
         <div>
           <p className="text-[11px] font-semibold tracking-widest uppercase mb-2 px-1 mt-2" style={{ color: 'var(--color-foreground-muted)' }}>About</p>
           <div className="flex flex-col gap-2">
+            <Row label="How Nila works" sub="A quick tour of everything" onClick={() => setShowGuide(true)} />
             <Row label="What's new" sub={`Version ${APP_VERSION}`} onClick={() => setShowChangelog(true)} />
           </div>
         </div>
@@ -293,6 +445,41 @@ export default function SettingsPage() {
                       </li>
                     ))}
                   </ul>
+                  {entry.howTo && entry.howTo.length > 0 && (
+                    <div className="mt-3 rounded-[var(--radius-sm)] p-3" style={{ background: 'var(--color-accent-soft)' }}>
+                      <p className="text-[10px] font-semibold tracking-widest uppercase mb-1.5" style={{ color: 'var(--color-accent)' }}>
+                        Try it
+                      </p>
+                      <ul className="flex flex-col gap-1">
+                        {entry.howTo.map((h, i) => (
+                          <li key={i} className="text-xs leading-relaxed flex gap-2" style={{ color: 'var(--color-foreground)' }}>
+                            <span style={{ color: 'var(--color-accent)' }}>{i + 1}.</span>
+                            <span>{h}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </BottomSheet>
+
+        <BottomSheet open={showGuide} onClose={() => setShowGuide(false)} maxHeight="80vh">
+          <div className="px-6 pt-3 pb-6">
+            <h2 className="font-display text-xl font-bold mb-1">How Nila works</h2>
+            <p className="text-xs mb-4" style={{ color: 'var(--color-foreground-muted)' }}>
+              A quick tour of everything, any time you want it.
+            </p>
+            <div className="flex flex-col gap-4">
+              {GUIDE.map((s) => (
+                <div key={s.title} className="flex gap-3">
+                  <span className="text-2xl leading-none mt-0.5 select-none">{s.emoji}</span>
+                  <div>
+                    <h3 className="text-sm font-semibold mb-0.5" style={{ color: 'var(--color-foreground)' }}>{s.title}</h3>
+                    <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground-muted)' }}>{s.body}</p>
+                  </div>
                 </div>
               ))}
             </div>

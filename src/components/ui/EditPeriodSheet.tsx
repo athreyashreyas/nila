@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { SheetHeader } from '@/components/ui/SheetHeader';
+import { DateField } from '@/components/ui/DateField';
 import { toISODate } from '@/lib/utils/dates';
 import type { CyclePayload, DecryptedCycle } from '@/types/app';
 
@@ -97,22 +98,15 @@ export function EditPeriodSheet({ open, onClose, cycle, cycles, isLatest, onConf
             style={{ color: 'var(--color-foreground-muted)' }}>
             Started
           </p>
-          <div className="rounded-[var(--radius-sm)] px-4 py-3"
-            style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
-            <input
-              type="date"
-              value={startDate}
-              max={today}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (!val || val > today) return;
-                setStartDate(val);
-                if (ended && endDate < val) setEndDate(val);
-              }}
-              className="w-full bg-transparent text-base font-medium focus:outline-none"
-              style={{ color: 'var(--color-foreground)', colorScheme: 'auto' }}
-            />
-          </div>
+          <DateField
+            value={startDate}
+            max={today}
+            onChange={(val) => {
+              if (!val || val > today) return;
+              setStartDate(val);
+              if (ended && endDate < val) setEndDate(val);
+            }}
+          />
         </div>
 
         {/* Has it ended? */}
@@ -158,18 +152,12 @@ export function EditPeriodSheet({ open, onClose, cycle, cycles, isLatest, onConf
               style={{ color: 'var(--color-foreground-muted)' }}>
               Ended
             </p>
-            <div className="rounded-[var(--radius-sm)] px-4 py-3"
-              style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
-              <input
-                type="date"
-                value={endDate}
-                min={startDate}
-                max={today}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full bg-transparent text-base font-medium focus:outline-none"
-                style={{ color: 'var(--color-foreground)', colorScheme: 'auto' }}
-              />
-            </div>
+            <DateField
+              value={endDate}
+              min={startDate}
+              max={today}
+              onChange={(val) => setEndDate(val)}
+            />
           </motion.div>
         )}
 

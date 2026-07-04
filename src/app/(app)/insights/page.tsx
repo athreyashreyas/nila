@@ -5,6 +5,8 @@ import { useAppData } from '@/lib/data/context';
 import { PHASE_META } from '@/types/app';
 import { daysBetween, fromISODate, toISODate } from '@/lib/utils/dates';
 import { getRecommendations } from '@/lib/recommendations/data';
+import { buildReflection } from '@/lib/insights/reflection';
+import { Bars, Heatmap } from '@/components/charts';
 
 const CHART_H = 120;
 const CHART_W = 300;
@@ -63,6 +65,24 @@ export default function InsightsPage() {
   const avgPeriod = prediction.estimatedPeriodLength;
   const meta = PHASE_META[prediction.currentPhase];
 
+  const reflection = buildReflection(cycles, logs, prediction);
+
+  // Recent symptom frequency (last 60 days), top 6.
+  const symptomCutoff = toISODate(new Date(Date.now() - 60 * 86400000));
+  const symptomCounts = new Map<string, number>();
+  for (const l of logs) {
+    if (l.payload.date < symptomCutoff) continue;
+    for (const s of l.payload.symptoms) symptomCounts.set(s, (symptomCounts.get(s) ?? 0) + 1);
+  }
+  const symptomBars = [...symptomCounts.entries()]
+    .map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 6);
+
+  // Check-in rhythm: one filled cell per day a log exists.
+  const checkinDays = new Map<string, number>();
+  for (const l of logs) checkinDays.set(l.payload.date, 1);
+
   return (
     <div className="px-5 pt-4 pb-28">
       <h1 className="font-display text-2xl font-bold pt-2 mb-5">Insights</h1>
@@ -81,6 +101,18 @@ export default function InsightsPage() {
             <div className="text-[9px] mt-0.5 opacity-50">{sub}</div>
           </div>
         ))}
+      </div>
+
+      {/* A warm, human read on how the last little while has gone. Rotates which
+          truths it surfaces and how it says them, so it stays fresh over months. */}
+      <div className="rounded-[var(--radius)] p-4 mb-5"
+        style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
+        <h2 className="text-xs font-semibold mb-2 tracking-widest uppercase" style={{ color: 'var(--color-foreground-muted)' }}>
+          A note on your rhythm
+        </h2>
+        <p className="text-sm leading-relaxed" style={{ color: 'var(--color-foreground)' }}>
+          {reflection.text}
+        </p>
       </div>
 
       {/* Recommendations */}
@@ -166,6 +198,34 @@ export default function InsightsPage() {
           </div>
         </div>
       </div>
+
+      {/* Check-in rhythm */}
+      <div className="rounded-[var(--radius)] p-4 mb-5"
+        style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
+        <h2 className="text-xs font-semibold mb-3 tracking-widest uppercase" style={{ color: 'var(--color-foreground-muted)' }}>
+          Check-in rhythm
+        </h2>
+        {logs.length === 0 ? (
+          <div className="text-sm opacity-40 text-center py-6">Your check-ins will show here as you log.</div>
+        ) : (
+          <>
+            <Heatmap days={checkinDays} weeks={12} />
+            <p className="text-[10px] mt-2 opacity-40">Last 12 weeks. Every square is a day you showed up.</p>
+          </>
+        )}
+      </div>
+
+      {/* Recent symptoms */}
+      {symptomBars.length > 0 && (
+        <div className="rounded-[var(--radius)] p-4 mb-5"
+          style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
+          <h2 className="text-xs font-semibold mb-3 tracking-widest uppercase" style={{ color: 'var(--color-foreground-muted)' }}>
+            Recent symptoms
+          </h2>
+          <Bars data={symptomBars} />
+          <p className="text-[10px] mt-3 opacity-40">Most noted over the last 60 days.</p>
+        </div>
+      )}
 
       {/* Cycle chart */}
       <div className="rounded-[var(--radius)] p-4 mb-5"

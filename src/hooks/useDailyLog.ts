@@ -5,7 +5,15 @@ import { encryptJSON, decryptJSON } from '@/lib/encryption/core';
 import { useEncryption } from '@/lib/encryption/context';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { logCache, type EncryptedRow } from '@/lib/data/decryptCache';
+import { enqueue } from '@/lib/data/outbox';
+import { saveSnapshotFromCaches } from '@/lib/data/snapshot';
 import type { DailyLogPayload, DecryptedDailyLog } from '@/types/app';
+
+// Signed-in user id from the local session (offline-safe, no network).
+async function currentUserId(): Promise<string | null> {
+  const { data: { session } } = await getSupabaseClient().auth.getSession();
+  return session?.user.id ?? null;
+}
 
 export function useDailyLog() {
   const { getMasterKey } = useEncryption();
@@ -83,32 +91,36 @@ export function useDailyLog() {
     [logs]
   );
 
+  // Optimistic upsert. There is one row per date, kept by reusing the existing
+  // row's id (the date lives inside the encrypted blob, so this is how we hold
+  // the one-per-date invariant without a DB constraint, and it avoids the
+  // duplicate rows the old delete-then-insert could create across devices).
   const upsertLog = useCallback(async (payload: DailyLogPayload) => {
     const masterKey = getMasterKey();
     if (!masterKey) throw new Error('Encryption key not loaded.');
+    const userId = await currentUserId();
+    if (!userId) throw new Error('Not authenticated.');
 
-    const { enc_data, enc_data_iv } = await encryptJSON(payload, masterKey);
-    const db = getSupabaseClient();
-
-    // Delete any existing log for this date, then insert fresh
-    // (date is inside the encrypted blob so we can't use a unique DB constraint)
     const existing = logs.find((l) => l.payload.date === payload.date);
-    if (existing) {
-      await db.from('daily_logs').delete().eq('id', existing.id);
-    }
+    const id = existing?.id ?? crypto.randomUUID();
+    const { enc_data, enc_data_iv } = await encryptJSON(payload, masterKey);
+    const entry: DecryptedDailyLog = { id, payload, createdAt: existing?.createdAt ?? new Date().toISOString() };
 
-    const { data: { user } } = await db.auth.getUser();
-    if (!user) throw new Error('Not authenticated.');
-    const { error: dbError } = await db.from('daily_logs').insert({ user_id: user.id, enc_data, enc_data_iv });
-    if (dbError) throw dbError;
-    await fetchAll();
-  }, [getMasterKey, logs, fetchAll]);
+    logCache.set(id, { iv: enc_data_iv, entry });
+    setLogs((prev) => {
+      const rest = prev.filter((l) => l.payload.date !== payload.date);
+      return [...rest, entry].sort((a, b) => b.payload.date.localeCompare(a.payload.date));
+    });
+    void saveSnapshotFromCaches();
+
+    await enqueue({ table: 'daily_logs', kind: 'upsert', rowId: id, row: { id, user_id: userId, enc_data, enc_data_iv } });
+  }, [getMasterKey, logs]);
 
   const deleteLog = useCallback(async (id: string) => {
-    const db = getSupabaseClient();
-    const { error: dbError } = await db.from('daily_logs').delete().eq('id', id);
-    if (dbError) throw dbError;
+    logCache.delete(id);
     setLogs((prev) => prev.filter((l) => l.id !== id));
+    void saveSnapshotFromCaches();
+    await enqueue({ table: 'daily_logs', kind: 'delete', rowId: id });
   }, []);
 
   // Seed state from a local snapshot for instant cold-load (before fetchAll).

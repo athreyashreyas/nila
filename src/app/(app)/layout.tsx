@@ -8,8 +8,10 @@ import { useEncryption } from '@/lib/encryption/context';
 import { derivePasswordKey, unwrapMasterKey } from '@/lib/encryption/core';
 import { loadKey, saveKey } from '@/lib/encryption/keyStore';
 import { BottomNav } from '@/components/ui/BottomNav';
+import { SyncDot } from '@/components/ui/SyncDot';
 import { AppDataProvider, useAppData } from '@/lib/data/context';
 import { useTheme } from '@/lib/theme/context';
+import { isThemeId } from '@/lib/theme/themes';
 
 const QUOTES = [
   'Your body keeps its own rhythm.',
@@ -132,7 +134,7 @@ function PullToRefreshMain({ children }: { children: React.ReactNode }) {
   const indicatorH = refreshing ? 52 : pull;
 
   return (
-    <main ref={mainRef} className="flex-1 min-h-0 overflow-y-auto overscroll-none">
+    <main ref={mainRef} className="scroll-ios flex-1 min-h-0 overflow-y-auto overscroll-none">
       {/* Pull indicator */}
       <div
         style={{
@@ -179,7 +181,7 @@ function ThemeSync() {
       if (!user) return;
       const { data } = await db.from('profiles').select('preferences').eq('id', user.id).single();
       const t = (data?.preferences as Record<string, string> | null)?.theme;
-      if (t === 'light' || t === 'dark' || t === 'system') {
+      if (isThemeId(t)) {
         setTheme(t);
       }
     }
@@ -337,6 +339,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             child at the bottom (not position:fixed), so the keyboard overlays it. */}
         <div className="flex flex-col h-full overflow-hidden"
           style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+          <SyncDot />
           <PullToRefreshMain>
             {children}
           </PullToRefreshMain>

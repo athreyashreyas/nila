@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toISODate } from '@/lib/utils/dates';
+import { DateField } from '@/components/ui/DateField';
+import { InstallPrompt } from '@/components/ui/InstallPrompt';
 
 const CYCLE_OPTIONS = [
   { label: 'Under 25', value: 23 },
@@ -200,18 +202,14 @@ export default function OnboardingPage() {
                   Your best guess is fine. It helps us predict your next period right away.
                 </p>
               </div>
-              <input
-                type="date"
-                max={today}
+              <DateField
                 value={lastPeriodDate}
-                onChange={(e) => setLastPeriodDate(e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl text-sm outline-none"
-                style={{
-                  background: 'var(--color-surface)',
-                  boxShadow: 'inset 0 0 0 1px var(--color-border)',
-                  color: 'var(--color-foreground)',
-                }}
+                max={today}
+                onChange={(val) => setLastPeriodDate(val)}
+                placeholder="Pick the date"
               />
+              {/* Only shows when Nila isn't yet on the home screen. */}
+              <InstallPrompt compact />
               <button
                 onClick={() => finish(lastPeriodDate || null)}
                 className="w-full py-3.5 rounded-full text-sm font-semibold transition-all active:scale-95"

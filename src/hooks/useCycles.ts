@@ -5,7 +5,16 @@ import { encryptJSON, decryptJSON } from '@/lib/encryption/core';
 import { useEncryption } from '@/lib/encryption/context';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { cycleCache, type EncryptedRow } from '@/lib/data/decryptCache';
+import { enqueue } from '@/lib/data/outbox';
+import { saveSnapshotFromCaches } from '@/lib/data/snapshot';
 import type { CyclePayload, DecryptedCycle } from '@/types/app';
+
+// The signed-in user id, read from the local session (no network), so writes
+// still work offline. Returns null only if the session is genuinely gone.
+async function currentUserId(): Promise<string | null> {
+  const { data: { session } } = await getSupabaseClient().auth.getSession();
+  return session?.user.id ?? null;
+}
 
 export function useCycles() {
   const { getMasterKey } = useEncryption();
@@ -56,36 +65,48 @@ export function useCycles() {
     }
   }, [getMasterKey]);
 
+  // Writes are optimistic: encrypt, update local state + the decrypt cache + the
+  // snapshot right away, then hand the ciphertext to the durable outbox, which
+  // syncs it to Supabase (retrying if offline). The UI never waits on the network.
   const addCycle = useCallback(async (payload: CyclePayload) => {
     const masterKey = getMasterKey();
     if (!masterKey) throw new Error('Encryption key not loaded.');
+    const userId = await currentUserId();
+    if (!userId) throw new Error('Not authenticated.');
+
+    const id = crypto.randomUUID();
     const { enc_data, enc_data_iv } = await encryptJSON(payload, masterKey);
-    const db = getSupabaseClient();
-    const { data: { user } } = await db.auth.getUser();
-    if (!user) throw new Error('Not authenticated.');
-    const { error: dbError } = await db.from('cycles').insert({ user_id: user.id, enc_data, enc_data_iv });
-    if (dbError) throw dbError;
-    await fetchAll();
-  }, [getMasterKey, fetchAll]);
+    const entry: DecryptedCycle = { id, payload, createdAt: new Date().toISOString() };
+
+    cycleCache.set(id, { iv: enc_data_iv, entry });
+    setCycles((prev) => [entry, ...prev].sort((a, b) => b.payload.periodStart.localeCompare(a.payload.periodStart)));
+    void saveSnapshotFromCaches();
+
+    await enqueue({ table: 'cycles', kind: 'upsert', rowId: id, row: { id, user_id: userId, enc_data, enc_data_iv } });
+  }, [getMasterKey]);
 
   const updateCycle = useCallback(async (id: string, payload: CyclePayload) => {
     const masterKey = getMasterKey();
     if (!masterKey) throw new Error('Encryption key not loaded.');
+    const userId = await currentUserId();
+    if (!userId) throw new Error('Not authenticated.');
+
     const { enc_data, enc_data_iv } = await encryptJSON(payload, masterKey);
-    const db = getSupabaseClient();
-    const { error: dbError } = await db
-      .from('cycles')
-      .update({ enc_data, enc_data_iv })
-      .eq('id', id);
-    if (dbError) throw dbError;
-    await fetchAll();
-  }, [getMasterKey, fetchAll]);
+    const existing = cycleCache.get(id)?.entry;
+    const entry: DecryptedCycle = { id, payload, createdAt: existing?.createdAt ?? new Date().toISOString() };
+
+    cycleCache.set(id, { iv: enc_data_iv, entry });
+    setCycles((prev) => prev.map((c) => (c.id === id ? entry : c)).sort((a, b) => b.payload.periodStart.localeCompare(a.payload.periodStart)));
+    void saveSnapshotFromCaches();
+
+    await enqueue({ table: 'cycles', kind: 'upsert', rowId: id, row: { id, user_id: userId, enc_data, enc_data_iv } });
+  }, [getMasterKey]);
 
   const deleteCycle = useCallback(async (id: string) => {
-    const db = getSupabaseClient();
-    const { error: dbError } = await db.from('cycles').delete().eq('id', id);
-    if (dbError) throw dbError;
+    cycleCache.delete(id);
     setCycles((prev) => prev.filter((c) => c.id !== id));
+    void saveSnapshotFromCaches();
+    await enqueue({ table: 'cycles', kind: 'delete', rowId: id });
   }, []);
 
   // Seed state from a local snapshot for instant cold-load (before fetchAll).

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { SheetHeader } from '@/components/ui/SheetHeader';
+import { DateField } from '@/components/ui/DateField';
 import { toISODate, fromISODate, daysBetween, subDays, startOfDay } from '@/lib/utils/dates';
 import type { PredictionResult } from '@/types/app';
 
@@ -92,23 +93,16 @@ export function SmartLogSheet({ open, onClose, prediction, onConfirm }: Props) {
             style={{ color: 'var(--color-foreground-muted)' }}>
             When did it start?
           </p>
-          <div className="rounded-[var(--radius-sm)] px-4 py-3"
-            style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
-            <input
-              type="date"
-              value={startDate}
-              min={ninetyDaysAgo}
-              max={today}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (!val || val > today) return; // hard block: no future dates
-                setStartDate(val);
-                if (endDate < val) setEndDate(val);
-              }}
-              className="w-full bg-transparent text-base font-medium focus:outline-none"
-              style={{ color: 'var(--color-foreground)', colorScheme: 'auto' }}
-            />
-          </div>
+          <DateField
+            value={startDate}
+            min={ninetyDaysAgo}
+            max={today}
+            onChange={(val) => {
+              if (!val || val > today) return; // hard block: no future dates
+              setStartDate(val);
+              if (endDate < val) setEndDate(val);
+            }}
+          />
           {daysAgo >= 0 && (
             <p className="text-xs mt-1.5 pl-1" style={{ color: 'var(--color-foreground-muted)' }}>
               {daysAgoLabel()}
@@ -152,17 +146,13 @@ export function SmartLogSheet({ open, onClose, prediction, onConfirm }: Props) {
                 transition={{ duration: 0.18 }}
                 className="mt-3 overflow-hidden"
               >
-                <div className="rounded-[var(--radius-sm)] px-4 py-3"
-                  style={{ background: 'var(--color-surface)', boxShadow: 'inset 0 0 0 1px var(--color-border)' }}>
+                <div>
                   <p className="text-xs mb-2" style={{ color: 'var(--color-foreground-muted)' }}>End date</p>
-                  <input
-                    type="date"
+                  <DateField
                     value={endDate}
                     min={startDate}
                     max={today}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="w-full bg-transparent text-base font-medium focus:outline-none"
-                    style={{ color: 'var(--color-foreground)', colorScheme: 'auto' }}
+                    onChange={(val) => setEndDate(val)}
                   />
                 </div>
               </motion.div>
