@@ -70,13 +70,14 @@ export function SyncDot() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label={`Sync status: ${state.label}. Open to sync.`}
-        className="fixed z-30 rounded-full p-2"
+        className="absolute z-30 flex h-8 w-8 items-center justify-center"
         style={{
-          // Sit up in the top safe-area strip (beside the Dynamic Island / notch),
-          // so the dot lives in the chrome rather than floating over page content.
-          // Falls back to a small inset on devices with no top inset (iPad, desktop).
-          top: 'max(0.5rem, calc(env(safe-area-inset-top) - 1.7rem))',
-          right: 'calc(env(safe-area-inset-right) + 0.7rem)',
+          // Anchored to the top-right of the scroll area, not the viewport, so it
+          // sits just below the status bar (the safe-area inset lives on the shell,
+          // outside the scroller) and scrolls away with the page instead of hovering
+          // over content. Reachable again by scrolling back to the top.
+          top: 0,
+          right: 'calc(env(safe-area-inset-right) + 0.6rem)',
         }}
       >
         <motion.span

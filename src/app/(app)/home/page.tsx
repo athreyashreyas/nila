@@ -568,7 +568,7 @@ export default function HomePage() {
           onPointerUp={(e) => e.currentTarget.style.transform = ''}
           onPointerLeave={(e) => e.currentTarget.style.transform = ''}
           onClick={() => setTheme(theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light')}
-          className="w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0 ml-3 mt-0.5"
+          className="w-10 h-10 rounded-full flex items-center justify-center text-lg flex-shrink-0 ml-3 mr-8 mt-0.5"
           style={{ background: 'var(--color-accent-soft)', color: 'var(--color-accent)', transition: 'transform 0.08s ease' }}
         >
           {theme === 'dark' ? '🌙' : theme === 'light' ? '☀️' : '◐'}

@@ -134,7 +134,10 @@ function PullToRefreshMain({ children }: { children: React.ReactNode }) {
   const indicatorH = refreshing ? 52 : pull;
 
   return (
-    <main ref={mainRef} className="scroll-ios flex-1 min-h-0 overflow-y-auto overscroll-none">
+    <main ref={mainRef} className="scroll-ios relative flex-1 min-h-0 overflow-y-auto overscroll-none">
+      {/* Sync status dot: absolute to this scroll area's top-right, so it sits just
+          below the status bar and scrolls with the page rather than floating over it. */}
+      <SyncDot />
       {/* Pull indicator */}
       <div
         style={{
@@ -339,7 +342,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             child at the bottom (not position:fixed), so the keyboard overlays it. */}
         <div className="flex flex-col h-full overflow-hidden"
           style={{ paddingTop: 'env(safe-area-inset-top)' }}>
-          <SyncDot />
           <PullToRefreshMain>
             {children}
           </PullToRefreshMain>

@@ -29,7 +29,7 @@ export default function JournalPage() {
           onPointerUp={release}
           onPointerLeave={release}
           onClick={() => openEntry(todayISO)}
-          className="px-4 py-2 rounded-full text-xs font-semibold"
+          className="px-4 py-2 rounded-full text-xs font-semibold mr-8"
           style={{ background: 'var(--color-accent-soft)', color: 'var(--color-accent)', transition: 'transform 0.08s ease' }}
         >
           + Today

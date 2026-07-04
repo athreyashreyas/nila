@@ -138,7 +138,8 @@ export default function CalendarPage() {
     <div className="px-5 pt-4 pb-28">
       <div className="flex items-center justify-between mb-5 pt-2">
         <h1 className="font-display text-2xl font-bold">Calendar</h1>
-        <div className="flex items-center gap-3">
+        {/* mr-8 leaves the top-right corner clear for the sync dot. */}
+        <div className="flex items-center gap-3 mr-8">
           <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-full text-lg" style={{ color: 'var(--color-accent)' }}>‹</button>
           <span className="text-sm font-semibold min-w-[120px] text-center">{monthName}</span>
           <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-full text-lg" style={{ color: 'var(--color-accent)' }}>›</button>
