@@ -112,8 +112,11 @@ async function sendOp(op: OutboxOp): Promise<void> {
 }
 
 // Drain the queue in FIFO order. Stops at the first op that fails (almost always
-// offline) and leaves it and everything after it queued. A poison op that keeps
-// failing is dropped after MAX_ATTEMPTS so it can never wedge the queue forever.
+// offline) and leaves it and everything after it queued. Only an op the server
+// actively rejected counts toward MAX_ATTEMPTS — a network failure retries
+// forever, because dropping a write that never reached the server would lose
+// data the server has no copy of. A PostgrestError (server reached, request
+// rejected) carries a `code`; a bare network throw does not.
 export async function flushOutbox(): Promise<void> {
   if (flushing) return;
   if (typeof navigator !== 'undefined' && !navigator.onLine) return;
@@ -124,11 +127,14 @@ export async function flushOutbox(): Promise<void> {
       try {
         await withPending(() => sendOp(op));
         if (op.id != null) await deleteOp(op.id);
-      } catch {
-        // Bump attempts; drop if it has failed too many times, otherwise stop
-        // and keep the rest of the queue for the next retry.
+      } catch (err) {
+        const serverRejected = typeof (err as { code?: unknown })?.code === 'string';
+        if (!serverRejected) break; // offline / flaky network: retry later, untouched
+        // Bump attempts; drop a poison op after MAX_ATTEMPTS so it can never
+        // wedge the queue forever, otherwise stop and retry next flush.
         const next = { ...op, attempts: op.attempts + 1 };
         if (next.attempts >= MAX_ATTEMPTS && op.id != null) {
+          console.warn('Outbox op rejected by server too many times, dropping.', op.table, op.kind, op.rowId);
           await deleteOp(op.id);
           continue;
         }

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEncryption } from '@/lib/encryption/context';
 import { useTheme } from '@/lib/theme/context';
 import { THEMES } from '@/lib/theme/themes';
-import { derivePasswordKey, wrapMasterKey, generateSalt } from '@/lib/encryption/core';
+import { derivePasswordKey, unwrapMasterKey, wrapMasterKey, generateSalt } from '@/lib/encryption/core';
 import { useAppData } from '@/lib/data/context';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { clearKey as clearIDBKey } from '@/lib/encryption/keyStore';
@@ -47,7 +47,7 @@ function HourPicker({ label, value, onChange }: { label: string; value: number; 
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { getMasterKey, clearKey } = useEncryption();
+  const { clearKey } = useEncryption();
   const { theme, setTheme } = useTheme();
   const { cycles, logs } = useAppData();
 
@@ -190,8 +190,6 @@ export default function SettingsPage() {
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
     if (newPassword.length < 8) { setPwError('New password must be at least 8 characters.'); return; }
-    const masterKey = getMasterKey();
-    if (!masterKey) { setPwError('Encryption key not loaded.'); return; }
     setPwLoading(true);
     setPwError('');
     try {
@@ -199,8 +197,25 @@ export default function SettingsPage() {
       const { data: { user } } = await db.auth.getUser();
       if (!user) throw new Error('Not signed in.');
 
-      const { data: profile } = await db.from('profiles').select('pbkdf2_iterations').single();
-      const iterations = profile?.pbkdf2_iterations ?? 600_000;
+      const { data: profile } = await db
+        .from('profiles')
+        .select('pbkdf2_iterations, key_salt, wrapped_key')
+        .single();
+      if (!profile) throw new Error('Profile not found.');
+      const iterations = profile.pbkdf2_iterations ?? 600_000;
+
+      // Unwrap the master key from the server blob with the OLD password. This
+      // both verifies the old password and yields an extractable key — the
+      // in-memory session key (restored from the key store on a cold reload) is
+      // non-extractable by design and cannot be re-wrapped.
+      let masterKey: CryptoKey;
+      try {
+        const oldPdk = await derivePasswordKey(oldPassword, profile.key_salt, iterations);
+        masterKey = await unwrapMasterKey(profile.wrapped_key, oldPdk);
+      } catch {
+        setPwError('Current password is incorrect.');
+        return;
+      }
 
       const newSalt = generateSalt();
       const newPdk = await derivePasswordKey(newPassword, newSalt, iterations);

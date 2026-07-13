@@ -13,27 +13,46 @@ function openDB(): Promise<IDBDatabase> {
   });
 }
 
-export async function saveKey(key: CryptoKey): Promise<void> {
-  const raw = await crypto.subtle.exportKey('raw', key);
+// Persist a NON-EXTRACTABLE clone of the key. IndexedDB structured-clones
+// CryptoKey objects, so no raw key bytes ever sit readable at rest: a script
+// (e.g. via XSS) can load and *use* the key but can never export its material.
+// Flows that need an extractable key (password change re-wrap) unwrap it from
+// the server-side wrapped blob with the password instead.
+async function putKey(sessionKey: CryptoKey): Promise<void> {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, 'readwrite');
-    tx.objectStore(STORE).put(raw, KEY_ID);
+    tx.objectStore(STORE).put(sessionKey, KEY_ID);
     tx.oncomplete = () => resolve();
     tx.onerror = () => reject(tx.error);
   });
 }
 
+export async function saveKey(key: CryptoKey): Promise<void> {
+  const raw = await crypto.subtle.exportKey('raw', key);
+  const sessionKey = await crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, [
+    'encrypt',
+    'decrypt',
+  ]);
+  return putKey(sessionKey);
+}
+
 export async function loadKey(): Promise<CryptoKey | null> {
   const db = await openDB();
-  const raw: ArrayBuffer | undefined = await new Promise((resolve, reject) => {
+  const stored: CryptoKey | ArrayBuffer | undefined = await new Promise((resolve, reject) => {
     const tx = db.transaction(STORE, 'readonly');
     const req = tx.objectStore(STORE).get(KEY_ID);
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
   });
-  if (!raw) return null;
-  return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+  if (!stored) return null;
+  // Migration: an entry written before the non-extractable change is raw bytes.
+  if (stored instanceof ArrayBuffer) {
+    const key = await crypto.subtle.importKey('raw', stored, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+    await putKey(key).catch(() => {});
+    return key;
+  }
+  return stored;
 }
 
 export async function clearKey(): Promise<void> {
