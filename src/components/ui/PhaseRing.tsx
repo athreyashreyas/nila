@@ -3,19 +3,21 @@
 import type { CyclePhase, PredictionResult } from '@/types/app';
 import { PHASE_META } from '@/types/app';
 
-const SIZE = 120;
-const STROKE = 8;
-const R = (SIZE - STROKE) / 2;
-const CIRCUMFERENCE = 2 * Math.PI * R;
-
 interface Props {
   prediction: PredictionResult;
   className?: string;
+  /** Outer diameter in px. The stroke and label scale with it. */
+  size?: number;
 }
 
-export function PhaseRing({ prediction, className = '' }: Props) {
+export function PhaseRing({ prediction, className = '', size = 120 }: Props) {
   const { currentPhase, dayInPhase, estimatedCycleLength } = prediction;
   const meta = PHASE_META[currentPhase];
+
+  const SIZE = size;
+  const STROKE = Math.round(size * 0.067);
+  const R = (SIZE - STROKE) / 2;
+  const CIRCUMFERENCE = 2 * Math.PI * R;
 
   // Progress = days elapsed in current cycle / total cycle length
   const cycleDay = getCycleDay(prediction);
@@ -57,8 +59,9 @@ export function PhaseRing({ prediction, className = '' }: Props) {
 
       {/* Center label */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-        <span className="font-display text-2xl leading-none" style={{ color: meta.color }}>{dayInPhase}</span>
-        <span className="text-[9px] font-semibold tracking-widest uppercase mt-0.5" style={{ color: 'var(--color-foreground-muted)' }}>day</span>
+        <span className="font-display leading-none" style={{ color: meta.color, fontSize: Math.round(size * 0.25) }}>{dayInPhase}</span>
+        <span className="font-semibold tracking-widest uppercase mt-0.5"
+          style={{ color: 'var(--color-foreground-muted)', fontSize: Math.max(8, Math.round(size * 0.078)) }}>day</span>
       </div>
     </div>
   );

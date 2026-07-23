@@ -7,7 +7,8 @@ import { Toast, useToast } from '@/components/ui/Toast';
 import { SmartLogSheet } from '@/components/ui/SmartLogSheet';
 import { EndPeriodSheet } from '@/components/ui/EndPeriodSheet';
 import { SectionLabel, MoodSelector, FlowSelector, SymptomPicker } from '@/components/ui/CheckinFields';
-import { PHASE_META } from '@/types/app';
+import { DropletIcon } from '@/components/ui/icons';
+import { PHASE_META, tint } from '@/types/app';
 import type { MoodLevel, FlowIntensity, CyclePhase } from '@/types/app';
 import { toISODate, fromISODate, daysBetween, startOfDay } from '@/lib/utils/dates';
 import { phaseForCycleDay } from '@/lib/algorithm/prediction';
@@ -29,10 +30,6 @@ let _lastLogId = '';
 // ─── Constants ────────────────────────────────────────────────
 
 const ENERGY_LABELS = ['', 'Drained', 'Low', 'Okay', 'Good', 'Vibrant'] as const;
-
-const PHASE_EMOJI: Record<CyclePhase, string> = {
-  period: '🌸', follicular: '✨', ovulation: '🌷', luteal: '🌙',
-};
 
 const PHASE_LINES: Record<CyclePhase, string[]> = {
   period: [
@@ -341,6 +338,72 @@ function HormoneGraph({ dayInCycle, cycleLength, estimatedPeriodLength }: {
   );
 }
 
+// ─── Phase timeline ────────────────────────────────────────────
+// The whole cycle as four proportional segments, with a marker showing where
+// today sits. Segment widths come from the user's own estimates, so a 24-day
+// cycle and a 33-day one look genuinely different.
+
+function PhaseTimeline({ cycleDay, cycleLength, periodLength }: {
+  cycleDay: number;
+  cycleLength: number;
+  periodLength: number;
+}) {
+  const luteal = 14;
+  const ovulation = 5;
+  const period = Math.min(periodLength, Math.max(1, cycleLength - luteal - ovulation - 1));
+  const follicular = Math.max(1, cycleLength - period - ovulation - luteal);
+  const total = period + follicular + ovulation + luteal;
+
+  const segments: { phase: CyclePhase; days: number }[] = [
+    { phase: 'period', days: period },
+    { phase: 'follicular', days: follicular },
+    { phase: 'ovulation', days: ovulation },
+    { phase: 'luteal', days: luteal },
+  ];
+
+  const markerPct = Math.max(0, Math.min(100, (cycleDay / cycleLength) * 100));
+
+  return (
+    <div className="mt-5">
+      <div className="relative">
+        <div className="flex gap-[3px] h-2">
+          {segments.map(({ phase, days }) => (
+            <div
+              key={phase}
+              className="h-full rounded-full"
+              style={{ width: `${(days / total) * 100}%`, background: tint(PHASE_META[phase].color, 55) }}
+            />
+          ))}
+        </div>
+        {/* Today's marker, riding on top of the segments */}
+        <div
+          className="absolute rounded-full"
+          style={{
+            left: `${markerPct}%`,
+            top: -3,
+            width: 3,
+            height: 14,
+            marginLeft: -1.5,
+            background: 'var(--color-foreground)',
+            transition: 'left 0.5s ease',
+          }}
+        />
+      </div>
+      <div className="flex gap-[3px] mt-1.5">
+        {segments.map(({ phase, days }) => (
+          <span
+            key={phase}
+            className="text-[8.5px] font-semibold tracking-wide text-center truncate"
+            style={{ width: `${(days / total) * 100}%`, color: 'var(--color-foreground-muted)', opacity: 0.75 }}
+          >
+            {PHASE_META[phase].label}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Home page ─────────────────────────────────────────────────
 
 export default function HomePage() {
@@ -482,7 +545,6 @@ export default function HomePage() {
 
   const hour = todayDate.getHours();
   const timePrefix = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
-  const phaseEmoji = PHASE_EMOJI[prediction.currentPhase];
 
   // Pick a line for the current phase, stable within a phase but re-picked when the
   // phase changes. The previous useRef locked it to whatever phase was current on the
@@ -492,15 +554,16 @@ export default function HomePage() {
     return pool[Math.floor(Math.random() * pool.length)];
   }, [prediction.currentPhase]);
 
-  const greetingName = userName
-    ? `${timePrefix}, ${userName} ${phaseEmoji}`
-    : `${timePrefix} ${phaseEmoji}`;
+  const greetingName = userName ? `${timePrefix}, ${userName}` : timePrefix;
 
-  const daysLabel = prediction.daysUntilNextPeriod > 1
-    ? `${prediction.daysUntilNextPeriod} days away`
-    : prediction.daysUntilNextPeriod === 1 ? 'tomorrow'
-    : prediction.daysUntilNextPeriod === 0 ? 'today'
-    : `${Math.abs(prediction.daysUntilNextPeriod)} days late`;
+  // The hero headline: a big serif number and a quiet line under it. Overdue
+  // cycles count up instead of down, so the number is always meaningful.
+  const days = prediction.daysUntilNextPeriod;
+  const headline = days === 0
+    ? { figure: 'Today', caption: 'your period is expected' }
+    : days > 0
+      ? { figure: String(days), caption: days === 1 ? 'day until your period' : 'days until your period' }
+      : { figure: String(Math.abs(days)), caption: Math.abs(days) === 1 ? 'day late' : 'days late' };
 
   // Clamp so overdue cycles don't push the active-day indicator past the graph edge
   const cycleDay = Math.min(
@@ -517,14 +580,12 @@ export default function HomePage() {
   // ─── Period section button label ─────────────────────────────
 
   const logPeriodLabel = (() => {
-    if (periodStatus === 'approaching') {
-      return `🩸 Period due soon, log it`;
-    }
+    if (periodStatus === 'approaching') return 'Period due soon, log it';
     if (periodStatus === 'late') {
-      const days = Math.abs(prediction.daysUntilNextPeriod);
-      return `🩸 Period overdue by ${days} day${days === 1 ? '' : 's'}, log it`;
+      const late = Math.abs(prediction.daysUntilNextPeriod);
+      return `Period overdue by ${late} day${late === 1 ? '' : 's'}, log it`;
     }
-    return `🩸 Log period`;
+    return 'Log period';
   })();
 
   return (
@@ -550,48 +611,58 @@ export default function HomePage() {
         />
       )}
 
-      {/* Header. pr-10 keeps the greeting clear of the sync dot in the top-right;
-          theme is changed in Settings now, so there's no toggle here. */}
-      <div className="pt-2 pr-10">
-        <h1 className="font-display text-3xl font-bold tracking-tight leading-tight">
+      {/* Compact top bar. pr-10 keeps the greeting clear of the sync dot pinned to
+          the scroll area's top-right corner. */}
+      <div className="pt-1 pr-10">
+        <p className="text-[11px] tracking-wide" style={{ color: 'var(--color-foreground-muted)', opacity: 0.75 }}>
+          {dateStr}
+        </p>
+        <h1 className="font-display text-[26px] tracking-tight leading-tight mt-0.5">
           {greetingName}
         </h1>
-        <p className="font-display text-sm italic mt-0.5 leading-snug" style={{ color: 'var(--color-foreground-muted)' }}>
+        <p className="text-[12px] mt-1 leading-snug" style={{ color: 'var(--color-foreground-muted)' }}>
           {greetLine}
         </p>
-        <p className="text-xs mt-1.5" style={{ color: 'var(--color-foreground-muted)', opacity: 0.7 }}>{dateStr}</p>
       </div>
 
-      {/* Phase card + hormone graph */}
-      <div className="rounded-[var(--radius)] p-5"
+      {/* Hero: where you are in your cycle, and how long until the next period.
+          The largest thing on the screen, and the reason the app exists. */}
+      <div className="rounded-[22px] p-5"
         style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
         {prediction.hasData ? (
           <>
-            <div className="flex gap-4 items-center mb-4">
-              <PhaseRing prediction={prediction} />
+            <span className="inline-block text-[10.5px] font-bold tracking-wide px-2.5 py-1 rounded-full"
+              style={{ background: tint(meta.color, 15), color: meta.color }}>
+              {meta.label}
+            </span>
+
+            <div className="flex items-center gap-4 mt-4">
+              <PhaseRing prediction={prediction} size={112} />
               <div className="flex-1 min-w-0">
-                <div className="font-display text-xl font-bold" style={{ color: meta.color }}>{meta.label}</div>
-                <div className="text-sm mt-0.5 leading-snug" style={{ color: 'var(--color-foreground-muted)' }}>
-                  Day {prediction.dayInPhase} of phase · Cycle day {cycleDay}
-                </div>
-                <div className="text-xs mt-1.5 flex items-center gap-1.5">
-                  <span style={{ color: 'var(--color-foreground-muted)' }}>Next period</span>
-                  <span className="font-semibold" style={{ color: meta.color }}>{daysLabel}</span>
-                </div>
+                <div className="font-display leading-none" style={{ fontSize: 40 }}>{headline.figure}</div>
+                <p className="text-xs mt-2 leading-snug" style={{ color: 'var(--color-foreground-muted)' }}>
+                  {headline.caption}
+                </p>
+                <p className="text-[11px] mt-1.5" style={{ color: 'var(--color-foreground-muted)', opacity: 0.7 }}>
+                  Cycle day {cycleDay} of {prediction.estimatedCycleLength}
+                </p>
               </div>
             </div>
-            <p className="text-[10px] font-semibold tracking-widest uppercase mb-2" style={{ color: 'var(--color-foreground-muted)' }}>
-              Hormone activity, drag to explore
-            </p>
-            <HormoneGraph
-              dayInCycle={cycleDay}
+
+            <PhaseTimeline
+              cycleDay={cycleDay}
               cycleLength={prediction.estimatedCycleLength}
-              estimatedPeriodLength={prediction.estimatedPeriodLength}
+              periodLength={prediction.estimatedPeriodLength}
             />
           </>
         ) : (
-          <div className="flex flex-col items-center py-4 gap-2 text-center">
-            <span className="text-3xl">🌸</span>
+          <div className="flex flex-col items-center py-4 gap-3 text-center">
+            {/* Light tile under the dancer: its cream ground needs paper beneath it. */}
+            <span className="w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center"
+              style={{ background: '#fdfcf9' }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/brand/dancer.png" alt="" className="w-full h-full object-cover" />
+            </span>
             <p className="text-sm font-semibold">Log your first period to get started</p>
             <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground-muted)' }}>
               Nila will learn your cycle and show personalised insights here.
@@ -600,38 +671,48 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* Phase focus + daily insight — only meaningful once there's data */}
+      {/* Today's focus. An editorial line, not a card, so it sits below the hero
+          in the hierarchy while still reading as the day's headline thought. */}
       {prediction.hasData && (
-        <>
-          <div className="rounded-[var(--radius-sm)] px-4 py-3"
-            style={{ background: `${meta.color}12`, boxShadow: `inset 0 0 0 1px ${meta.color}30` }}>
-            <p className="text-xs font-semibold mb-1" style={{ color: meta.color }}>Today's focus</p>
-            <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground)' }}>
+        <div className="flex gap-3.5 pr-1">
+          <div className="w-[3px] rounded-full flex-shrink-0" style={{ background: meta.color }} />
+          <div>
+            <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: meta.color }}>
+              Today's focus
+            </p>
+            <p className="font-display text-[19px] leading-snug mt-1.5">
               {pickDaily(PHASE_FOCUS[prediction.currentPhase])}
             </p>
           </div>
-
-          <div className="rounded-[var(--radius-sm)] px-4 py-3 flex gap-3 items-start"
-            style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
-            <span className="text-base mt-0.5 flex-shrink-0">💡</span>
-            <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground)' }}>
-              {dailyInsight}
-            </p>
-          </div>
-        </>
+        </div>
       )}
 
-      {/* Mood */}
-      <div>
-        <SectionLabel className="mb-3">How are you feeling?</SectionLabel>
-        <MoodSelector value={mood} onChange={setMood} />
-      </div>
+      {/* Hormone activity, still the best thing to poke at on this screen. */}
+      {prediction.hasData && (
+        <div className="rounded-[var(--radius)] p-4"
+          style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
+          <p className="text-xs font-semibold mb-2.5" style={{ color: 'var(--color-foreground-muted)' }}>
+            Hormone activity, drag to explore
+          </p>
+          <HormoneGraph
+            dayInCycle={cycleDay}
+            cycleLength={prediction.estimatedCycleLength}
+            estimatedPeriodLength={prediction.estimatedPeriodLength}
+          />
+        </div>
+      )}
 
-      {/* Energy */}
-      <div>
+      {/* Quick check-in: mood and energy are one thought, so they're one card. */}
+      <div className="rounded-[var(--radius)] p-4"
+        style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
+        <SectionLabel className="mb-3">Quick check-in</SectionLabel>
+        <MoodSelector value={mood} onChange={setMood} />
+
+        <div className="h-px my-4" style={{ background: 'var(--color-border)' }} />
+
         <p className="text-[11px] font-semibold tracking-widest uppercase mb-3"
           style={{ color: 'var(--color-foreground-muted)' }}>
-          Energy level{energy > 0 ? ` · ${ENERGY_LABELS[energy]}` : ''}
+          Energy{energy > 0 ? ` · ${ENERGY_LABELS[energy]}` : ''}
         </p>
         <div className="flex gap-2">
           {[1,2,3,4,5].map((lvl) => (
@@ -685,7 +766,7 @@ export default function HomePage() {
               onClick={() => setEndSheetOpen(true)}
               disabled={saving}
               className="flex-1 text-xs py-2 rounded-full font-medium disabled:opacity-50"
-              style={{ color: PHASE_META.period.color, background: `${PHASE_META.period.color}12`, boxShadow: `inset 0 0 0 1px ${PHASE_META.period.color}30` }}
+              style={{ color: PHASE_META.period.color, background: tint(PHASE_META.period.color, 12), boxShadow: `inset 0 0 0 1px ${tint(PHASE_META.period.color, 30)}` }}
             >
               End period
             </button>
@@ -702,6 +783,7 @@ export default function HomePage() {
         </div>
       ) : (
         <div>
+          {/* The one primary action on this screen. */}
           <button
             onPointerDown={(e) => e.currentTarget.style.transform = 'scale(0.97)'}
             onPointerUp={(e) => e.currentTarget.style.transform = ''}
@@ -709,12 +791,12 @@ export default function HomePage() {
             onClick={() => setLogSheetOpen(true)}
             className="w-full py-3.5 rounded-full text-sm font-semibold flex items-center justify-center gap-2"
             style={{
-              background: periodStatus === 'late' ? `${PHASE_META.period.color}15` : 'var(--color-surface)',
-              boxShadow: `inset 0 0 0 1.5px ${periodStatus === 'late' ? PHASE_META.period.color : 'var(--color-border)'}`,
-              color: periodStatus === 'late' ? PHASE_META.period.color : undefined,
+              background: 'var(--color-accent)',
+              color: 'var(--color-on-accent)',
               transition: 'transform 0.08s ease',
             }}
           >
+            <DropletIcon size={17} />
             {logPeriodLabel}
           </button>
         </div>
@@ -735,10 +817,23 @@ export default function HomePage() {
           onClick={save}
           disabled={saving}
           className="w-full py-3.5 rounded-full text-sm font-semibold disabled:opacity-60"
-          style={{ background: 'var(--color-accent)', color: 'var(--color-on-accent)', transition: 'transform 0.08s ease' }}
+          style={{
+            background: 'transparent',
+            color: 'var(--color-accent)',
+            boxShadow: 'inset 0 0 0 1.5px var(--color-accent)',
+            transition: 'transform 0.08s ease',
+          }}
         >
           {saving ? 'Saving…' : todayLog ? 'Update check-in' : 'Save check-in'}
         </button>
+      )}
+
+      {/* A quiet footnote, not a card. It's a nice-to-read, not a thing to do. */}
+      {prediction.hasData && (
+        <p className="text-[11px] leading-relaxed px-1 pt-1"
+          style={{ color: 'var(--color-foreground-muted)' }}>
+          {dailyInsight}
+        </p>
       )}
     </div>
   );

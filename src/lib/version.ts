@@ -1,6 +1,6 @@
 // Bumped with every push that ships user-facing changes.
 // Add a new entry to CHANGELOG (most recent first) alongside the bump.
-export const APP_VERSION = '2.2.0';
+export const APP_VERSION = '2.3.0';
 
 export interface ChangelogEntry {
   version: string;
@@ -13,6 +13,26 @@ export interface ChangelogEntry {
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: '2.3.0',
+    date: '2026-07-23',
+    highlights: [
+      'A redesigned Today screen built around one hero card: the days until your next period is now the biggest thing on the page',
+      'A phase timeline under the hero shows your whole cycle at a glance, with a marker for where today sits',
+      'Today\'s focus reads as an editorial line rather than a tinted box, and the daily tip is now a quiet footnote',
+      'Mood and energy are merged into a single quick check-in card',
+      'Calendar opens with the month in serif and a berry strip showing the likely window for your next period',
+      'Insights is now "Your rhythm", with serif figures and a proper editorial note at the top',
+      'Settings gains a profile row and a privacy card that says plainly what zero-knowledge encryption means',
+      'Decorative emoji are gone everywhere except mood, replaced by one consistent set of line icons',
+      'Phase colours now follow whichever theme you pick, so they read cleanly on every palette',
+    ],
+    howTo: [
+      'Open Today to see the new hero card and the phase timeline beneath it.',
+      'Tap Calendar to check the likely window for your next period, right above the grid.',
+      'Open Settings to find the privacy card and your profile near the top.',
+    ],
+  },
   {
     version: '2.2.0',
     date: '2026-07-04',

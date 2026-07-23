@@ -50,12 +50,14 @@ function LoadingScreen() {
     <div className="min-h-screen flex flex-col items-center justify-center gap-5"
       style={{ background: 'var(--color-background)' }}>
       <motion.div
-        animate={{ scale: [1, 1.06, 1], opacity: [0.9, 1, 0.9] }}
+        animate={{ scale: [1, 1.04, 1], opacity: [0.9, 1, 0.9] }}
         transition={{ repeat: Infinity, duration: 3.5, ease: 'easeInOut' }}
-        className="text-5xl select-none">
-        🌕
+        className="w-16 h-16 rounded-2xl overflow-hidden select-none"
+        style={{ background: '#fdfcf9', boxShadow: 'var(--shadow-card)' }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/brand/dancer.png" alt="" className="w-full h-full object-cover" />
       </motion.div>
-      <div className="text-2xl font-bold tracking-tight" style={{ color: 'var(--color-foreground)' }}>Nila</div>
+      <div className="font-display text-2xl tracking-tight" style={{ color: 'var(--color-foreground)' }}>Nila</div>
       <AnimatePresence mode="wait">
         <motion.p
           key={quoteIdx}

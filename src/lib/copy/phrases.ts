@@ -31,11 +31,11 @@ export const TOAST = {
     'Tweaked and saved ✓',
   ],
   periodStarted: [
-    'Period started. We\'re tracking with you 🩸',
-    'Logged. Be gentle with yourself today 🩸',
-    'Noted. Rest is more than allowed right now 🩸',
-    'Tracking with you. Warmth and softness today 🩸',
-    'Got it. Your body is doing real work 🩸',
+    'Period started. We\'re tracking with you',
+    'Logged. Be gentle with yourself today',
+    'Noted. Rest is more than allowed right now',
+    'Tracking with you. Warmth and softness today',
+    'Got it. Your body is doing real work',
   ],
   periodLogged: [
     'Period logged ✓',

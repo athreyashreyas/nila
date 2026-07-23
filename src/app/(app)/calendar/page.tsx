@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { EditPeriodSheet } from '@/components/ui/EditPeriodSheet';
 import { useAppData } from '@/lib/data/context';
-import { PHASE_META, MOOD_EMOJI, MOOD_LABEL } from '@/types/app';
+import { PHASE_META, MOOD_EMOJI, MOOD_LABEL, tint } from '@/types/app';
+import { DropletIcon, BoltIcon, NoteIcon } from '@/components/ui/icons';
 import { getDaysInMonth, getFirstDayOfMonth, toISODate, addDays, fromISODate } from '@/lib/utils/dates';
 import { phaseForCycleDay, cycleDayForDate } from '@/lib/algorithm/prediction';
 import type { CyclePhase, PredictionResult } from '@/types/app';
@@ -116,6 +117,20 @@ export default function CalendarPage() {
 
   const monthName = new Date(year, month).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 
+  const currentCycleDay = cycleDayForDate(now, prediction);
+
+  // The likely window for the next period: the prediction plus or minus however
+  // confident the algorithm is. Same month is written once, "12 to 16 August".
+  const nextWindow = (() => {
+    const r = prediction.nextPeriodConfidenceRange;
+    const from = addDays(prediction.nextPeriodDate, -r);
+    const to = addDays(prediction.nextPeriodDate, r);
+    const sameMonth = from.getMonth() === to.getMonth() && from.getFullYear() === to.getFullYear();
+    const fmt = (d: Date, withMonth: boolean) =>
+      d.toLocaleDateString('en-GB', withMonth ? { day: 'numeric', month: 'long' } : { day: 'numeric' });
+    return `${fmt(from, !sameMonth)} to ${fmt(to, true)}`;
+  })();
+
   function openSheet(iso: string, date: Date) {
     // Warm the journal route now, while the user reads the day sheet, so tapping
     // "Add entry" navigates instantly.
@@ -136,15 +151,39 @@ export default function CalendarPage() {
 
   return (
     <div className="px-5 pt-4 pb-28">
-      <div className="flex items-center justify-between mb-5 pt-2">
-        <h1 className="font-display text-2xl font-bold">Calendar</h1>
-        {/* mr-8 leaves the top-right corner clear for the sync dot. */}
-        <div className="flex items-center gap-3 mr-8">
-          <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-full text-lg" style={{ color: 'var(--color-accent)' }}>‹</button>
-          <span className="text-sm font-semibold min-w-[120px] text-center">{monthName}</span>
-          <button onClick={nextMonth} className="w-8 h-8 flex items-center justify-center rounded-full text-lg" style={{ color: 'var(--color-accent)' }}>›</button>
+      {/* Month header. pr-10 leaves the top-right corner clear for the sync dot. */}
+      <div className="flex items-end justify-between mb-4 pt-1 pr-10">
+        <div className="min-w-0">
+          <h1 className="font-display text-[26px] leading-tight truncate">{monthName}</h1>
+          {prediction.hasData && (
+            <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-foreground-muted)' }}>
+              Cycle day {currentCycleDay} · {PHASE_META[prediction.currentPhase].label}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button onClick={prevMonth} aria-label="Previous month"
+            className="w-9 h-9 flex items-center justify-center rounded-[12px] text-lg"
+            style={{ background: 'var(--color-surface)', color: 'var(--color-foreground)' }}>‹</button>
+          <button onClick={nextMonth} aria-label="Next month"
+            className="w-9 h-9 flex items-center justify-center rounded-[12px] text-lg"
+            style={{ background: 'var(--color-surface)', color: 'var(--color-foreground)' }}>›</button>
         </div>
       </div>
+
+      {/* When the next period is likely to land, in plain language. */}
+      {prediction.hasData && (
+        <div className="rounded-[var(--radius-sm)] px-4 py-3 mb-4 flex items-center gap-3"
+          style={{ background: 'var(--color-accent-soft)' }}>
+          <span style={{ color: 'var(--color-accent)' }}><DropletIcon size={17} /></span>
+          <div>
+            <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: 'var(--color-accent)' }}>
+              Next period likely
+            </p>
+            <p className="text-sm font-semibold mt-0.5">{nextWindow}</p>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-7 mb-1">
         {WEEKDAYS.map(d => (
@@ -152,7 +191,7 @@ export default function CalendarPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-[3px]">
         {Array.from({ length: firstDay }).map((_, i) => <div key={`e${i}`} />)}
         {monthCells.map(({ day, iso, date, isToday, hasPeriod, phaseMeta }) => {
           return (
@@ -163,9 +202,9 @@ export default function CalendarPage() {
               onPointerLeave={() => setTappedDate(null)}
               onPointerCancel={() => setTappedDate(null)}
               onClick={() => openSheet(iso, date)}
-              className="relative flex flex-col items-center justify-center aspect-square rounded-xl text-sm font-medium"
+              className="relative flex flex-col items-center justify-center aspect-square rounded-[11px] text-sm font-medium"
               style={{
-                background: phaseMeta ? `${phaseMeta.color}28` : 'var(--color-surface)',
+                background: phaseMeta ? tint(phaseMeta.color, 16) : 'var(--color-surface)',
                 color: isToday ? 'var(--color-accent)' : 'var(--color-foreground)',
                 fontWeight: isToday ? 700 : 500,
                 boxShadow: isToday ? 'inset 0 0 0 1.5px var(--color-accent)' : 'none',
@@ -182,11 +221,11 @@ export default function CalendarPage() {
         })}
       </div>
 
-      <div className="flex flex-wrap gap-3 mt-6 px-1">
+      <div className="flex flex-wrap gap-x-4 gap-y-2 mt-5 px-1">
         {(['period', 'follicular', 'ovulation', 'luteal'] as CyclePhase[]).map(p => (
           <div key={p} className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full" style={{ background: PHASE_META[p].color }} />
-            <span className="text-xs" style={{ color: 'var(--color-foreground-muted)' }}>{PHASE_META[p].label}</span>
+            <div className="w-[7px] h-[7px] rounded-full" style={{ background: PHASE_META[p].color }} />
+            <span className="text-[11px]" style={{ color: 'var(--color-foreground-muted)' }}>{PHASE_META[p].label}</span>
           </div>
         ))}
       </div>
@@ -198,7 +237,7 @@ export default function CalendarPage() {
                 {/* Date header */}
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <div className="font-display text-xl font-bold"
+                    <div className="font-display text-[22px] leading-tight"
                       style={{ color: sheetMeta?.color ?? 'var(--color-foreground)' }}>
                       {sheet.date.toLocaleDateString('en-GB', { weekday: 'long' })}
                     </div>
@@ -208,7 +247,7 @@ export default function CalendarPage() {
                   </div>
                   {sheetMeta && (
                     <span className="text-xs font-semibold px-3 py-1.5 rounded-full mt-1"
-                      style={{ background: `${sheetMeta.color}22`, color: sheetMeta.color }}>
+                      style={{ background: tint(sheetMeta.color, 15), color: sheetMeta.color }}>
                       {sheetMeta.label}
                     </span>
                   )}
@@ -217,7 +256,7 @@ export default function CalendarPage() {
                 {/* Phase context */}
                 {sheetMeta && (
                   <div className="rounded-2xl px-4 py-3 mb-4"
-                    style={{ background: `${sheetMeta.color}12`, boxShadow: `inset 0 0 0 1px ${sheetMeta.color}30` }}>
+                    style={{ background: tint(sheetMeta.color, 10), boxShadow: `inset 0 0 0 1px ${tint(sheetMeta.color, 25)}` }}>
                     <p className="text-sm leading-relaxed" style={{ color: 'var(--color-foreground)' }}>
                       {sheetMeta.description}
                     </p>
@@ -249,7 +288,7 @@ export default function CalendarPage() {
                     {sheetLog.energy && (
                       <div className="flex items-center gap-3 rounded-2xl px-4 py-3"
                         style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
-                        <span className="text-2xl">⚡</span>
+                        <span style={{ color: 'var(--color-accent)' }}><BoltIcon size={22} /></span>
                         <div>
                           <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-foreground-muted)' }}>Energy</div>
                           <div className="flex gap-0.5 mt-1">
@@ -265,7 +304,7 @@ export default function CalendarPage() {
                     {sheetLog.flow && sheetLog.flow !== 'none' && (
                       <div className="flex items-center gap-3 rounded-2xl px-4 py-3"
                         style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
-                        <span className="text-2xl">🩸</span>
+                        <span style={{ color: PHASE_META.period.color }}><DropletIcon size={22} /></span>
                         <div>
                           <div className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-foreground-muted)' }}>Flow</div>
                           <div className="text-sm font-medium capitalize">{sheetLog.flow}</div>
@@ -289,8 +328,8 @@ export default function CalendarPage() {
                     )}
                   </div>
                 ) : (
-                  <div className="text-center py-6 opacity-40">
-                    <div className="text-3xl mb-2">🌿</div>
+                  <div className="flex flex-col items-center gap-2 py-6 opacity-40">
+                    <NoteIcon size={26} />
                     <p className="text-sm">Nothing logged for this day</p>
                   </div>
                 )}
@@ -318,7 +357,7 @@ export default function CalendarPage() {
                     onPointerLeave={(e) => (e.currentTarget.style.transform = '')}
                     onClick={() => { setEditingCycleId(sheet.cycleId); setSheet(null); }}
                     className="w-full mt-2 py-3 rounded-full text-sm font-semibold"
-                    style={{ background: 'var(--color-surface)', color: PHASE_META.period.color, boxShadow: `inset 0 0 0 1px ${PHASE_META.period.color}40`, transition: 'transform 0.08s ease' }}
+                    style={{ background: 'var(--color-surface)', color: PHASE_META.period.color, boxShadow: `inset 0 0 0 1px ${tint(PHASE_META.period.color, 40)}`, transition: 'transform 0.08s ease' }}
                   >
                     Edit period dates
                   </button>

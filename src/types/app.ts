@@ -102,25 +102,34 @@ export type Symptom = typeof SYMPTOMS[number];
 
 // ─── Phase metadata ───────────────────────────────────────────
 
+// Colours are the Quiet Paper phase tokens, so every theme (light and dark)
+// re-tints them from one place in globals.css. Because they are CSS variables
+// rather than hex, use `tint()` below to build a translucent version instead of
+// appending a hex alpha suffix.
 export const PHASE_META: Record<CyclePhase, { label: string; color: string; description: string }> = {
   period: {
     label: 'Period',
-    color: '#f43f5e',
+    color: 'var(--color-phase-period)',
     description: 'Your body is working hard right now, so be gentle with yourself. Resting isn\'t laziness, it\'s exactly what you need.',
   },
   follicular: {
     label: 'Follicular',
-    color: '#f59e0b',
+    color: 'var(--color-phase-follicular)',
     description: 'New energy is quietly building. A good time to begin things.',
   },
   ovulation: {
     label: 'Ovulation',
-    color: '#f97316',
+    color: 'var(--color-phase-ovulation)',
     description: 'You\'re glowing at your peak. Soak up all this warmth and clarity while it\'s here.',
   },
   luteal: {
     label: 'Luteal',
-    color: '#a78bfa',
+    color: 'var(--color-phase-luteal)',
     description: 'Soften your pace. Your body is winding down, beautifully.',
   },
 };
+
+/** A translucent wash of any colour, including a CSS variable. `pct` is 0..100. */
+export function tint(color: string, pct: number): string {
+  return `color-mix(in srgb, ${color} ${pct}%, transparent)`;
+}

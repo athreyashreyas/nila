@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { useAppData } from '@/lib/data/context';
-import { PHASE_META } from '@/types/app';
+import { PHASE_META, tint } from '@/types/app';
+import { LeafIcon } from '@/components/ui/icons';
 import { daysBetween, fromISODate, toISODate } from '@/lib/utils/dates';
 import { getRecommendations } from '@/lib/recommendations/data';
 import { buildReflection } from '@/lib/insights/reflection';
@@ -85,7 +86,8 @@ export default function InsightsPage() {
 
   return (
     <div className="px-5 pt-4 pb-28">
-      <h1 className="font-display text-2xl font-bold pt-2 mb-5">Insights</h1>
+      {/* pr-10 leaves the top-right corner clear for the sync dot. */}
+      <h1 className="font-display text-[26px] pt-1 mb-4 pr-10">Your rhythm</h1>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-5">
@@ -96,21 +98,22 @@ export default function InsightsPage() {
         ].map(({ label, value, sub }) => (
           <div key={label} className="rounded-[var(--radius)] p-3 text-center"
             style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
-            <div className="text-xl font-bold" style={{ color: 'var(--color-accent)' }}>{value}</div>
-            <div className="text-[10px] font-semibold mt-0.5">{label}</div>
+            <div className="font-display text-[26px] leading-none" style={{ color: 'var(--color-accent)' }}>{value}</div>
+            <div className="text-[10px] font-semibold mt-1.5">{label}</div>
             <div className="text-[9px] mt-0.5 opacity-50">{sub}</div>
           </div>
         ))}
       </div>
 
       {/* A warm, human read on how the last little while has gone. Rotates which
-          truths it surfaces and how it says them, so it stays fresh over months. */}
-      <div className="rounded-[var(--radius)] p-4 mb-5"
+          truths it surfaces and how it says them, so it stays fresh over months.
+          Set as an editorial serif line: it's the page's opening thought. */}
+      <div className="rounded-[var(--radius)] p-5 mb-5"
         style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
-        <h2 className="text-xs font-semibold mb-2 tracking-widest uppercase" style={{ color: 'var(--color-foreground-muted)' }}>
+        <h2 className="text-[10px] font-bold mb-2.5 tracking-widest uppercase" style={{ color: 'var(--color-accent)' }}>
           A note on your rhythm
         </h2>
-        <p className="text-sm leading-relaxed" style={{ color: 'var(--color-foreground)' }}>
+        <p className="font-display text-[18px] leading-snug" style={{ color: 'var(--color-foreground)' }}>
           {reflection.text}
         </p>
       </div>
@@ -124,7 +127,7 @@ export default function InsightsPage() {
               {recs.headline}
             </h2>
             <span className="text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
-              style={{ background: `${meta.color}22`, color: meta.color }}>
+              style={{ background: tint(meta.color, 15), color: meta.color }}>
               {meta.label}
             </span>
           </div>
@@ -139,7 +142,8 @@ export default function InsightsPage() {
               transition: 'all 0.15s ease',
             }}
           >
-            🌿 {isVeg ? 'Veg on' : 'Veg'}
+            <LeafIcon size={13} />
+            {isVeg ? 'Veg on' : 'Veg'}
           </button>
         </div>
 
@@ -162,14 +166,14 @@ export default function InsightsPage() {
                   <span className="text-sm font-semibold">{food.name}</span>
                   {i === 0 && recs.symptomTriggers.length > 0 && (
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
-                      style={{ background: `${meta.color}20`, color: meta.color }}>
+                      style={{ background: tint(meta.color, 14), color: meta.color }}>
                       top pick
                     </span>
                   )}
                   {food.veg && (
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-full" aria-label="Vegetarian"
                       style={{ background: 'var(--color-accent-soft)', color: 'var(--color-accent)' }}>
-                      🌿
+                      <LeafIcon size={11} />
                     </span>
                   )}
                 </div>
@@ -180,7 +184,7 @@ export default function InsightsPage() {
         </div>
 
         <div className="rounded-[var(--radius-sm)] p-3 mb-3"
-          style={{ background: `${meta.color}12`, boxShadow: `inset 0 0 0 1px ${meta.color}30` }}>
+          style={{ background: tint(meta.color, 10), boxShadow: `inset 0 0 0 1px ${tint(meta.color, 25)}` }}>
           <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground)' }}>{recs.lifestyle}</p>
         </div>
 
@@ -281,7 +285,7 @@ export default function InsightsPage() {
                   <span className="opacity-50">{durations[phase]}d</span>
                 </div>
                 <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--color-border)' }}>
-                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: pMeta.color, opacity: isCurrent ? 1 : 0.35 }} />
+                  <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: pMeta.color, opacity: isCurrent ? 1 : 0.4 }} />
                 </div>
               </div>
             </div>

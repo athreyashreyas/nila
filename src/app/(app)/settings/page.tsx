@@ -12,6 +12,7 @@ import { clearKey as clearIDBKey } from '@/lib/encryption/keyStore';
 import { registerPushSubscription, unregisterPushSubscription, isPushSupported } from '@/lib/push/register';
 import { BottomSheet } from '@/components/ui/BottomSheet';
 import { InstallPrompt } from '@/components/ui/InstallPrompt';
+import { LockIcon } from '@/components/ui/icons';
 import { GUIDE } from '@/lib/guide';
 import { APP_VERSION, CHANGELOG } from '@/lib/version';
 
@@ -252,11 +253,17 @@ export default function SettingsPage() {
     URL.revokeObjectURL(url);
   }
 
-  const Row = ({ label, sub, onClick, danger = false }: { label: string; sub?: string; onClick: () => void; danger?: boolean }) => (
+  // The name the user gave at onboarding, shown on the profile row.
+  const userName = (() => {
+    try { return (JSON.parse(localStorage.getItem('nila-prefs') ?? '{}').name as string | null) || null; }
+    catch { return null; }
+  })();
+
+  const Row = ({ label, sub, onClick, accent = false }: { label: string; sub?: string; onClick: () => void; accent?: boolean }) => (
     <button onClick={onClick} className="flex items-center justify-between w-full px-4 py-3.5 rounded-[var(--radius)] transition-all"
       style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
       <div className="text-left">
-        <div className="text-sm font-medium" style={{ color: danger ? '#f87171' : undefined }}>{label}</div>
+        <div className="text-sm font-medium" style={{ color: accent ? 'var(--color-accent)' : undefined }}>{label}</div>
         {sub && <div className="text-xs mt-0.5 opacity-50">{sub}</div>}
       </div>
       <span className="opacity-30 text-base">›</span>
@@ -265,9 +272,43 @@ export default function SettingsPage() {
 
   return (
     <div className="px-5 pt-4 pb-28">
-      <h1 className="font-display text-2xl font-bold pt-2 mb-5">Settings</h1>
+      {/* pr-10 leaves the top-right corner clear for the sync dot. */}
+      <h1 className="font-display text-[26px] pt-1 mb-4 pr-10">Settings</h1>
 
       <div className="flex flex-col gap-3">
+        {/* Who this is. The dancer sits on a light tile, never blended. */}
+        <div className="flex items-center gap-3.5 rounded-[var(--radius)] p-4"
+          style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)' }}>
+          {/* A light tile under the dancer, fixed rather than themed: the PNG has a
+              cream ground, so it needs paper beneath it on dark palettes too. */}
+          <span className="w-12 h-12 rounded-[14px] overflow-hidden flex-shrink-0"
+            style={{ background: '#fdfcf9' }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/brand/dancer.png" alt="" className="w-full h-full object-cover" />
+          </span>
+          <div className="min-w-0">
+            <div className="font-display text-lg leading-tight">{userName ?? 'Nila'}</div>
+            <div className="text-xs mt-0.5" style={{ color: 'var(--color-foreground-muted)' }}>
+              {cycles.length} cycles, {logs.length} entries
+            </div>
+          </div>
+        </div>
+
+        {/* The app's soul, near the top where it belongs. */}
+        <div className="rounded-[var(--radius)] p-4 flex gap-3.5"
+          style={{ background: 'var(--color-accent-soft)' }}>
+          <span className="flex-shrink-0 mt-0.5" style={{ color: 'var(--color-accent)' }}>
+            <LockIcon size={20} />
+          </span>
+          <div>
+            <p className="text-sm font-semibold" style={{ color: 'var(--color-accent)' }}>Zero-knowledge encryption</p>
+            <p className="text-xs leading-relaxed mt-1" style={{ color: 'var(--color-foreground-muted)' }}>
+              Everything you log is encrypted on this device before it leaves. Nila's servers hold only
+              unreadable bytes, so your dates, symptoms, and notes stay yours alone.
+            </p>
+          </div>
+        </div>
+
         <div>
           <p className="text-[11px] font-semibold tracking-widest uppercase mb-2 px-1" style={{ color: 'var(--color-foreground-muted)' }}>Appearance</p>
           <div className="grid grid-cols-3 gap-2">
@@ -283,19 +324,19 @@ export default function SettingsPage() {
                     boxShadow: active ? 'inset 0 0 0 1.5px var(--color-accent)' : 'none',
                   }}
                 >
-                  {/* Two-tone swatch: the palette's paper with its accent as a dot. */}
+                  {/* Two-tone chip: the palette's paper with its accent as a dot.
+                      System shows both halves, since it is whichever the OS says. */}
                   <span
-                    className="relative w-8 h-8 rounded-full flex items-center justify-center"
+                    className="relative w-8 h-8 rounded-full overflow-hidden flex items-center justify-center"
                     style={{
                       background: t.swatch[0],
                       boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.12)',
                     }}
                   >
-                    {t.id === 'system' ? (
-                      <span className="text-sm">🌗</span>
-                    ) : (
-                      <span className="w-4 h-4 rounded-full" style={{ background: t.swatch[1] }} />
+                    {t.id === 'system' && (
+                      <span className="absolute inset-y-0 right-0 w-1/2" style={{ background: '#1a1a18' }} />
                     )}
+                    <span className="relative w-4 h-4 rounded-full" style={{ background: t.swatch[1] }} />
                   </span>
                   <span
                     className="text-[11px] font-medium leading-tight text-center"
@@ -410,14 +451,6 @@ export default function SettingsPage() {
         )}
 
         <div>
-          <p className="text-[11px] font-semibold tracking-widest uppercase mb-2 px-1 mt-2" style={{ color: 'var(--color-foreground-muted)' }}>Privacy</p>
-          <div className="rounded-[var(--radius)] p-4 text-xs leading-relaxed"
-            style={{ background: 'var(--color-surface-solid)', boxShadow: 'var(--shadow-card)', color: 'var(--color-foreground-muted)' }}>
-            Your health data is encrypted end-to-end. Nila's servers store only encrypted bytes, so no period dates, symptoms, or notes are ever readable by anyone but you.
-          </div>
-        </div>
-
-        <div>
           <p className="text-[11px] font-semibold tracking-widest uppercase mb-2 px-1 mt-2" style={{ color: 'var(--color-foreground-muted)' }}>About</p>
           <div className="flex flex-col gap-2">
             <Row label="How Nila works" sub="A quick tour of everything" onClick={() => setShowGuide(true)} />
@@ -426,7 +459,7 @@ export default function SettingsPage() {
         </div>
 
         <div className="mt-2">
-          <Row label="Sign out" danger onClick={handleSignOut} />
+          <Row label="Sign out" accent onClick={handleSignOut} />
         </div>
 
         <button

@@ -55,13 +55,16 @@ export function BottomNav() {
 
   return (
     <nav
-      className="flex items-start justify-around border-t"
+      className="flex items-start justify-around"
       style={{
-        background: 'var(--color-background)',
-        borderColor: 'var(--color-border)',
+        // Translucent paper with a blur, so the page scrolls softly under the nav
+        // instead of stopping dead at an opaque bar.
+        background: 'color-mix(in srgb, var(--color-background) 80%, transparent)',
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
+        boxShadow: 'inset 0 1px 0 var(--color-border)',
         paddingTop: '8px',
         paddingBottom: 'max(20px, env(safe-area-inset-bottom))',
-        borderTopWidth: '1.5px',
       }}
     >
       {TABS.map(({ href, label, Icon }) => {
@@ -73,15 +76,22 @@ export function BottomNav() {
             onPointerDown={(e) => (e.currentTarget.style.transform = 'scale(0.88)')}
             onPointerUp={(e) => (e.currentTarget.style.transform = '')}
             onPointerLeave={(e) => (e.currentTarget.style.transform = '')}
-            className="flex flex-col items-center gap-1 px-5 py-1 rounded-2xl"
+            className="flex flex-col items-center gap-1 rounded-2xl"
             style={{
-              background: active ? 'var(--color-accent-soft)' : 'transparent',
               color: active ? 'var(--color-accent)' : 'var(--color-foreground)',
-              opacity: active ? 1 : 0.42,
-              transition: 'opacity 0.12s ease, background 0.12s ease, transform 0.09s ease',
+              opacity: active ? 1 : 0.4,
+              transition: 'opacity 0.12s ease, transform 0.09s ease',
             }}
           >
-            <Icon />
+            <span
+              className="flex items-center justify-center px-5 py-1 rounded-[14px]"
+              style={{
+                background: active ? 'var(--color-accent-soft)' : 'transparent',
+                transition: 'background 0.12s ease',
+              }}
+            >
+              <Icon />
+            </span>
             <span className="text-[10px] font-bold tracking-wide">{label}</span>
           </Link>
         );
