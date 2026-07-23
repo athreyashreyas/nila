@@ -10,11 +10,9 @@ import { useAppData } from '@/lib/data/context';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { clearKey as clearIDBKey } from '@/lib/encryption/keyStore';
 import { registerPushSubscription, unregisterPushSubscription, isPushSupported } from '@/lib/push/register';
-import { BottomSheet } from '@/components/ui/BottomSheet';
 import { InstallPrompt } from '@/components/ui/InstallPrompt';
 import { LockIcon } from '@/components/ui/icons';
-import { GUIDE } from '@/lib/guide';
-import { APP_VERSION, CHANGELOG } from '@/lib/version';
+import { APP_VERSION } from '@/lib/version';
 
 // A friendly name for the current device, used when saving a push subscription
 // so a user can tell their devices apart.
@@ -62,8 +60,6 @@ export default function SettingsPage() {
   const [pwSuccess, setPwSuccess] = useState(false);
   const [tapCount, setTapCount] = useState(0);
   const [showDevReset, setShowDevReset] = useState(false);
-  const [showChangelog, setShowChangelog] = useState(false);
-  const [showGuide, setShowGuide] = useState(false);
   const [resetting, setResetting] = useState(false);
 
   // Notification preferences (quiet hours + evening round-up), stored in the
@@ -453,8 +449,8 @@ export default function SettingsPage() {
         <div>
           <p className="text-[11px] font-semibold tracking-widest uppercase mb-2 px-1 mt-2" style={{ color: 'var(--color-foreground-muted)' }}>About</p>
           <div className="flex flex-col gap-2">
-            <Row label="How Nila works" sub="A quick tour of everything" onClick={() => setShowGuide(true)} />
-            <Row label="What's new" sub={`Version ${APP_VERSION}`} onClick={() => setShowChangelog(true)} />
+            <Row label="How Nila works" sub="A quick tour of everything" onClick={() => router.push('/guide?pane=guide&from=settings')} />
+            <Row label="What's new" sub={`Version ${APP_VERSION}`} onClick={() => router.push('/guide?pane=new&from=settings')} />
           </div>
         </div>
 
@@ -469,70 +465,6 @@ export default function SettingsPage() {
         >
           Nila v{APP_VERSION} · private by design
         </button>
-
-        <BottomSheet open={showChangelog} onClose={() => setShowChangelog(false)} maxHeight="70vh">
-          <div className="px-6 pt-3 pb-2">
-            <h2 className="font-display text-xl font-bold mb-1">What's new</h2>
-            <p className="text-xs mb-4" style={{ color: 'var(--color-foreground-muted)' }}>
-              You're running version {APP_VERSION}.
-            </p>
-            <div className="flex flex-col gap-5">
-              {CHANGELOG.map((entry) => (
-                <div key={entry.version}>
-                  <div className="flex items-baseline justify-between mb-2">
-                    <span className="text-sm font-semibold">Version {entry.version}</span>
-                    <span className="text-xs opacity-50">
-                      {new Date(entry.date + 'T00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                    </span>
-                  </div>
-                  <ul className="flex flex-col gap-1.5">
-                    {entry.highlights.map((h, i) => (
-                      <li key={i} className="text-xs leading-relaxed flex gap-2" style={{ color: 'var(--color-foreground-muted)' }}>
-                        <span style={{ color: 'var(--color-accent)' }}>•</span>
-                        <span>{h}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  {entry.howTo && entry.howTo.length > 0 && (
-                    <div className="mt-3 rounded-[var(--radius-sm)] p-3" style={{ background: 'var(--color-accent-soft)' }}>
-                      <p className="text-[10px] font-semibold tracking-widest uppercase mb-1.5" style={{ color: 'var(--color-accent)' }}>
-                        Try it
-                      </p>
-                      <ul className="flex flex-col gap-1">
-                        {entry.howTo.map((h, i) => (
-                          <li key={i} className="text-xs leading-relaxed flex gap-2" style={{ color: 'var(--color-foreground)' }}>
-                            <span style={{ color: 'var(--color-accent)' }}>{i + 1}.</span>
-                            <span>{h}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </BottomSheet>
-
-        <BottomSheet open={showGuide} onClose={() => setShowGuide(false)} maxHeight="80vh">
-          <div className="px-6 pt-3 pb-6">
-            <h2 className="font-display text-xl font-bold mb-1">How Nila works</h2>
-            <p className="text-xs mb-4" style={{ color: 'var(--color-foreground-muted)' }}>
-              A quick tour of everything, any time you want it.
-            </p>
-            <div className="flex flex-col gap-4">
-              {GUIDE.map((s) => (
-                <div key={s.title} className="flex gap-3">
-                  <span className="text-2xl leading-none mt-0.5 select-none">{s.emoji}</span>
-                  <div>
-                    <h3 className="text-sm font-semibold mb-0.5" style={{ color: 'var(--color-foreground)' }}>{s.title}</h3>
-                    <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground-muted)' }}>{s.body}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </BottomSheet>
 
         {showDevReset && (
           <div className="rounded-[var(--radius)] p-4 flex flex-col gap-3"

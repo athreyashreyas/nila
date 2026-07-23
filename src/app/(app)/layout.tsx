@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEncryption } from '@/lib/encryption/context';
@@ -12,6 +12,8 @@ import { SyncDot } from '@/components/ui/SyncDot';
 import { AppDataProvider, useAppData } from '@/lib/data/context';
 import { useTheme } from '@/lib/theme/context';
 import { isThemeId } from '@/lib/theme/themes';
+import { APP_VERSION } from '@/lib/version';
+import { claimUnseenVersion, markVersionSeen } from '@/lib/whatsNew';
 
 const QUOTES = [
   'Your body keeps its own rhythm.',
@@ -79,14 +81,59 @@ function LoadingScreen() {
 // Plain scroller. Refresh is on demand now, via the sync dot, so there's no
 // pull-to-refresh gesture to get in the way of normal scrolling.
 function ScrollMain({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  // The guide is a full screen you step into, so it carries its own header and
+  // its own way back out. No sync dot over it.
+  const chrome = !pathname.startsWith('/guide');
   return (
     <main className="scroll-ios relative flex-1 min-h-0 overflow-y-auto overscroll-none">
       {/* Sync status dot: absolute to this scroll area's top-right, aligned with the
           page header and scrolling with the page rather than floating over it. */}
-      <SyncDot />
+      {chrome && <SyncDot />}
       {children}
     </main>
   );
+}
+
+// ─── First-run and update decisions ───────────────────────────
+
+// Once per mount, and at most once per version: a user who has just finished
+// onboarding is walked through the guide, and a returning user who opens a
+// version they have not met yet is shown What's new. `claimUnseenVersion` marks
+// the version seen (on this device and on the account) at the moment it answers,
+// so a plain reopen never re-triggers either, and neither does opening the app
+// on a second device once it has been read on the first.
+//
+// APP_VERSION is baked into the bundle, so "the version changed" and "a fresh
+// bundle loaded" are the same moment: a cold open, or the reload that follows
+// picking up a new version from the sync sheet. Both land here.
+function GuideBoot() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const decided = useRef(false);
+
+  useEffect(() => {
+    if (decided.current) return;
+    decided.current = true;
+    // Already on the guide (onboarding sent them straight here): nothing to do
+    // but make sure this version does not greet them again later.
+    if (pathname.startsWith('/guide')) {
+      markVersionSeen(APP_VERSION);
+      return;
+    }
+    // The claim waits on the network, and a brand-new account can be redirected
+    // to onboarding while it is in flight. Only navigate if this is still the
+    // mounted shell, so a late answer never yanks anyone out of setup.
+    let alive = true;
+    void (async () => {
+      const unseen = await claimUnseenVersion(APP_VERSION);
+      if (alive && unseen) router.replace('/guide?pane=new');
+    })();
+    return () => { alive = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return null;
 }
 
 // ─── Cross-device theme sync ──────────────────────────────────
@@ -256,6 +303,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <AppDataProvider>
       <DataGate>
         <ThemeSync />
+        <GuideBoot />
         {/* Shell fills the html element's height (see globals.css), which is the true
             full-screen height and shrinks with the keyboard. The nav is a normal flex
             child at the bottom (not position:fixed), so the keyboard overlays it. */}

@@ -53,6 +53,10 @@ const TABS = [
 export function BottomNav() {
   const pathname = usePathname();
 
+  // The guide is a full screen with its own way back out, so the tabs step
+  // aside for it. Every other route in the shell keeps them.
+  if (pathname.startsWith('/guide')) return null;
+
   return (
     <nav
       className="flex items-start justify-around"

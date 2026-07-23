@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toISODate } from '@/lib/utils/dates';
 import { DateField } from '@/components/ui/DateField';
 import { InstallPrompt } from '@/components/ui/InstallPrompt';
+import { APP_VERSION } from '@/lib/version';
+import { markVersionSeen } from '@/lib/whatsNew';
 
 const CYCLE_OPTIONS = [
   { label: 'Under 25', value: 23 },
@@ -61,7 +63,11 @@ export default function OnboardingPage() {
       }));
       localStorage.setItem('nila-onboarded', 'true');
     } catch {}
-    router.replace('/home');
+    // A brand-new user goes straight into the walk-through, the intended first
+    // stop after setup. Having just been shown around, they should never then be
+    // greeted by What's new, so this version is marked seen on the way in.
+    markVersionSeen(APP_VERSION);
+    router.replace('/guide?pane=guide');
   }
 
   // Local date, not UTC: toISOString() would shift to the previous day late at night
