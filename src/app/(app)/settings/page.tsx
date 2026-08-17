@@ -454,19 +454,18 @@ export default function SettingsPage() {
         <div>
           <p className="text-[11px] font-semibold tracking-widest uppercase mb-2 px-1 mt-2" style={{ color: 'var(--color-foreground-muted)' }}>Make Nila Yours</p>
           <p className="text-xs leading-relaxed mb-2 px-1" style={{ color: 'var(--color-foreground-muted)' }}>
-            Nila is built and maintained by one person, and this goes straight to
-            their desk. Say what broke, or what you wish the app did. It does not
-            need to be long.
+            One person makes Nila, and this goes to them directly. Tell them what
+            broke, or what you wish it did. A line or two is plenty.
           </p>
           <div className="flex flex-col gap-2">
             <Row
               label="Report something broken"
-              sub="Found a bug, or something that doesn't work as you expect?"
+              sub="Something not behaving the way you expected?"
               onClick={() => setFeedback('bug')}
             />
             <Row
               label="Suggest something"
-              sub="Any and all ideas are welcome. Especially half-formed ones."
+              sub="Even a half-formed thought is welcome."
               onClick={() => setFeedback('idea')}
             />
           </div>

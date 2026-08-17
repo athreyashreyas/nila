@@ -248,7 +248,7 @@ export function GuideArt({ kind }: { kind: GuideArtKind }) {
           {/* It arrived. */}
           <circle cx={82} cy={96} r={7} fill={ACCENT} />
           <path d="M78.5 96l2.5 2.5 4.5-5" fill="none" stroke={PAPER} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
-          <text x={95} y={99} fontSize={8} fill={MUTED}>with them now</text>
+          <text x={95} y={99} fontSize={8} fill={MUTED}>it is with them</text>
         </Stage>
       );
   }

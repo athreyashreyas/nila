@@ -37,15 +37,15 @@ export const FEEDBACK_KINDS: Record<FeedbackKind, KindCopy> = {
     label: 'Something is broken',
     subject: 'Bug report',
     prompt:
-      'What went wrong, and what were you doing just before it did? The more detail you give, the easier it is to fix.',
-    placeholder: 'I logged the start of my period and the prediction did not move...',
+      'What happened, and what were you doing just before? The small specifics are usually what make something easy to track down.',
+    placeholder: 'I logged the start of my period and the prediction stayed where it was...',
   },
   idea: {
     label: 'An idea',
     subject: 'Feature idea',
     prompt:
-      'What would you like Nila to do? It does not have to be a finished idea. A fair amount of what is here now started as somebody asking for it.',
-    placeholder: 'It would help if I could...',
+      'What would you like Nila to do? Nothing needs to be worked out yet. Much of what is here began as somebody\'s passing thought.',
+    placeholder: 'I keep wishing I could...',
   },
 };
 

@@ -117,9 +117,9 @@ export function FeedbackSheet({
           </div>
 
           <p className="text-xs leading-relaxed" style={{ color: 'var(--color-foreground-muted)' }}>
-            Your message goes to the person who makes Nila, and nothing you have
-            logged travels with it.
-            {account ? ` Any reply will come directly to ${account}.` : ''}
+            This goes to the person who makes Nila. Nothing you have logged is
+            attached to it.
+            {account ? ` Replies come to ${account}.` : ''}
           </p>
 
           {/* A line is always held here, so an error arriving never shoves the
@@ -181,7 +181,7 @@ function Delivered({
       </motion.div>
 
       <p className="text-center font-display text-xl">
-        {queued ? 'Saved, and it will send itself.' : 'That is with them now.'}
+        {queued ? 'Kept safe, and it will go on its own.' : 'It is with them.'}
       </p>
 
       <div
@@ -190,31 +190,31 @@ function Delivered({
       >
         {queued ? (
           <p>
-            It could not go just now, so it is sitting on your device. Nila sends
-            it the next time it gets a connection, whether or not you open the app
-            again.
+            There was no connection just now, so it is waiting on your device.
+            Nila sends it as soon as you are back online, even if you never open
+            the app again.
           </p>
         ) : (
           <p>
-            It arrived with your version and device attached, so they can see the
-            same screen you were looking at.
+            Your version and the sort of device you are on went with it, so they
+            can picture the screen you were looking at.
           </p>
         )}
         <p>
-          Nila is built and maintained by one person. They read what comes in, and
-          they write back when there is something worth saying. A fair amount of
-          what is in the app now started as somebody&apos;s message.
+          Nila is made and looked after by one person. They read everything that
+          arrives, and answer when there is something worth saying. A good deal of
+          the app began as somebody writing in.
         </p>
         {account && (
           <p>
-            Any reply will come to{' '}
+            Replies come to{' '}
             <span className="font-medium" style={{ color: 'var(--color-foreground)' }}>
               {account}
             </span>
             .
           </p>
         )}
-        <p className="opacity-60">Thank you for taking the time.</p>
+        <p className="opacity-60">Thank you for the time it took to write.</p>
       </div>
 
       <button

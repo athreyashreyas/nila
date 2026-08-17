@@ -48,16 +48,16 @@ Current version: see `src/lib/version.ts` (also shown in-app under Settings → 
 | Backend | Supabase (Auth + PostgreSQL) |
 | Encryption | @noble/ciphers + @noble/hashes + @scure/bip39 |
 
-## Privacy Architecture
+## Privacy architecture
 
 The server stores:
-- `profiles` — PBKDF2 salt, AES-KW wrapped master key, preferences
-- `cycles` — random UUID + encrypted blob (AES-256-GCM)
-- `daily_logs` — random UUID + encrypted blob
+- `profiles`: PBKDF2 salt, AES-KW wrapped master key, preferences
+- `cycles`: random UUID + encrypted blob (AES-256-GCM)
+- `daily_logs`: random UUID + encrypted blob
 
 The server never sees: period dates, phases, flow, symptoms, mood, notes, or any health content.
 
-## Dev Setup
+## Dev setup
 
 ```bash
 npm install
@@ -73,7 +73,7 @@ supabase start       # local Supabase (Docker required)
 supabase db push     # apply migrations
 ```
 
-## Environment Variables
+## Environment variables
 
 ```
 NEXT_PUBLIC_SUPABASE_URL= #ANON
