@@ -225,5 +225,31 @@ export function GuideArt({ kind }: { kind: GuideArtKind }) {
           <text x={W / 2} y={87} textAnchor="middle" fontSize={9} fill={MUTED}>quiet hours</text>
         </Stage>
       );
+
+    // A message written in Settings, and where it gets to: the two kinds as the
+    // sheet offers them, a report somebody wrote with the version the app
+    // attaches underneath, and the line that comes back once it lands.
+    case 'message':
+      return (
+        <Stage>
+          {/* The two tabs, the left one chosen. */}
+          <Card x={24} y={12} w={152} h={18} r={9} fill={SURFACE} />
+          <Card x={26} y={14} w={74} h={14} r={7} />
+          <text x={63} y={24} textAnchor="middle" fontSize={8} fill={INK}>broken</text>
+          <text x={139} y={24} textAnchor="middle" fontSize={8} fill={MUTED}>an idea</text>
+
+          {/* What they wrote, and the line the app adds for them. */}
+          <Card x={24} y={38} w={152} h={44} />
+          <rect x={34} y={48} width={116} height={4} rx={2} fill={MUTED} opacity={0.35} />
+          <rect x={34} y={57} width={132} height={4} rx={2} fill={MUTED} opacity={0.35} />
+          <rect x={34} y={66} width={64} height={4} rx={2} fill={ACCENT} opacity={0.45} />
+          <text x={112} y={70} fontSize={7} fill={MUTED}>Nila 2.5.0 · iPhone</text>
+
+          {/* It arrived. */}
+          <circle cx={82} cy={96} r={7} fill={ACCENT} />
+          <path d="M78.5 96l2.5 2.5 4.5-5" fill="none" stroke={PAPER} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
+          <text x={95} y={99} fontSize={8} fill={MUTED}>with them now</text>
+        </Stage>
+      );
   }
 }

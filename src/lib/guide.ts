@@ -18,7 +18,8 @@ export type GuideArtKind =
   | 'privacy'
   | 'sync'
   | 'themes'
-  | 'reminders';
+  | 'reminders'
+  | 'message';
 
 export interface GuideSection {
   id: string;
@@ -144,5 +145,20 @@ export const GUIDE: GuideSection[] = [
     ],
     steps: ['Open Settings, then Appearance, and tap any theme to switch instantly.'],
     art: 'themes',
+  },
+  {
+    id: 'yours',
+    title: 'Making Nila yours',
+    body: [
+      'One person makes Nila, and Settings has a line straight to them. If something is broken, say so. If the app should do something it does not yet do, say that too. You do not have to be certain, you do not have to be technical, and you do not have to soften it.',
+      'Your version and the device you are holding travel with the message, so you can describe what you saw and leave the rest alone. Nothing you have logged goes with it: not a date, not a symptom, not a note.',
+      'They read all of it. Bugs are looked at quickly, ideas are thought about properly, and where there is an answer worth giving it comes to the email you signed up with.',
+      'Writing it offline is fine. The message waits on your device and goes out by itself the next time you have a connection, so you can close the app and forget you sent it.',
+    ],
+    steps: [
+      'Open Settings and scroll to "Make Nila Yours".',
+      'Choose whether it is something broken or an idea, then write as much or as little as you like.',
+    ],
+    art: 'message',
   },
 ];

@@ -12,6 +12,8 @@ import { clearKey as clearIDBKey } from '@/lib/encryption/keyStore';
 import { registerPushSubscription, unregisterPushSubscription, isPushSupported } from '@/lib/push/register';
 import { InstallPrompt } from '@/components/ui/InstallPrompt';
 import { LockIcon } from '@/components/ui/icons';
+import { FeedbackSheet } from '@/components/ui/FeedbackSheet';
+import type { FeedbackKind } from '@/lib/feedback';
 import { APP_VERSION } from '@/lib/version';
 
 // A friendly name for the current device, used when saving a push subscription
@@ -61,6 +63,8 @@ export default function SettingsPage() {
   const [tapCount, setTapCount] = useState(0);
   const [showDevReset, setShowDevReset] = useState(false);
   const [resetting, setResetting] = useState(false);
+  // Which kind the feedback sheet opens on, or null while it is closed.
+  const [feedback, setFeedback] = useState<FeedbackKind | null>(null);
 
   // Notification preferences (quiet hours + evening round-up), stored in the
   // profile so they follow the user across devices and are enforced by the push
@@ -446,6 +450,28 @@ export default function SettingsPage() {
           </div>
         )}
 
+        {/* A line straight to the person who makes it. */}
+        <div>
+          <p className="text-[11px] font-semibold tracking-widest uppercase mb-2 px-1 mt-2" style={{ color: 'var(--color-foreground-muted)' }}>Make Nila Yours</p>
+          <p className="text-xs leading-relaxed mb-2 px-1" style={{ color: 'var(--color-foreground-muted)' }}>
+            Nila is built and maintained by one person, and this goes straight to
+            their desk. Say what broke, or what you wish the app did. It does not
+            need to be long.
+          </p>
+          <div className="flex flex-col gap-2">
+            <Row
+              label="Report something broken"
+              sub="Found a bug, or something that doesn't work as you expect?"
+              onClick={() => setFeedback('bug')}
+            />
+            <Row
+              label="Suggest something"
+              sub="Any and all ideas are welcome. Especially half-formed ones."
+              onClick={() => setFeedback('idea')}
+            />
+          </div>
+        </div>
+
         <div>
           <p className="text-[11px] font-semibold tracking-widest uppercase mb-2 px-1 mt-2" style={{ color: 'var(--color-foreground-muted)' }}>About</p>
           <div className="flex flex-col gap-2">
@@ -493,6 +519,8 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
+
+      <FeedbackSheet kind={feedback} onClose={() => setFeedback(null)} />
     </div>
   );
 }

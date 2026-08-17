@@ -24,6 +24,23 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: '2.5.0',
+    date: '2026-08-17',
+    major: true,
+    title: 'A way to make Nila exactly what you want',
+    art: 'message',
+    highlights: [
+      'If Nila has ever been any good, it is because of the thoughtful voices of everyone who has used it. Settings now has a line straight to the app\'s creator, so that can carry on',
+      'Report a bug, suggest a feature, or send a half-formed idea. Bugs are fixed as soon as possible, and ideas are read and considered for the next version',
+      'Nothing you have logged travels with it. The message carries your version and the device you are holding, and not one date, symptom or note',
+      'Offline, or the message could not get through? Nothing is lost. Nila keeps it on your device and sends it once you are back online, so you can write it and forget it',
+      'Replies come back to the email you signed up with, so there is nothing to check and nothing to miss',
+    ],
+    howTo: [
+      'Open Settings and scroll to "Make Nila Yours", then choose whether it is a bug or an idea.',
+    ],
+  },
+  {
     version: '2.4.0',
     date: '2026-07-23',
     major: true,

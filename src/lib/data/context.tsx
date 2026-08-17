@@ -8,6 +8,7 @@ import { usePrediction } from '@/hooks/usePrediction';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { restoreSnapshot, saveSnapshotFromCaches } from '@/lib/data/snapshot';
 import { initOutbox, flushOutbox } from '@/lib/data/outbox';
+import { startFeedbackOutbox } from '@/lib/data/feedbackOutbox';
 import { initSyncStatus } from '@/lib/sync/status';
 import type { DecryptedCycle, DecryptedDailyLog, PredictionResult, CyclePayload, DailyLogPayload } from '@/types/app';
 
@@ -71,6 +72,14 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     await syncAll();
   }, [syncAll]);
+
+  // Messages written in Settings ride their own queue. It lives here rather than
+  // in the sheet so a message written offline still goes out on the next
+  // connection, whether or not Settings is ever opened again.
+  useEffect(() => {
+    if (!isUnlocked) return;
+    return startFeedbackOutbox();
+  }, [isUnlocked]);
 
   // Re-sync whenever the tab/app comes back into view (covers iPhone ↔ iPad state drift)
   useEffect(() => {
