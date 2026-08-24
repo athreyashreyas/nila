@@ -151,7 +151,10 @@ export function cycleDayForDate(
 ): number {
   const { estimatedCycleLength, daysUntilNextPeriod } = prediction;
   const diff = daysBetween(startOfDay(today), startOfDay(date));
-  const todayCycleDay = estimatedCycleLength - daysUntilNextPeriod;
+  // Cycle day is 1-indexed: the first day of a period is day 1, not day 0. On
+  // that day daysUntilNextPeriod is a whole cycle, so without the +1 the whole
+  // calendar sat one day early and a period's first day painted as luteal.
+  const todayCycleDay = estimatedCycleLength - daysUntilNextPeriod + 1;
   const rawDay = todayCycleDay + diff;
   return ((rawDay - 1) % estimatedCycleLength + estimatedCycleLength) % estimatedCycleLength + 1;
 }
